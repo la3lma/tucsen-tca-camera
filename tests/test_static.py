@@ -40,6 +40,8 @@ def main() -> None:
     assert "TCA_MODE2_ROW_TIME_US 120u" in source
     assert "0x3012u" in source and "0x305eu" in source
     assert '"--exposure-ms"' in source and '"--gain"' in source
+    assert 'perror("flush raw-first")' in source
+    assert "fflush(raw_first)" in source
     assert "libusb_reset_device" not in source
     assert "libusb_set_configuration" not in source
     dry = subprocess.run([str(binary)], check=True, capture_output=True, text=True)

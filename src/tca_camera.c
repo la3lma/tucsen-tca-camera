@@ -412,7 +412,10 @@ int main(int argc, char **argv)
         result = read_device_frame(handle, device_frame, &received);
         if (result != 0) {
             if (frames == 0u && received > 0u) {
-                (void)fwrite(device_frame, 1, received, raw_first);
+                if (fwrite(device_frame, 1, received, raw_first) != received ||
+                    fflush(raw_first) != 0) {
+                    perror("write partial raw-first");
+                }
             }
             goto done;
         }
@@ -420,6 +423,10 @@ int main(int argc, char **argv)
             fwrite(device_frame, 1, TCA_DEVICE_BYTES, raw_first) !=
                 TCA_DEVICE_BYTES) {
             perror("write raw-first");
+            goto done;
+        }
+        if (frames == 0u && fflush(raw_first) != 0) {
+            perror("flush raw-first");
             goto done;
         }
         memcpy(pixels, device_frame, TCA_PIXEL_BYTES);
