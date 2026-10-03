@@ -1,0 +1,159 @@
+#!/bin/sh
+
+set -eu
+
+TOKEN=--serve
+
+usage() {
+    echo "usage: $0 $TOKEN RAW_FIRST [VIDEO_NUMBER] [EXPOSURE_MS] [GAIN]" >&2
+    echo "       exposes the trace-confirmed 1280x960 stream as temporary V4L2" >&2
+}
+
+if [ "$#" -eq 0 ]; then
+    usage
+    echo "NO USB TRANSFER SENT." >&2
+    exit 0
+fi
+if [ "$#" -lt 2 ] || [ "$#" -gt 5 ] || [ "$1" != "$TOKEN" ]; then
+    usage
+    echo "NO USB TRANSFER SENT." >&2
+    exit 64
+fi
+
+raw_output=$2
+video_number=${3:-42}
+exposure_ms=${4:-400}
+gain=${5:-20}
+device=/dev/video${video_number}
+project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+reader=${TCA_CAMERA_READER:-$project_dir/build/tca-camera}
+loaded=0
+reader_pid=0
+writer_pid=0
+stream_dir=
+
+cleanup() {
+    if [ "$reader_pid" -ne 0 ]; then
+        kill "$reader_pid" 2>/dev/null || true
+        wait "$reader_pid" 2>/dev/null || true
+    fi
+    if [ "$writer_pid" -ne 0 ]; then
+        kill "$writer_pid" 2>/dev/null || true
+        wait "$writer_pid" 2>/dev/null || true
+    fi
+    if [ "$loaded" -eq 1 ]; then
+        sudo /usr/sbin/modprobe -r v4l2loopback || true
+    fi
+    if [ -n "$stream_dir" ] && [ -p "$stream_dir/bayer.fifo" ]; then
+        rm -f -- "$stream_dir/bayer.fifo"
+    fi
+    if [ -n "$stream_dir" ] && [ -d "$stream_dir" ]; then
+        rmdir -- "$stream_dir" 2>/dev/null || true
+    fi
+}
+
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+for value in "$video_number" "$exposure_ms" "$gain"; do
+    case "$value" in
+        ''|*[!0-9]*)
+            echo "video number, exposure, and gain must be decimal integers" >&2
+            exit 64
+            ;;
+    esac
+done
+if [ "$exposure_ms" -lt 1 ] || [ "$exposure_ms" -gt 480 ] ||
+   [ "$gain" -gt 320 ]; then
+    echo "control range: EXPOSURE_MS=1..480, GAIN=0..320" >&2
+    exit 64
+fi
+if [ "$(uname -s)" != Linux ]; then
+    echo "the V4L2 adapter requires Linux; the reader core is portable" >&2
+    exit 69
+fi
+if [ "$raw_output" = - ] || [ -e "$raw_output" ]; then
+    echo "RAW_FIRST must name a new regular file: $raw_output" >&2
+    exit 73
+fi
+if [ ! -x "$reader" ]; then
+    echo "missing $reader; run 'make linux-stream-reader' first" >&2
+    exit 69
+fi
+for command in ffmpeg mkfifo mktemp sudo v4l2-ctl; do
+    if ! command -v "$command" >/dev/null 2>&1; then
+        echo "missing command: $command" >&2
+        exit 69
+    fi
+done
+if [ ! -x /usr/sbin/modprobe ]; then
+    echo "missing /usr/sbin/modprobe" >&2
+    exit 69
+fi
+if grep -q '^v4l2loopback ' /proc/modules 2>/dev/null; then
+    echo "v4l2loopback is already loaded; refusing to alter an existing setup" >&2
+    exit 73
+fi
+if [ -e "$device" ]; then
+    echo "device already exists: $device" >&2
+    exit 73
+fi
+
+sudo /usr/sbin/modprobe v4l2loopback video_nr="$video_number" \
+    card_label="TCA Camera 0547:c003" exclusive_caps=1 max_buffers=4
+loaded=1
+
+attempt=0
+while [ ! -e "$device" ] && [ "$attempt" -lt 50 ]; do
+    sleep 0.1
+    attempt=$((attempt + 1))
+done
+if [ ! -e "$device" ]; then
+    echo "loopback device did not appear: $device" >&2
+    exit 1
+fi
+sudo chown "$(id -u):$(id -g)" "$device"
+
+stream_dir=$(mktemp -d "${TMPDIR:-/tmp}/tca-v4l2-live.XXXXXX")
+mkfifo "$stream_dir/bayer.fifo"
+
+"$reader" capture --frames 0 --raw-first "$raw_output" \
+    --bayer - --exposure-ms "$exposure_ms" --gain "$gain" \
+    >"$stream_dir/bayer.fifo" &
+reader_pid=$!
+ffmpeg -hide_banner -loglevel warning -f rawvideo \
+    -pixel_format bayer_grbg8 -video_size 1280x960 -framerate 2 \
+    -i "$stream_dir/bayer.fifo" -vf format=yuyv422 -f v4l2 "$device" &
+writer_pid=$!
+
+attempt=0
+while [ "$attempt" -lt 50 ]; do
+    if v4l2-ctl -d "$device" --all 2>/dev/null | grep -q 'Video Capture'; then
+        break
+    fi
+    if ! kill -0 "$reader_pid" 2>/dev/null ||
+       ! kill -0 "$writer_pid" 2>/dev/null; then
+        echo "V4L2 pipeline exited before the camera became ready" >&2
+        exit 1
+    fi
+    sleep 0.1
+    attempt=$((attempt + 1))
+done
+if [ "$attempt" -ge 50 ]; then
+    echo "V4L2 writer did not become ready: $device" >&2
+    exit 1
+fi
+
+echo "camera ready at $device; first unmodified device frame: $raw_output" >&2
+echo "press Ctrl-C to stop and remove the temporary loopback device" >&2
+set +e
+wait "$reader_pid"
+reader_status=$?
+set -e
+reader_pid=0
+if [ "$reader_status" -ne 0 ]; then
+    echo "reader exited with status $reader_status" >&2
+    exit "$reader_status"
+fi

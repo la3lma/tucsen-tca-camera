@@ -1,0 +1,6 @@
+/build/
+*.raw
+*.bayer
+*.mkv
+*.mp4
+.DS_Store
