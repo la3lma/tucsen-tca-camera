@@ -75,6 +75,13 @@ captured three consecutive frames in each mode. Mode 0 emitted 30,206,016
 Bayer bytes (3 × 10,068,672), mode 2 emitted 3,686,400 Bayer bytes
 (3 × 1,228,800), and both invocations exited zero.
 
+The Pi then fast-forwarded to exact commit
+`f35dad144d9333fc5692a31d3d310ec285a705ea` and tag
+`v0.2.0-alpha.1`, rebuilt, and passed `make test`. One tagged mode-0 capture
+emitted exactly 10,068,992 raw and 10,068,672 Bayer bytes; a following tagged
+mode-2 capture emitted exactly 1,229,312 raw and 1,228,800 Bayer bytes. Both
+processes exited zero.
+
 Because the sensor was covered, the repaired mode-0 pixels provide a useful
 dark-frame sanity check rather than an optical validation: median 12, mean
 11.893, and 99th percentile 13 on an 8-bit scale.
