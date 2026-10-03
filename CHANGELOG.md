@@ -2,7 +2,16 @@
 
 ## Unreleased
 
+## 0.2.0-alpha.2 — 2026-10-03
+
 - Relicense the project from the MIT License to the Apache License 2.0.
+- Verify cold capture after a connected-camera Raspberry Pi reboot.
+- Verify the Apple Silicon reader against the physical camera through a
+  one-device VirtualHere relay, then return ownership to Linux.
+- Add an explicit, two-frame maximum initial resynchronization window. This
+  recovers a stale leading frame observed after relay handoff while preserving
+  the untouched first device frame and never retrying marker loss after the
+  first application frame has been delivered.
 
 ## 0.2.0-alpha.1 — 2026-10-03
 

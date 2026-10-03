@@ -29,6 +29,7 @@
 #define TCA_MAX_DEVICE_BYTES TCA_MODE0_DEVICE_BYTES
 #define TCA_FULL_CHUNK 524288u
 #define TCA_MARKER_BYTES 10u
+#define TCA_INITIAL_RESYNC_LIMIT 2u
 #define TCA_EXPOSURE_MAX_LINES 4000u
 #define TCA_GAIN_MAX 320u
 #define TCA_NEXT_PACKET_BYTES(value) ((((value) >> 9u) + 1u) << 9u)
@@ -74,7 +75,7 @@ static const struct init_step init_steps[] = {
 };
 
 static const char execution_token[] = "capture";
-static const char version[] = "0.2.0-alpha.1";
+static const char version[] = "0.2.0-alpha.2";
 static volatile sig_atomic_t stop_requested;
 
 static size_t pixel_bytes(const struct mode_profile *mode)
@@ -331,6 +332,7 @@ int main(int argc, char **argv)
     FILE *bayer = NULL;
     uint64_t requested_frames = 0;
     uint64_t frames = 0;
+    unsigned initial_resyncs = 0u;
     const char *raw_path = NULL;
     const char *bayer_path = NULL;
     uint32_t exposure_ms = 0u;
@@ -341,6 +343,7 @@ int main(int argc, char **argv)
     int gain_set = 0;
     int mode_set = 0;
     int frames_set = 0;
+    int raw_written = 0;
     int claimed = 0;
     int argument;
     int result;
@@ -502,26 +505,37 @@ int main(int argc, char **argv)
 
         result = read_device_frame(handle, mode, device_frame, &received);
         if (result != 0) {
-            if (frames == 0u && received > 0u) {
+            if (!raw_written && received > 0u) {
                 if (fwrite(device_frame, 1, received, raw_first) != received ||
                     fflush(raw_first) != 0) {
                     perror("write partial raw-first");
                 }
+                raw_written = 1;
             }
             goto done;
         }
-        if (frames == 0u &&
+        if (!raw_written &&
             fwrite(device_frame, 1, mode->device_bytes, raw_first) !=
                 mode->device_bytes) {
             perror("write raw-first");
             goto done;
         }
-        if (frames == 0u && fflush(raw_first) != 0) {
+        if (!raw_written && fflush(raw_first) != 0) {
             perror("flush raw-first");
             goto done;
         }
+        raw_written = 1;
         memcpy(pixels, device_frame, pixel_bytes(mode));
         if (!validate_and_repair_markers(mode, pixels)) {
+            if (frames == 0u &&
+                initial_resyncs < TCA_INITIAL_RESYNC_LIMIT) {
+                ++initial_resyncs;
+                fprintf(stderr,
+                        "initial frame marker validation failed; "
+                        "discarding bounded warm-up frame %u/%u\n",
+                        initial_resyncs, TCA_INITIAL_RESYNC_LIMIT);
+                continue;
+            }
             fputs("frame marker validation failed\n", stderr);
             goto done;
         }

@@ -109,6 +109,45 @@ a35f96f7beb6c4184433aaf391aaf9940d72800961a3d57e2fab0157e0247bf0  3,686,400-byte
 This verifies connected-camera host-reboot recovery. Physical cable
 disconnect/reconnect remains a separate hands-on test.
 
+## Apple Silicon physical reader through a Pi relay
+
+Public commit `c5fa44ca59256ba5f423e616a7b37f3e91fb5d02` built and passed its
+tests on the Apple Silicon workstation. VirtualHere Server 4.8.8 on the Pi and
+Client 6.0.3 on macOS exposed the physical `0547:c003` camera through an SSH
+forward on VirtualHere's default trial port. macOS registered the device under
+`AppleUSBUserHCI` at 480 Mbit/s with the expected vendor/product identity. The
+public reader cold-initialized it, applied gain 20 and 100-ms exposure, and
+captured three mode-2 frames with exit zero:
+
+```text
+1c0256f291ef24c0fef702b2c56d6e8b514d9c1c0e8c5687898281d2dd80b5e2  1,229,312-byte first device frame
+7fb92d416b0e7718299fa4ea59ed85948bc7274de85d03ebb5e6382603a2bc29  3,686,400-byte three-frame Bayer stream
+```
+
+This proves the userspace reader's physical Apple Silicon path. It does not
+substitute for a native-cable run or an AVFoundation camera surface.
+
+## Bounded recovery after relay handoff
+
+After macOS released the camera, the first direct Pi invocation received a
+complete 1,229,312-byte device frame with the first marker absent and later
+markers aligned; it failed closed. A second invocation immediately succeeded.
+Candidate source then added a two-frame maximum initial resynchronization
+window. Repeating the macOS capture and hand-back reproduced the invalid first
+warm-up frame, but the same Pi process logged exactly one discard, delivered
+three valid frames, and exited zero. The preserved first raw file remained
+exactly one device frame rather than being appended:
+
+```text
+initial frame marker validation failed; discarding bounded warm-up frame 1/2
+frames=3 status=ok
+f76c7f61495388b20fc2ea6e04d61dae60a80c8aef0b074d88ef735cc2a8f827  1,229,312-byte first device frame
+bf525b75678133fffeb77a96ba084349787304df68d8e6a0eb208162c2fc5887  3,686,400-byte three-frame Bayer stream
+```
+
+The bounded discard applies only before frame zero. Marker loss after delivery
+begins still terminates the reader, so recovery cannot conceal stream damage.
+
 Because the sensor was covered, the repaired mode-0 pixels provide a useful
 dark-frame sanity check rather than an optical validation: median 12, mean
 11.893, and 99th percentile 13 on an 8-bit scale.

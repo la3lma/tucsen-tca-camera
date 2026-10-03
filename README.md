@@ -40,7 +40,8 @@ Reproducible physical checks and their evidence hashes are summarized in the
 | Optional `/dev/video*` through `v4l2loopback` | Verified live |
 | Connected-camera Pi reboot and cold reopen | Verified live |
 | Apple Silicon build | Verified |
-| Direct capture on macOS | Not yet physically tested |
+| Apple Silicon libusb capture through Pi relay | Verified live |
+| Native-cable capture on macOS | Not yet physically tested |
 | Full 3664×2748 Bayer8 capture | Verified live |
 | Optical color and focus validation | Awaiting microscope setup |
 
@@ -106,7 +107,11 @@ Current controls are intentionally narrow and mode-aware:
 - `--gain 0..320`
 
 The reader refuses unknown or duplicate options, refuses to overwrite output
-files, and exposes no arbitrary USB request facility.
+files, and exposes no arbitrary USB request facility. If ownership has just
+returned from another host, it may discard at most two marker-invalid initial
+warm-up frames before delivering frame zero. Each discard is logged, the first
+untouched device frame remains preserved, and any marker loss after delivery
+begins is fatal.
 
 ## Optional V4L2 camera
 

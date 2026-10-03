@@ -41,12 +41,15 @@ def main() -> None:
     assert "TCA_MODE0_HEIGHT 2748u" in source
     assert "TCA_NEXT_PACKET_BYTES" in source
     assert "TCA_FULL_CHUNK 524288u" in source
+    assert "TCA_INITIAL_RESYNC_LIMIT 2u" in source
     assert "TCA_MODE2_ROW_TIME_US 120u" in source
     assert "TCA_MODE0_ROW_TIME_US 309u" in source
     assert "0x3012u" in source and "0x305eu" in source
     assert '"--exposure-ms"' in source and '"--gain"' in source
     assert 'perror("flush raw-first")' in source
     assert "fflush(raw_first)" in source
+    assert "discarding bounded warm-up frame %u/%u" in source
+    assert "int raw_written = 0" in source
     assert "libusb_reset_device" not in source
     assert "libusb_set_configuration" not in source
     dry = subprocess.run([str(binary)], check=True, capture_output=True, text=True)
@@ -55,7 +58,7 @@ def main() -> None:
     version = subprocess.run(
         [str(binary), "--version"], check=True, capture_output=True, text=True
     )
-    assert version.stdout.strip() == "tca-camera 0.2.0-alpha.1"
+    assert version.stdout.strip() == "tca-camera 0.2.0-alpha.2"
     with tempfile.TemporaryDirectory(prefix="tca-linux-stream-") as directory:
         raw = pathlib.Path(directory, "no.raw")
         bayer = pathlib.Path(directory, "no.bayer")

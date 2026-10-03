@@ -66,6 +66,15 @@ marker with the following ten pixel bytes. The reader first validates every
 marker, preserves the untouched first device frame separately, performs that
 repair in its application buffer, and emits only the mode's image bytes.
 
+After a VirtualHere macOS-to-Linux ownership handoff, one physical run returned
+a complete-size initial device frame whose first marker was absent while the
+later markers remained aligned. The next open produced a normal frame. The
+reader therefore permits a bounded initial resynchronization window: before
+delivering its first application frame, it may discard at most two
+marker-invalid warm-up frames. The first untouched device frame is still
+written once for diagnosis. Marker loss after delivery begins, or exhaustion
+of the two-frame limit, remains fatal; command transfers are never retried.
+
 The present FFmpeg/V4L2 path uses `bayer_grbg8`. That phase matches recovered
 application memory conventions but still needs optical confirmation because
 the sensor was covered during protocol work.
@@ -115,6 +124,7 @@ restricted material are deliberately excluded from this repository.
 - frame rate depends on mode and exposure; no formal performance guarantee;
 - no automatic exposure, white balance, or host color correction;
 - no hotplug daemon or multi-camera selection;
-- direct macOS live capture is not yet physically verified; and
+- Apple Silicon live capture is verified through a one-device Pi relay, but a
+  native-cable macOS run and AVFoundation integration are not yet verified; and
 - optical Bayer phase, color response, exposure scale, and gain response await
   the intended microscope and an uncovered sensor.
