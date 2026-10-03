@@ -1,0 +1,217 @@
+#!/usr/bin/env python3
+"""Report deterministic statistics for one Bayer8 application frame."""
+
+from __future__ import annotations
+
+import argparse
+from array import array
+import hashlib
+import json
+import pathlib
+import sys
+
+
+MODE_GEOMETRIES = {
+    0: (3664, 2748),
+    2: (1280, 960),
+}
+
+PHASE_MAPS = {
+    "rggb": (("R", "G"), ("G", "B")),
+    "grbg": (("G", "R"), ("B", "G")),
+    "gbrg": (("G", "B"), ("R", "G")),
+    "bggr": (("B", "G"), ("G", "R")),
+}
+
+
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Validate one headerless Bayer8 frame and report intensity, "
+            "sensor-parity, clipping, and focus statistics."
+        )
+    )
+    parser.add_argument("frame", type=pathlib.Path)
+    parser.add_argument("--mode", type=int, choices=sorted(MODE_GEOMETRIES))
+    parser.add_argument("--width", type=int)
+    parser.add_argument("--height", type=int)
+    parser.add_argument(
+        "--json",
+        type=pathlib.Path,
+        help="write JSON to this new file instead of standard output",
+    )
+    return parser.parse_args()
+
+
+def percentile(histogram: list[int], numerator: int, denominator: int) -> int:
+    count = sum(histogram)
+    if count == 0:
+        return 0
+    rank = ((count - 1) * numerator) // denominator
+    seen = 0
+    for value, frequency in enumerate(histogram):
+        seen += frequency
+        if seen > rank:
+            return value
+    return 255
+
+
+def summarize(histogram: list[int]) -> dict[str, int | float]:
+    count = sum(histogram)
+    weighted = sum(value * frequency for value, frequency in enumerate(histogram))
+    minimum = next((value for value, frequency in enumerate(histogram) if frequency), 0)
+    maximum = next(
+        (value for value in range(255, -1, -1) if histogram[value]), 0
+    )
+    return {
+        "count": count,
+        "min": minimum,
+        "p01": percentile(histogram, 1, 100),
+        "median": percentile(histogram, 1, 2),
+        "mean": weighted / count if count else 0.0,
+        "p99": percentile(histogram, 99, 100),
+        "max": maximum,
+        "zero_count": histogram[0],
+        "saturated_count": histogram[255],
+        "zero_fraction": histogram[0] / count if count else 0.0,
+        "saturated_fraction": histogram[255] / count if count else 0.0,
+    }
+
+
+def frame_histograms(data: bytes, width: int, height: int) -> tuple[list[int], list[list[int]]]:
+    overall = [0] * 256
+    parity = [[0] * 256 for _ in range(4)]
+    for row in range(height):
+        start = row * width
+        parity_row = (row & 1) << 1
+        for column in range(width):
+            value = data[start + column]
+            overall[value] += 1
+            parity[parity_row | (column & 1)][value] += 1
+    return overall, parity
+
+
+def focus_variance(data: bytes, width: int, height: int) -> tuple[float, int]:
+    """Variance of a 4-neighbour Laplacian over 2x2-tile mean intensity."""
+    tile_width = width // 2
+    tile_height = height // 2
+    if tile_width < 3 or tile_height < 3:
+        return 0.0, 0
+
+    luminance = array("H", [0]) * (tile_width * tile_height)
+    for tile_row in range(tile_height):
+        row0 = (tile_row * 2) * width
+        row1 = row0 + width
+        tile_start = tile_row * tile_width
+        for tile_column in range(tile_width):
+            column = tile_column * 2
+            luminance[tile_start + tile_column] = (
+                data[row0 + column]
+                + data[row0 + column + 1]
+                + data[row1 + column]
+                + data[row1 + column + 1]
+            ) // 4
+
+    count = 0
+    mean = 0.0
+    moment = 0.0
+    for row in range(1, tile_height - 1):
+        start = row * tile_width
+        for column in range(1, tile_width - 1):
+            index = start + column
+            laplacian = (
+                4 * luminance[index]
+                - luminance[index - 1]
+                - luminance[index + 1]
+                - luminance[index - tile_width]
+                - luminance[index + tile_width]
+            )
+            count += 1
+            delta = laplacian - mean
+            mean += delta / count
+            moment += delta * (laplacian - mean)
+    return (moment / count if count else 0.0), count
+
+
+def resolve_geometry(
+    size: int, mode: int | None, width: int | None, height: int | None
+) -> tuple[int | None, int, int]:
+    if (width is None) != (height is None):
+        raise ValueError("--width and --height must be supplied together")
+    if width is not None and height is not None:
+        if width <= 0 or height <= 0:
+            raise ValueError("width and height must be positive")
+        if mode is not None and MODE_GEOMETRIES[mode] != (width, height):
+            raise ValueError("explicit geometry does not match selected mode")
+        return mode, width, height
+    if mode is not None:
+        selected_width, selected_height = MODE_GEOMETRIES[mode]
+        return mode, selected_width, selected_height
+    matches = [
+        (number, geometry[0], geometry[1])
+        for number, geometry in MODE_GEOMETRIES.items()
+        if geometry[0] * geometry[1] == size
+    ]
+    if len(matches) != 1:
+        raise ValueError("cannot infer mode from byte length; specify geometry")
+    return matches[0]
+
+
+def main() -> int:
+    arguments = parse_arguments()
+    try:
+        data = arguments.frame.read_bytes()
+        mode, width, height = resolve_geometry(
+            len(data), arguments.mode, arguments.width, arguments.height
+        )
+        expected = width * height
+        if len(data) != expected:
+            raise ValueError(
+                f"frame length {len(data)} does not match {width}x{height} "
+                f"Bayer8 ({expected} bytes)"
+            )
+        overall, parity = frame_histograms(data, width, height)
+        focus, focus_samples = focus_variance(data, width, height)
+    except (OSError, ValueError) as error:
+        print(f"tca-frame-stats: {error}", file=sys.stderr)
+        return 64
+
+    result = {
+        "schema": "tca-frame-stats-v1",
+        "file": str(arguments.frame),
+        "sha256": hashlib.sha256(data).hexdigest(),
+        "mode": mode,
+        "width": width,
+        "height": height,
+        "pixel_format": "Bayer8-headerless",
+        "bytes": len(data),
+        "intensity": summarize(overall),
+        "parity": {
+            "row0_col0": summarize(parity[0]),
+            "row0_col1": summarize(parity[1]),
+            "row1_col0": summarize(parity[2]),
+            "row1_col1": summarize(parity[3]),
+        },
+        "candidate_phase_maps": PHASE_MAPS,
+        "focus": {
+            "metric": "population variance of 4-neighbour Laplacian",
+            "input": "mean intensity of each non-overlapping 2x2 Bayer tile",
+            "value": focus,
+            "samples": focus_samples,
+        },
+    }
+    encoded = json.dumps(result, indent=2, sort_keys=True) + "\n"
+    if arguments.json is None:
+        sys.stdout.write(encoded)
+        return 0
+    try:
+        with arguments.json.open("x", encoding="utf-8") as output:
+            output.write(encoded)
+    except OSError as error:
+        print(f"tca-frame-stats: {error}", file=sys.stderr)
+        return 73
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

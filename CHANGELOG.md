@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add a dependency-free Bayer-frame statistics and focus utility.
+- Add a reproducible microscope-mounted optical validation procedure covering
+  Bayer phase, orientation, exposure, gain, focus, full resolution, and the
+  V4L2 application boundary.
+
 ## 0.2.0-alpha.2 — 2026-10-03
 
 - Relicense the project from the MIT License to the Apache License 2.0.

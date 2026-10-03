@@ -29,6 +29,11 @@ entry is published.
 Reproducible physical checks and their evidence hashes are summarized in the
 [validation record](docs/validation.md).
 
+The remaining microscope-mounted checks have a reproducible
+[optical validation procedure](docs/optical-validation.md), including Bayer
+phase, orientation, exposure/gain sweeps, focus scoring, and a full-resolution
+still.
+
 ## Supported state
 
 | Capability | Status |
@@ -112,6 +117,16 @@ returned from another host, it may discard at most two marker-invalid initial
 warm-up frames before delivering frame zero. Each discard is logged, the first
 untouched device frame remains preserved, and any marker loss after delivery
 begins is fatal.
+
+One headerless Bayer frame can be checked without NumPy or OpenCV:
+
+```sh
+scripts/tca-frame-stats capture/one-frame.bayer --mode 2
+```
+
+For a multi-frame stream, extract one exact frame first. The utility reports
+SHA-256, dimensions, intensity percentiles, clipping, four sensor-parity
+planes, and a phase-independent Laplacian focus score.
 
 ## Optional V4L2 camera
 
