@@ -38,6 +38,7 @@ Reproducible physical checks and their evidence hashes are summarized in the
 | Exposure and analog gain writes | Transport-verified live |
 | FFmpeg/stdout pipeline | Verified live |
 | Optional `/dev/video*` through `v4l2loopback` | Verified live |
+| Connected-camera Pi reboot and cold reopen | Verified live |
 | Apple Silicon build | Verified |
 | Direct capture on macOS | Not yet physically tested |
 | Full 3664×2748 Bayer8 capture | Verified live |

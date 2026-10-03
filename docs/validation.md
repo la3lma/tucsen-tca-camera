@@ -88,8 +88,26 @@ The exact tagged mode-2 reader was observed active with its complete
 1,229,312-byte first-frame evidence file and then terminated with `SIGKILL`.
 The shell recorded the expected status 137. Without resetting or power-cycling
 the device, a new process immediately opened it and captured three frames with
-`frames=3 status=ok` and exit zero. This checks host-process crash recovery;
-physical USB disconnect and host reboot remain separate tests.
+`frames=3 status=ok` and exit zero. This checks host-process crash recovery.
+
+## Host reboot and cold reopen
+
+The Pi checkout was fast-forwarded to public commit
+`71fdae1d93afe0d2cfc06a7fc3d850d0bef8c12e`, rebuilt, and passed `make test`.
+With the camera connected and no reader process active, the Pi was rebooted.
+The Linux boot ID changed from `d588bee0-fe1b-4dc4-a2ba-eea7b3803168` to
+`77a640be-2c3b-43ce-bdeb-c1fd06bbd181`; the camera re-enumerated as a fresh USB
+instance with the same `0547:c003` identity. The rebuilt reader then applied
+gain 20 and 100-ms exposure and captured three preview frames with exit zero
+and `frames=3 status=ok`.
+
+```text
+b30eccf5fd2e1a220c5657bf37a63ed987658fa63c2e80415f257b3f747456af  1,229,312-byte first device frame
+a35f96f7beb6c4184433aaf391aaf9940d72800961a3d57e2fab0157e0247bf0  3,686,400-byte three-frame Bayer stream
+```
+
+This verifies connected-camera host-reboot recovery. Physical cable
+disconnect/reconnect remains a separate hands-on test.
 
 Because the sensor was covered, the repaired mode-0 pixels provide a useful
 dark-frame sanity check rather than an optical validation: median 12, mean
