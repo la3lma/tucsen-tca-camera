@@ -82,6 +82,15 @@ emitted exactly 10,068,992 raw and 10,068,672 Bayer bytes; a following tagged
 mode-2 capture emitted exactly 1,229,312 raw and 1,228,800 Bayer bytes. Both
 processes exited zero.
 
+## Abrupt process death and reopen
+
+The exact tagged mode-2 reader was observed active with its complete
+1,229,312-byte first-frame evidence file and then terminated with `SIGKILL`.
+The shell recorded the expected status 137. Without resetting or power-cycling
+the device, a new process immediately opened it and captured three frames with
+`frames=3 status=ok` and exit zero. This checks host-process crash recovery;
+physical USB disconnect and host reboot remain separate tests.
+
 Because the sensor was covered, the repaired mode-0 pixels provide a useful
 dark-frame sanity check rather than an optical validation: median 12, mean
 11.893, and 99th percentile 13 on an 8-bit scale.
