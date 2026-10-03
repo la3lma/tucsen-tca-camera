@@ -144,5 +144,6 @@ material. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## License and names
 
-MIT licensed. AmScope and Tucsen are names or trademarks of their respective
-owners. This independent project is not affiliated with or endorsed by them.
+Licensed under the Apache License 2.0. AmScope and Tucsen are names or
+trademarks of their respective owners. This independent project is not
+affiliated with or endorsed by them.

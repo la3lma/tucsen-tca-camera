@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Relicense the project from the MIT License to the Apache License 2.0.
+
 ## 0.2.0-alpha.1 — 2026-10-03
 
 - Add physically verified 3664×2748 Bayer8 capture as explicit `--mode 0`;
