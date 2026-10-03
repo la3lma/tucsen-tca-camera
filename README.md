@@ -16,6 +16,16 @@ required.
 > image-quality calibration, and full 10-megapixel mode remain open. Preserve
 > raw frames and report your hardware identity when testing another unit.
 
+## Full report and research record
+
+The complete investigation report, including device identification, recovered
+protocol evidence, driver comparisons, and the staged validation plan, is
+intended for publication in the
+[Journal of Bjorn](https://la3lma.github.io/journal-of-bjorn/) as
+[Recovery Plan for a Legacy AmScope Microscope Camera](https://la3lma.github.io/journal-of-bjorn/papers/microscope-window-sensor.html).
+The article link is reserved for the report and may return 404 until the journal
+entry is published.
+
 ## Supported state
 
 | Capability | Status |
