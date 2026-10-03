@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.0-alpha.3 — 2026-10-03
+
 - Add a dependency-free Bayer-frame statistics and focus utility.
 - Add a reproducible microscope-mounted optical validation procedure covering
   Bayer phase, orientation, exposure, gain, focus, full resolution, and the
