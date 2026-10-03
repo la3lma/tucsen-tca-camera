@@ -4,16 +4,16 @@ Early, independently developed userspace support for the legacy AmScope/Tucsen
 USB microscope camera identified as `0547:c003` (`10MP CMOS Camera`, commonly
 sold as TCA-10.0N/IS1000-family hardware).
 
-The reader cold-initializes the camera with `libusb`, captures a continuous
-1280×960 Bayer8 stream, validates and removes transport markers, and exposes
-bounded exposure and gain controls. A Raspberry Pi 5 has captured 30
-consecutive frames and fed the live stream through FFmpeg and a temporary
-V4L2 camera device. No vendor driver and no camera-specific kernel module are
-required.
+The reader cold-initializes the camera with `libusb`, captures 1280×960 preview
+or 3664×2748 full-resolution Bayer8 frames, validates and removes transport
+markers, and exposes bounded exposure and gain controls. A Raspberry Pi 5 has
+completed a 14,400-frame preview endurance run, captured consecutive full-size
+frames, and fed the preview stream through FFmpeg and a temporary V4L2 camera
+device. No vendor driver and no camera-specific kernel module are required.
 
 > **Alpha hardware support:** one physical camera has been tested. The sensor
-> was covered during protocol work, so final color/Bayer-phase confirmation,
-> image-quality calibration, and full 10-megapixel mode remain open. Preserve
+> was covered during protocol work, so final color/Bayer-phase confirmation
+> and image-quality calibration remain open. Preserve
 > raw frames and report your hardware identity when testing another unit.
 
 ## Full report and research record
@@ -26,6 +26,9 @@ intended for publication in the
 The article link is reserved for the report and may return 404 until the journal
 entry is published.
 
+Reproducible physical checks and their evidence hashes are summarized in the
+[validation record](docs/validation.md).
+
 ## Supported state
 
 | Capability | Status |
@@ -37,7 +40,7 @@ entry is published.
 | Optional `/dev/video*` through `v4l2loopback` | Verified live |
 | Apple Silicon build | Verified |
 | Direct capture on macOS | Not yet physically tested |
-| Full 3664×2748 mode | Not yet enabled |
+| Full 3664×2748 Bayer8 capture | Verified live |
 | Optical color and focus validation | Awaiting microscope setup |
 
 ## Build
@@ -76,6 +79,16 @@ mkdir -p capture
   --gain 20
 ```
 
+Mode 2 (1280×960) is the default. Add `--mode 0` for 3664×2748 capture:
+
+```sh
+./build/tca-camera capture \
+  --frames 1 --mode 0 \
+  --raw-first capture/full-device-frame.raw \
+  --bayer capture/full-frame.bayer \
+  --exposure-ms 100 --gain 20
+```
+
 `--frames 0` streams until interrupted. Bayer output can be `-` for stdout:
 
 ```sh
@@ -86,9 +99,9 @@ mkdir -p capture
     -video_size 1280x960 -framerate 2 -i -
 ```
 
-Current controls are intentionally narrow:
+Current controls are intentionally narrow and mode-aware:
 
-- `--exposure-ms 1..480`
+- `--exposure-ms 1..480` in mode 2, or `1..1236` in mode 0
 - `--gain 0..320`
 
 The reader refuses unknown or duplicate options, refuses to overwrite output
@@ -103,7 +116,7 @@ sudo apt install ffmpeg v4l-utils v4l2loopback-dkms
 scripts/tca-v4l2 --serve first-device-frame.raw
 ```
 
-This creates `/dev/video42` by default, converts the Bayer stream to YUYV, and
+This creates `/dev/video42` by default, converts the mode-2 Bayer stream to YUYV, and
 removes only the loopback device it created when stopped. The adapter refuses
 to alter an existing loopback configuration. The custom camera protocol still
 runs in userspace; `v4l2loopback` is an optional, generic compatibility layer.

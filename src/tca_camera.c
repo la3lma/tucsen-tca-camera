@@ -18,20 +18,49 @@
 #define TCA_REQUEST_TYPE 0xc0u
 #define TCA_CONTROL_LENGTH 10u
 #define TCA_TIMEOUT_MS 3000u
-#define TCA_WIDTH 1280u
-#define TCA_HEIGHT 960u
-#define TCA_PIXEL_BYTES ((size_t)TCA_WIDTH * (size_t)TCA_HEIGHT)
-#define TCA_DEVICE_BYTES 1229312u
-#define TCA_MARKER_BYTES 10u
+#define TCA_MODE2_WIDTH 1280u
+#define TCA_MODE2_HEIGHT 960u
+#define TCA_MODE2_DEVICE_BYTES 1229312u
 #define TCA_MODE2_ROW_TIME_US 120u
+#define TCA_MODE0_WIDTH 3664u
+#define TCA_MODE0_HEIGHT 2748u
+#define TCA_MODE0_DEVICE_BYTES 10068992u
+#define TCA_MODE0_ROW_TIME_US 309u
+#define TCA_MAX_DEVICE_BYTES TCA_MODE0_DEVICE_BYTES
+#define TCA_FULL_CHUNK 524288u
+#define TCA_MARKER_BYTES 10u
 #define TCA_EXPOSURE_MAX_LINES 4000u
 #define TCA_GAIN_MAX 320u
+#define TCA_NEXT_PACKET_BYTES(value) ((((value) >> 9u) + 1u) << 9u)
+
+_Static_assert(TCA_MODE2_DEVICE_BYTES ==
+                   TCA_NEXT_PACKET_BYTES(TCA_MODE2_WIDTH * TCA_MODE2_HEIGHT),
+               "mode 2 size must match the recovered next-packet formula");
+_Static_assert(TCA_MODE0_DEVICE_BYTES ==
+                   TCA_NEXT_PACKET_BYTES(TCA_MODE0_WIDTH * TCA_MODE0_HEIGHT),
+               "mode 0 size must match the recovered next-packet formula");
 
 struct init_step {
     uint8_t request;
     uint16_t value;
     uint16_t index;
     unsigned delay_after_ms;
+};
+
+struct mode_profile {
+    unsigned number;
+    uint16_t selector;
+    unsigned width;
+    unsigned height;
+    size_t device_bytes;
+    unsigned row_time_us;
+};
+
+static const struct mode_profile mode_profiles[] = {
+    {0u, 0x00c0u, TCA_MODE0_WIDTH, TCA_MODE0_HEIGHT,
+     TCA_MODE0_DEVICE_BYTES, TCA_MODE0_ROW_TIME_US},
+    {2u, 0x00c2u, TCA_MODE2_WIDTH, TCA_MODE2_HEIGHT,
+     TCA_MODE2_DEVICE_BYTES, TCA_MODE2_ROW_TIME_US},
 };
 
 static const struct init_step init_steps[] = {
@@ -44,11 +73,32 @@ static const struct init_step init_steps[] = {
     {0xb7u, 0x0d0fu, 0x3012u, 120u},
 };
 
-static const size_t read_lengths[] = {524288u, 524288u, 180736u};
-static const size_t marker_offsets[] = {0u, 524288u, 1048576u};
 static const char execution_token[] = "capture";
-static const char version[] = "0.1.0-alpha.1";
+static const char version[] = "0.2.0-alpha.1";
 static volatile sig_atomic_t stop_requested;
+
+static size_t pixel_bytes(const struct mode_profile *mode)
+{
+    return (size_t)mode->width * (size_t)mode->height;
+}
+
+static unsigned max_exposure_ms(const struct mode_profile *mode)
+{
+    return (TCA_EXPOSURE_MAX_LINES * mode->row_time_us) / 1000u;
+}
+
+static const struct mode_profile *find_mode(unsigned number)
+{
+    size_t index;
+
+    for (index = 0; index < sizeof(mode_profiles) / sizeof(mode_profiles[0]);
+         ++index) {
+        if (mode_profiles[index].number == number) {
+            return &mode_profiles[index];
+        }
+    }
+    return NULL;
+}
 
 static void request_stop(int signal_number)
 {
@@ -138,21 +188,33 @@ static uint16_t encode_gain(uint32_t gain)
     return 0x1dffu;
 }
 
-static void print_plan(FILE *output)
+static void print_plan(FILE *output, const struct mode_profile *mode)
 {
-    fprintf(output, "profile=tca-userspace-mode2-stream-v1 target=0547:c003\n");
+    size_t pixels = pixel_bytes(mode);
+    size_t reads = (mode->device_bytes + TCA_FULL_CHUNK - 1u) /
+                   TCA_FULL_CHUNK;
+
+    fprintf(output, "profile=tca-userspace-mode%u-stream-v1 target=0547:c003\n",
+            mode->number);
     fprintf(output,
-            "frame=1280x960 Bayer8 application-bytes=%zu "
-            "device-bytes=%u\n",
-            TCA_PIXEL_BYTES, TCA_DEVICE_BYTES);
-    fputs("startup=seven exact trace-confirmed controls; expected data-stage "
-          "result is PIPE\n", output);
-    fputs("capture=endpoint-0x82 reads 524288,524288,180736; validate and "
-          "repair ten-byte 0x88 markers\n", output);
-    fputs("raw-first=unmodified 1229312-byte device frame; Bayer output "
-          "discards final 512-byte alignment surplus\n", output);
-    fputs("controls=optional exposure-ms 1..480 and normalized-gain 0..320; "
-          "each becomes one trace-confirmed b7 register write\n", output);
+            "frame=%ux%u Bayer8 application-bytes=%zu device-bytes=%zu\n",
+            mode->width, mode->height, pixels, mode->device_bytes);
+    fprintf(output,
+            "startup=seven fixed controls with selector=0x%04x; expected "
+            "data-stage result is PIPE\n",
+            mode->selector);
+    fprintf(output,
+            "capture=endpoint-0x82 reads=%zu maximum-read=%u; validate and "
+            "repair ten-byte 0x88 markers\n",
+            reads, TCA_FULL_CHUNK);
+    fprintf(output,
+            "raw-first=unmodified %zu-byte device frame; Bayer output "
+            "discards final alignment surplus\n",
+            mode->device_bytes);
+    fprintf(output,
+          "controls=optional exposure-ms 1..%u and normalized-gain 0..320; "
+          "each becomes one trace-confirmed b7 register write\n",
+          max_exposure_ms(mode));
 }
 
 static int apply_trace_command(libusb_device_handle *handle,
@@ -179,13 +241,18 @@ static int apply_trace_command(libusb_device_handle *handle,
     return 0;
 }
 
-static int apply_initialization(libusb_device_handle *handle)
+static int apply_initialization(libusb_device_handle *handle,
+                                const struct mode_profile *mode)
 {
     size_t index;
 
     for (index = 0;
          index < sizeof(init_steps) / sizeof(init_steps[0]); ++index) {
-        const struct init_step *step = &init_steps[index];
+        struct init_step selected = init_steps[index];
+        const struct init_step *step = &selected;
+        if (index == 0u) {
+            selected.value = mode->selector;
+        }
         int result = apply_trace_command(
             handle, index + 1u, "init", step->request, step->value,
             step->index, step->delay_after_ms);
@@ -197,15 +264,18 @@ static int apply_initialization(libusb_device_handle *handle)
 }
 
 static int read_device_frame(libusb_device_handle *handle,
+                             const struct mode_profile *mode,
                              unsigned char *frame, size_t *received)
 {
-    size_t index;
+    size_t index = 0u;
 
     *received = 0u;
-    for (index = 0;
-         index < sizeof(read_lengths) / sizeof(read_lengths[0]); ++index) {
+    while (*received < mode->device_bytes) {
+        size_t remaining = mode->device_bytes - *received;
         int transferred = 0;
-        int requested = (int)read_lengths[index];
+        int requested = (int)(remaining < TCA_FULL_CHUNK
+                                  ? remaining
+                                  : TCA_FULL_CHUNK);
         int result = libusb_bulk_transfer(
             handle, TCA_ENDPOINT, frame + *received, requested, &transferred,
             TCA_TIMEOUT_MS);
@@ -223,21 +293,21 @@ static int read_device_frame(libusb_device_handle *handle,
                     index, requested, transferred);
             return LIBUSB_ERROR_IO;
         }
+        ++index;
     }
-    return *received == TCA_DEVICE_BYTES ? 0 : LIBUSB_ERROR_IO;
+    return *received == mode->device_bytes ? 0 : LIBUSB_ERROR_IO;
 }
 
-static int validate_and_repair_markers(unsigned char *pixels)
+static int validate_and_repair_markers(const struct mode_profile *mode,
+                                       unsigned char *pixels)
 {
-    size_t marker_index;
+    size_t offset;
+    size_t pixel_count = pixel_bytes(mode);
 
-    for (marker_index = 0;
-         marker_index < sizeof(marker_offsets) / sizeof(marker_offsets[0]);
-         ++marker_index) {
-        size_t offset = marker_offsets[marker_index];
+    for (offset = 0u; offset < mode->device_bytes; offset += TCA_FULL_CHUNK) {
         size_t byte_index;
 
-        if (offset + 2u * TCA_MARKER_BYTES > TCA_PIXEL_BYTES) {
+        if (offset + 2u * TCA_MARKER_BYTES > pixel_count) {
             return 0;
         }
         for (byte_index = 0; byte_index < TCA_MARKER_BYTES; ++byte_index) {
@@ -265,8 +335,11 @@ int main(int argc, char **argv)
     const char *bayer_path = NULL;
     uint32_t exposure_ms = 0u;
     uint32_t gain = 0u;
+    uint32_t mode_number = 2u;
+    const struct mode_profile *mode = NULL;
     int exposure_set = 0;
     int gain_set = 0;
+    int mode_set = 0;
     int frames_set = 0;
     int claimed = 0;
     int argument;
@@ -275,11 +348,13 @@ int main(int argc, char **argv)
 
     if (argc == 1 ||
         (argc == 2 && strcmp(argv[1], "--help") == 0)) {
-        print_plan(stdout);
+        print_plan(stdout, find_mode(2u));
+        fputs("available-modes=0:3664x2748-still,2:1280x960-preview "
+              "(default=2)\n", stdout);
         fprintf(stdout,
                 "NO TRANSFER SENT. usage: %s %s --frames COUNT "
                 "--raw-first RAW --bayer OUTPUT|- "
-                "[--exposure-ms 1..480] [--gain 0..320]\n",
+                "[--mode 0|2] [--exposure-ms MS] [--gain 0..320]\n",
                 argv[0], execution_token);
         return EXIT_SUCCESS;
     }
@@ -310,8 +385,17 @@ int main(int argc, char **argv)
             bayer_path = argv[argument + 1];
             continue;
         }
+        if (strcmp(argv[argument], "--mode") == 0 && !mode_set &&
+            parse_u32(argv[argument + 1], 0u, 2u, &mode_number) &&
+            find_mode(mode_number) != NULL) {
+            mode_set = 1;
+            continue;
+        }
         if (strcmp(argv[argument], "--exposure-ms") == 0 && !exposure_set &&
-            parse_u32(argv[argument + 1], 1u, 480u, &exposure_ms)) {
+            parse_u32(argv[argument + 1], 1u,
+                      (TCA_EXPOSURE_MAX_LINES * TCA_MODE0_ROW_TIME_US) /
+                          1000u,
+                      &exposure_ms)) {
             exposure_set = 1;
             continue;
         }
@@ -330,7 +414,14 @@ int main(int argc, char **argv)
         fputs("NO TRANSFER SENT: missing or conflicting output paths\n", stderr);
         return 64;
     }
-    print_plan(stderr);
+    mode = find_mode(mode_number);
+    if (mode == NULL ||
+        (exposure_set && exposure_ms > max_exposure_ms(mode))) {
+        fputs("NO TRANSFER SENT: exposure is out of range for selected mode\n",
+              stderr);
+        return 64;
+    }
+    print_plan(stderr, mode);
     raw_first = fopen(raw_path, "wbx");
     if (raw_first == NULL) {
         perror(raw_path);
@@ -347,8 +438,8 @@ int main(int argc, char **argv)
         fputs("cannot install signal handlers\n", stderr);
         goto done;
     }
-    device_frame = malloc(TCA_DEVICE_BYTES);
-    pixels = malloc(TCA_PIXEL_BYTES);
+    device_frame = malloc(mode->device_bytes);
+    pixels = malloc(pixel_bytes(mode));
     if (device_frame == NULL || pixels == NULL) {
         perror("malloc");
         goto done;
@@ -369,7 +460,7 @@ int main(int argc, char **argv)
         goto done;
     }
     claimed = 1;
-    result = apply_initialization(handle);
+    result = apply_initialization(handle, mode);
     if (result != 0) {
         fprintf(stderr, "initialization: %s (%d)\n",
                 libusb_error_name(result), result);
@@ -388,8 +479,8 @@ int main(int argc, char **argv)
                 encoded);
     }
     if (exposure_set) {
-        uint32_t lines = (exposure_ms * 1000u + TCA_MODE2_ROW_TIME_US - 1u) /
-                         TCA_MODE2_ROW_TIME_US;
+        uint32_t lines = (exposure_ms * 1000u + mode->row_time_us - 1u) /
+                         mode->row_time_us;
         if (lines == 0u || lines > TCA_EXPOSURE_MAX_LINES) {
             fputs("exposure conversion exceeded sensor range\n", stderr);
             goto done;
@@ -409,7 +500,7 @@ int main(int argc, char **argv)
            (requested_frames == 0u || frames < requested_frames)) {
         size_t received = 0;
 
-        result = read_device_frame(handle, device_frame, &received);
+        result = read_device_frame(handle, mode, device_frame, &received);
         if (result != 0) {
             if (frames == 0u && received > 0u) {
                 if (fwrite(device_frame, 1, received, raw_first) != received ||
@@ -420,8 +511,8 @@ int main(int argc, char **argv)
             goto done;
         }
         if (frames == 0u &&
-            fwrite(device_frame, 1, TCA_DEVICE_BYTES, raw_first) !=
-                TCA_DEVICE_BYTES) {
+            fwrite(device_frame, 1, mode->device_bytes, raw_first) !=
+                mode->device_bytes) {
             perror("write raw-first");
             goto done;
         }
@@ -429,12 +520,13 @@ int main(int argc, char **argv)
             perror("flush raw-first");
             goto done;
         }
-        memcpy(pixels, device_frame, TCA_PIXEL_BYTES);
-        if (!validate_and_repair_markers(pixels)) {
+        memcpy(pixels, device_frame, pixel_bytes(mode));
+        if (!validate_and_repair_markers(mode, pixels)) {
             fputs("frame marker validation failed\n", stderr);
             goto done;
         }
-        if (fwrite(pixels, 1, TCA_PIXEL_BYTES, bayer) != TCA_PIXEL_BYTES) {
+        if (fwrite(pixels, 1, pixel_bytes(mode), bayer) !=
+            pixel_bytes(mode)) {
             perror("write Bayer stream");
             goto done;
         }

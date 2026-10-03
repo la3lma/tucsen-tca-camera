@@ -11,7 +11,7 @@ TCA camera. It is an interoperability record, not vendor documentation.
 - commands travel through endpoint zero
 - no UVC interface and no bulk-OUT endpoint
 
-## Cold initialization: mode 2
+## Cold initialization and mode selection
 
 The working 1280×960 sequence sends these seven vendor/device/IN setup packets
 in order. Each requests ten response bytes:
@@ -35,6 +35,11 @@ reader. Treating the stall as a fatal command failure prevents initialization.
 The implementation accepts either this expected stall or a complete ten-byte
 data stage, but no other result. It does not retry a command.
 
+Mode 0 uses the same fixed sequence with only step 1 changed to selector
+`0x00c0`. The recovered mode table maps it to 3664×2748, and the physical
+camera completed the resulting twenty-read frame schedule. Mode 2 remains the
+default because it is better suited to preview and the V4L2 adapter.
+
 ## Frame transport
 
 One device frame is read from endpoint `0x82` as:
@@ -47,11 +52,19 @@ The application image is 1280×960 Bayer8, or 1,228,800 bytes. The device/DLL
 contract rounds the transfer allocation one extra 512-byte packet beyond an
 already aligned image size, leaving 512 surplus bytes after the image.
 
-A ten-byte run of `0x88` begins at offsets 0, 524288, and 1048576. The legacy
-application replaces each marker with the following ten pixel bytes. The
-reader first validates all markers, preserves the untouched first device frame
-separately, performs that repair in its application buffer, and emits only the
-1,228,800 image bytes.
+The recovered capture routine expresses that rule exactly as
+`((width * height >> 9) + 1) << 9`: select the next 512-byte boundary,
+including one extra packet when the pixel count is already aligned. Applied to
+the 3664×2748 mode, this gives 10,068,992 device bytes (nineteen 524,288-byte
+blocks plus 107,520 bytes). A physical one-frame probe validated all twenty
+predicted markers; the public reader then captured three consecutive mode-0
+frames and returned to mode 2 without a reset.
+
+A ten-byte run of `0x88` begins at each 524,288-byte read boundary: three
+markers in mode 2 and twenty in mode 0. The legacy application replaces each
+marker with the following ten pixel bytes. The reader first validates every
+marker, preserves the untouched first device frame separately, performs that
+repair in its application buffer, and emits only the mode's image bytes.
 
 The present FFmpeg/V4L2 path uses `bayer_grbg8`. That phase matches recovered
 application memory conventions but still needs optical confirmation because
@@ -65,7 +78,8 @@ effect.
 
 - Exposure uses coarse-integration register `0x3012`. Mode 2 has a recovered
   120 µs row time; `lines = ceil(milliseconds × 1000 / 120)`, bounded to
-  1–4000 lines (public range 1–480 ms).
+  1–4000 lines (public range 1–480 ms). Mode 0 uses its recovered 309 µs row
+  time and a public range of 1–1236 ms.
 - Analog gain uses register `0x305e`. Public gain 0–320 uses the piecewise
   encoding recovered from the matching control implementation:
 
@@ -97,10 +111,9 @@ restricted material are deliberately excluded from this repository.
 
 ## Known limitations
 
-- only fixed mode 2 (1280×960) is enabled;
-- typical observed rate is about 2 fps;
+- only fixed modes 0 (3664×2748) and 2 (1280×960) are enabled;
+- frame rate depends on mode and exposure; no formal performance guarantee;
 - no automatic exposure, white balance, or host color correction;
-- no full 3664×2740/10 MP capture yet;
 - no hotplug daemon or multi-camera selection;
 - direct macOS live capture is not yet physically verified; and
 - optical Bayer phase, color response, exposure scale, and gain response await
