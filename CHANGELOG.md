@@ -6,6 +6,8 @@
 - Add a reproducible microscope-mounted optical validation procedure covering
   Bayer phase, orientation, exposure, gain, focus, full resolution, and the
   V4L2 application boundary.
+- Document and test staged installation and exact-file removal of the reader,
+  V4L2 helper, and frame analyzer.
 
 ## 0.2.0-alpha.2 — 2026-10-03
 

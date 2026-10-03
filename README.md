@@ -72,6 +72,24 @@ The camera-specific implementation is entirely userspace code. On a headless
 Linux system, either run with appropriate USB permissions or install the
 optional rule in [`udev/99-tucsen-tca-camera.rules`](udev/99-tucsen-tca-camera.rules).
 
+## Install and remove
+
+Install the reader, V4L2 helper, and frame analyzer under the selected prefix:
+
+```sh
+sudo make install PREFIX=/usr/local
+```
+
+Remove exactly those three installed programs:
+
+```sh
+sudo make uninstall PREFIX=/usr/local
+```
+
+Packagers can set `DESTDIR` for a staged install or removal. These targets do
+not modify the optional udev rule or distribution-managed `v4l2loopback`
+package.
+
 ## Capture
 
 Capture three frames while preserving the first untouched device frame:
