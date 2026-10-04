@@ -65,3 +65,23 @@ VirtualHere server on `192.168.65.5:7575`, with `usbmon3` recording to
 corresponding live capture is `/tmp/virtualhere-20260929T140811Z.pcapng` and
 contained 14 preflight packets before client attachment. See the
 [fallback evidence](virtualhere-trace-bench.md).
+
+## 2026-10-04 UTM shortcut retry
+
+The Linux bench was retried after the userspace reader, complete optical frame
+assembly, and V4L2 acceptance harness were available. Ubuntu booted normally
+at `192.168.64.4`, but neither `utmctl usb connect` by `0547:c003` nor by the
+reported host location produced guest enumeration. macOS continued to show the
+camera active, configured at high speed, and idle. The VM was stopped cleanly.
+
+Exact public main `d39e7971eb62c23dcac13e5c16d5cc964a6564d7` then reopened the
+camera directly on macOS and captured one complete 1280x960 frame at requested
+250 ms/gain 0. The reader exited `frames=1 status=ok`; the Bayer frame hash is
+`020819d6e72cb9b272ed124d9e41d49d6c2999c39b5f70c886cac95a5857268d`,
+with zero zero-valued and zero saturated pixels. The raw record, Bayer frame,
+statistics, display derivative, summary, and manifest are retained privately
+under the report project's `work/utm-shortcut-attempt-20261004/` directory.
+
+This reconfirms that UTM is not a substitute for the pending direct Linux cable
+run on this host/UTM build. Do not retry the same attachment paths unless the
+USB implementation changes or new evidence identifies a specific fix.
