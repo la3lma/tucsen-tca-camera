@@ -34,18 +34,19 @@ transport/application run; or</li>
 exposure, and gain validation before the camera or loopback setup is
 touched.</li>
 </ul>
-<p>Follow-up hardening candidate <code>5b297b5</code> advances the
-evidence profile to <code>tca-linux-v4l2-acceptance-v4</code>. Both
-paths record the selected <code>calibration_mode</code>, exact release
-commit, camera and host identity, reader timestamps, bounded consumer
-YUYV bytes, per-frame digests, producer/consumer counts and cadence,
-bridge exit status, cleanup, immediate reader reopen, and a SHA-256
-manifest. The FFmpeg consumer is additionally bounded by a recorded
-deadline derived from frame count and requested exposure. A timeout or
-other consumer failure records its exit status, tears down the bridge
-through the normal trap, and hashes the partial evidence instead of
-hanging indefinitely. The uncorrected path writes an explicit JSON
-marker instead of pretending that a flat-field map was applied.</p>
+<p>Follow-up hardening candidate <code>5b297b5</code>, merged as public
+main <code>a2dbc06</code>, advances the evidence profile to
+<code>tca-linux-v4l2-acceptance-v4</code>. Both paths record the
+selected <code>calibration_mode</code>, exact release commit, camera and
+host identity, reader timestamps, bounded consumer YUYV bytes, per-frame
+digests, producer/consumer counts and cadence, bridge exit status,
+cleanup, immediate reader reopen, and a SHA-256 manifest. The FFmpeg
+consumer is additionally bounded by a recorded deadline derived from
+frame count and requested exposure. A timeout or other consumer failure
+records its exit status, tears down the bridge through the normal trap,
+and hashes the partial evidence instead of hanging indefinitely. The
+uncorrected path writes an explicit JSON marker instead of pretending
+that a flat-field map was applied.</p>
 <p>An uncorrected pass proves physical USB-to-application transport. It
 cannot satisfy the optical flat-field acceptance criterion and must not
 be described as corrected delivery.</p>
