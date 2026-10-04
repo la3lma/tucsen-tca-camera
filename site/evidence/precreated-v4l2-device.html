@@ -19,11 +19,13 @@ loopback lifecycle</h1>
 <p>Date: 2026-10-04</p>
 <p>Issue <a
 href="https://github.com/la3lma/tucsen-tca-camera/issues/38">#38</a> and
-draft <a href="https://github.com/la3lma/tucsen-tca-camera/pull/39">PR
-#39</a> address an application-integration limitation:
-<code>tca-v4l2</code> previously refused to run when
-<code>v4l2loopback</code> was already loaded, because its only mode
-owned module creation, device ownership, and teardown.</p>
+<a href="https://github.com/la3lma/tucsen-tca-camera/pull/39">PR
+#39</a>, merged as public main
+<code>8d254b7b27e5d4d27d8a06a9e9fdddbb48a6e929</code>, address an
+application-integration limitation: <code>tca-v4l2</code> previously
+refused to run when <code>v4l2loopback</code> was already loaded,
+because its only mode owned module creation, device ownership, and
+teardown.</p>
 <h2 id="ownership-contract">Ownership contract</h2>
 <p>The existing <code>--serve</code> operation is unchanged: it requires
 an unused setup, creates an exact-labelled temporary loopback, changes
@@ -64,11 +66,12 @@ retrying USB.</p>
 <h2 id="raspberry-pi-aarch64-integration">Raspberry Pi AArch64
 integration</h2>
 <p>Exact candidate <code>c9a7e6e5ecc78bf36b040f829ed0e7446211ba0a</code>
-passed the complete camera-free Raspberry Pi suite, including
-reproducible Debian package construction. The token-gated integration
-then ran both ownership models in each supported geometry using the
-USB-inert synthetic reader, real FFmpeg, real <code>v4l2loopback</code>,
-and ordinary <code>v4l2-ctl</code> consumers.</p>
+and exact merged main passed the complete camera-free Raspberry Pi
+suite, including reproducible Debian package construction. The
+token-gated integration then ran both ownership models from exact merged
+main in each supported geometry using the USB-inert synthetic reader,
+real FFmpeg, real <code>v4l2loopback</code>, and ordinary
+<code>v4l2-ctl</code> consumers.</p>
 <table>
 <thead>
 <tr>
@@ -91,7 +94,7 @@ and ordinary <code>v4l2-ctl</code> consumers.</p>
 <tr>
 <td>Managed warm-baseline RSS growth</td>
 <td style="text-align: right;">0 KiB</td>
-<td style="text-align: right;">9,824 KiB</td>
+<td style="text-align: right;">0 KiB</td>
 </tr>
 <tr>
 <td>Pre-created-device consumer frames</td>
@@ -126,12 +129,13 @@ remained loaded; only the surrounding root-owned harness then removed
 them. Final checks found neither
 <code>/dev/video46</code>/<code>47</code> nor <code>v4l2loopback</code>
 loaded.</p>
-<p>The retained preview manifest has SHA-256
-<code>ebf09d543d9a40f150f94fa1b430235271dd0153c8329c3699a11ef106f4ad2e</code>.
-The retained full-resolution manifest has SHA-256
-<code>2c466c6711f7050f103bd1f0b9df6f85da729573419da831574c74f13e0dc27f</code>.
-These are hashes of the manifest files; the manifest entries hash every
-generated integration artifact.</p>
+<p>The retained exact-main preview manifest has SHA-256
+<code>af783cf4201785d9f3492000eaab2b688e8aeb10a5c11e7d07a855342462fffb</code>.
+The retained exact-main full-resolution manifest has SHA-256
+<code>c0bc93e4cd69aa7c3b28ef1725fe090250239b9d1b4453297988df8ca34ff997</code>.
+These are hashes of the manifest files; their entries hash every
+generated integration artifact. Hosted Ubuntu/macOS CI and the complete
+Apple Silicon suite also pass on exact merged main.</p>
 <h2 id="scope">Scope</h2>
 <p>This proves ownership isolation, application attachment,
 deterministic stop, and scoped cleanup for both geometries without a
