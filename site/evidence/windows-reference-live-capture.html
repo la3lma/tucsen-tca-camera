@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Working Windows reference and direct host capture — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="working-windows-reference-and-direct-host-capture">Working
+Windows reference and direct host capture</h1>
+<p>Executed 2026-09-29 with the taped sensor, so a nearly black image
+was the expected optical result.</p>
+<h2 id="reference-stack-result">Reference-stack result</h2>
+<p>The isolated Windows 10 x86-64 guest ran in test-signing mode with
+the official 2011 Tucsen driver. Windows reported the physical instance
+<code>USB\VID_0547&amp;PID_C003</code> as <code>Started</code>. TSView7
+7.3.1.8 opened its camera child window and reached <code>Ready</code>,
+exposing resolution, snapshot, record, white balance, exposure, crop,
+properties, and crosshair controls. This is a working reference path,
+not merely successful device enumeration.</p>
+<p>The installed binaries copied from that guest match the already
+analyzed TCA evidence exactly:</p>
+<pre class="text"><code>ee9c8ec6a680404c375a6bf0c44ded0486c6e7557cdee379a5f332eb9a8d12ac  TS1000.dll
+01c8fdc3b34c0d13cf67c550968d7ae0236e633cb66154a67c04bd10e9326987  Tucsen64.sys</code></pre>
+<p><code>TS1000.dll</code> opens <code>\\.\tca000-N</code>; the driver
+INF names <code>0547:c003</code> as
+<code>Tucsen TCA-10.0-N Camera</code>. This removes the remaining
+ambiguity about which of TSView7’s many model DLLs and protocol
+generations belongs to this camera.</p>
+<h2 id="usbpcap-limitation">USBPcap limitation</h2>
+<p>All eight USBPcap roots were armed before the reference run. Only
+root 8 contained packets: 525 USBPcap records over 142.878672 seconds.
+Its only descriptor identities were three QEMU virtual HID devices, all
+<code>0627:0001</code>. No <code>0547:c003</code> URB was present and
+the vendor-control extractor emitted no row.</p>
+<p>This is explained by UTM’s architecture. The camera travels through a
+CocoaSPICE usbredir channel rather than a Windows emulated root hub, so
+the Windows USBPcap filter never owns that traffic. The pcap is
+preserved as negative instrumentation evidence:</p>
+<pre class="text"><code>6d713d85f3a778c44dea03029ff229719f1ba1eb0f7b1c40f47d016f94c4e8e0  testmode-allroot8.pcap</code></pre>
+<p>The UTM debug log independently records
+<code>usbredir-9:2: connecting device 0547:c003</code> and large
+usbredir writes, including 1,048,602 and 180,762 bytes, but logs lengths
+rather than payload bytes.</p>
+<h2 id="direct-macos-bulk-capture">Direct macOS bulk capture</h2>
+<p>After TSView reached <code>Ready</code>, the disposable VM was
+hard-stopped while idle. That closed the usbredir channel without
+removing camera power. A read-only libusb probe immediately claimed
+interface 0 and received a complete 81,920-byte bulk transfer from
+endpoint <code>0x82</code>. It began with ten <code>0x88</code> bytes,
+the observed transport marker, followed by dark-frame samples
+concentrated around values 10–12.</p>
+<p>The project-local <code>tools/tca_stream_read.c</code> then held one
+libusb handle and captured the exact reconstructed mode-4 geometry:</p>
+<pre class="text"><code>read 0: requested 81920, received 81920
+read 1: requested 81920, received 81920
+read 2: requested 81920, received 81920
+read 3: requested 61440, received 61440
+total:  307200 bytes = 640 x 480 Bayer8</code></pre>
+<p>The ten-byte <code>0x88</code> marker occurs at offsets 0, 81,920,
+163,840, and 245,760, exactly one per scheduled block. The final
+raw-frame hash is:</p>
+<pre class="text"><code>97ec45e81302f66e1f17e472b769f538c3bc33cb70b23cc726200b31647dd7df  mode4-final-short-request.raw</code></pre>
+<p>The exact read-only probe source and the x86-64 macOS binary used for
+the verified schedule are pinned as:</p>
+<pre class="text"><code>043a736b570dcbc95234dc241273a8424651c1042de8c690c3f24b2ff77e229e  tools/tca_stream_read.c
+a557899c50b9bd9a8046f47767441a18049b85cc8b93749b7d85e98e60076e1d  work/tca_stream_read-macos</code></pre>
+<p>The fixed GRBG/BGR24 converter produced valid 640x480 grayscale and
+color derivatives. The grayscale image is nearly black as predicted by
+the tape; the four bright ten-pixel runs at the left edge are the
+unstripped block markers. Raw samples have minimum 9, maximum 136, and
+mean approximately 11.06. The complete private evidence bundle and
+manifest are under
+<code>work/live-host-capture-20260929T080041Z/</code>.</p>
+<h2 id="what-this-proves-and-what-remains">What this proves and what
+remains</h2>
+<p>This is the first live non-Windows frame acquisition. It proves the
+endpoint, four-block mode-4 geometry, exact byte count, marker
+placement, Bayer replay path, and direct libusb readability. The data
+plane is no longer speculative.</p>
+<p>It does <strong>not</strong> yet prove cold-start initialization from
+Linux or macOS. Direct <code>0xc0/0x02</code> startup attempts still
+stall or return <code>PIPE</code> outside the Windows driver path. The
+next protocol experiment should therefore route the camera through a
+Linux USB/IP host to the working Windows guest while Linux
+<code>usbmon</code> records the physical URBs. That route observes the
+successful initialization without guessing another request and is
+independent of USBPcap’s usbredir blind spot.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Offline TCA startup-signature core — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="offline-tca-startup-signature-core">Offline TCA
+startup-signature core</h1>
+<p>Implemented and verified 2026-09-29. This module has no USB
+dependency and cannot access the camera.</p>
+<h2 id="purpose">Purpose</h2>
+<p>The purchase-era TSView7 DLL sends its open wrapper and then
+validates 80 even-numbered sensor registers from <code>0x0000</code>
+through <code>0x009e</code> before applying a mode plan. The existing
+portable mode-plan core began after that gate.
+<code>src/tca_startup.c</code> now represents the missing offline
+slice.</p>
+<p>The module:</p>
+<ul>
+<li>emits exactly 80 <code>0xc0/0x11</code> three-byte register-read
+steps;</li>
+<li>places each even register address in <code>wIndex</code> and zero in
+<code>wValue</code>;</li>
+<li>requires the established acknowledgement <code>0x08</code> at
+response byte 2;</li>
+<li>exposes the 80 expected big-endian values recovered by the
+independent extractor; and</li>
+<li>validates decoded values with a deterministic first-mismatch
+report.</li>
+</ul>
+<p>The first entry is register <code>0x0000 = 0xc247</code>; the last is
+register <code>0x009e = 0x01d0</code>.</p>
+<h2 id="deliberate-boundary">Deliberate boundary</h2>
+<p>The open request is not folded into this read plan. TSView7 ignores
+its open wrapper’s result, while <code>tca_execute_plan</code> is
+intentionally fail-fast. A live adapter must model that transition
+explicitly, based on the accepted D40 trace, rather than weakening the
+generic executor or silently ignoring a transport error.</p>
+<p>No signature read or other transfer was sent while implementing this
+module.</p>
+<h2 id="verification">Verification</h2>
+<p><code>tests/test_tca_startup.c</code> checks:</p>
+<ul>
+<li>size-query and insufficient-capacity behavior;</li>
+<li>every request field for all 80 reads;</li>
+<li>register sequence <code>0x0000..0x009e</code>;</li>
+<li>first and last expected values;</li>
+<li>exact-signature success;</li>
+<li>first-mismatch register, expected value, and actual value; and</li>
+<li>invalid pointer/count handling.</li>
+</ul>
+<p>Run with:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> test-startup</span></code></pre></div>
+<p>Result on macOS and the project-local Ubuntu ARM64 VM:
+<code>tca startup signature tests: PASS</code>. The independent
+Raspberry Pi was not reachable during this run, so its earlier core
+validation was not silently extended to this new module.</p>
+<p>The source values are independently reproducible from the pinned DLL
+disassembly using <code>python3 tools/extract_tca_signature.py</code>.
+See <code>tsview7-tca-startup-validation.md</code> and
+<code>ghidra-targeted-decompilation.md</code> for the two
+static-analysis paths.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Warm-state libusb reader backend — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="warm-state-libusb-reader-backend">Warm-state libusb reader
+backend</h1>
+<p>Evidence date: 2026-09-29</p>
+<h2 id="scope">Scope</h2>
+<p>This is the first live transport implementation behind the portable
+reader session. It is deliberately limited to the already-verified warm
+handoff: the legacy Windows stack must have initialized the
+still-powered camera in fixed mode 4 before this backend is used. It
+does not attempt cold initialization, controls, reset, configuration,
+alternate-setting selection, an OUT transfer, or firmware loading.</p>
+<p>Sources:</p>
+<ul>
+<li><code>src/tca_libusb_warm.h</code></li>
+<li><code>src/tca_libusb_warm.c</code></li>
+<li><code>tools/tca_reader_warm.c</code></li>
+<li><code>tests/test_tca_warm_static.py</code></li>
+<li><code>tests/test_tca_libusb_warm.c</code></li>
+</ul>
+<p>The CLI is inert by default. Only the exact token
+<code>--capture-already-streaming-mode4</code> enters the USB path. The
+invalid-token test also verifies that no output files are created.</p>
+<h2 id="transport-contract">Transport contract</h2>
+<p>Before claiming interface zero, the backend verifies:</p>
+<ul>
+<li>USB identity <code>0547:c003</code>;</li>
+<li>at least one configuration descriptor;</li>
+<li>vendor-specific interface zero; and</li>
+<li>bulk-IN endpoint <code>0x82</code> with a 512-byte maximum
+packet.</li>
+</ul>
+<p>It refuses a currently active kernel driver and never detaches one.
+After a successful claim it performs the fixed, bounded mode-4
+schedule:</p>
+<pre class="text"><code>81920 + 81920 + 81920 + 61440 = 307200 bytes</code></pre>
+<p>Every successful read must have exactly the requested length. There
+is no retry or continuation after a short read. Complete raw frames are
+written to the mandatory raw sink before decode; bytes received before a
+transfer error or short completion are also preserved for diagnosis.
+Exact frames then pass through the common bounded queue and
+GRBG-to-RGB24 decoder. The two output paths must differ so an operator
+cannot accidentally alias and corrupt them.</p>
+<h2 id="static-call-surface-audit">Static call-surface audit</h2>
+<p>The native ARM64 Linux binary imports exactly these libusb
+functions:</p>
+<pre class="text"><code>libusb_bulk_transfer
+libusb_claim_interface
+libusb_close
+libusb_exit
+libusb_free_config_descriptor
+libusb_get_config_descriptor
+libusb_get_device
+libusb_get_device_descriptor
+libusb_init
+libusb_kernel_driver_active
+libusb_open_device_with_vid_pid
+libusb_release_interface</code></pre>
+<p>The Apple Silicon binary has the same set with Mach-O symbol
+prefixes. In particular, neither binary imports
+<code>libusb_control_transfer</code>, <code>libusb_reset_device</code>,
+<code>libusb_set_configuration</code>,
+<code>libusb_set_interface_alt_setting</code>, an asynchronous submit
+API, or a distinct OUT-transfer API. <code>libusb_bulk_transfer</code>
+is invoked only with the compile-time endpoint <code>0x82</code>.</p>
+<p><code>tests/test_tca_warm_static.py</code> compares the binary import
+set to this exact allowlist, runs the inert default path, and verifies
+invalid-token refusal.</p>
+<p>The backend’s bulk-call boundary is injectable for offline testing
+while its production default remains <code>libusb_bulk_transfer</code>.
+The native C test verifies the exact four-request schedule, endpoint and
+timeout, complete-frame preservation, short completion with no retry,
+transport error with partial raw preservation, zero-length refusal,
+raw-sink failure propagation, fixed-mode guard, and claimed-state guard.
+It performs no enumeration or USB operation.</p>
+<h2 id="native-builds">Native builds</h2>
+<p>Ubuntu ARM64 VM:</p>
+<ul>
+<li>AArch64 PIE linked to
+<code>/lib/aarch64-linux-gnu/libusb-1.0.so.0</code>;</li>
+<li>strict C17 build with <code>-Wall -Wextra -Werror -pedantic</code>
+passes;</li>
+<li>static/inert CLI and fault-injection backend tests pass; and</li>
+<li>binary SHA-256 is
+<code>fcd8ed392c6653f8b5600f93641cd72db37a150476afdf855815c39838fa8938</code>.</li>
+</ul>
+<p>Apple Silicon macOS:</p>
+<ul>
+<li>native arm64 Mach-O built by Apple clang 21.0.0;</li>
+<li>project-local libusb 1.0.28 avoids the installed Intel Homebrew
+mismatch;</li>
+<li>the official release archive remains inside the project at
+<code>work/deps/src/libusb-1.0.28.tar.bz2</code>, SHA-256
+<code>966bb0d231f94a474eaae2e67da5ec844d3527a1f386456394ff432580634b29</code>;</li>
+<li>strict build and static/inert CLI plus fault-injection backend tests
+pass;</li>
+<li>AddressSanitizer/UndefinedBehaviorSanitizer dry execution and the
+import allowlist test pass; and</li>
+<li>binary SHA-256 is
+<code>3507192d9ecdfcf84ac4875645d1440137f5c4a2fb136783f7e82727bf79c0ad</code>.</li>
+</ul>
+<p>The archive was downloaded from the upstream libusb 1.0.28 GitHub
+release; all downloaded and expanded dependency material is under
+<code>work/deps/</code>.</p>
+<p>The full core and replay suites pass on macOS and Ubuntu ARM64. The
+separate Windows-PE emulator suite passes on macOS; it was not repeated
+on Ubuntu because the project-local emulator virtual environment is not
+installed there.</p>
+<h2 id="prepared-linux-application-bridge">Prepared Linux application
+bridge</h2>
+<p><code>tools/tca_v4l2_warm.sh</code> connects the warm reader’s RGB24
+stream to a temporary YUYV V4L2 loopback while preserving the Bayer8
+stream in an operator-selected raw file. It is also inert without its
+own exact <code>--camera-already-streaming-mode4</code> token, refuses
+an existing raw output, video node, or loopback setup, and removes only
+the loopback module it loaded.</p>
+<p>Syntax and invalid-token paths pass <code>sh -n</code> and inert
+tests on both macOS and Ubuntu ARM64. No live bridge run was attempted
+because the warm-state camera precondition is not presently satisfied.
+The already-verified replay bridge remains the evidence for
+application-side V4L2 negotiation and consumption.</p>
+<h2 id="live-execution-boundary">Live-execution boundary</h2>
+<p>No execution-token run was performed in this implementation session
+because the connected camera is presently cold, not an already-streaming
+handoff. Running this backend now would only test the known-unmet
+precondition and could consume or fault the preserved trace setup. The
+previously captured live frame already proves the same mode-4 bulk-IN
+data plane; this change integrates that operation with the portable
+reader contract but does not replace the pending known-good Windows
+initialization trace.</p>
+<p>At the end of verification the camera still enumerated as
+<code>0547:c003</code>, TCP 7575 was listening, the independent
+<code>usbmon3</code> capture remained 1,668 bytes, and
+<code>/dev/video42</code> was absent.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Linux V4L2 replay bridge — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="linux-v4l2-replay-bridge">Linux V4L2 replay bridge</h1>
+<p>Evidence date: 2026-09-29</p>
+<h2 id="scope">Scope</h2>
+<p>This is an application-boundary proof on the disposable Ubuntu ARM64
+VM. It uses the 640x480 Bayer8 frame previously captured live from the
+camera after Windows initialization. It does not initialize or control
+the camera and does not satisfy the live D70/D80 dependency.</p>
+<p>Authoritative input:</p>
+<pre class="text"><code>e21de091b464f3113f9ba9b66abf806a1f4af112a0d96afaa317a8b8040de769  work/live-host-capture-20260929T080041Z/mode4.raw</code></pre>
+<p>The sensor was covered, so a dark repeated frame is expected.</p>
+<h2 id="environment">Environment</h2>
+<ul>
+<li>Ubuntu ARM64 kernel <code>6.8.0-142-generic</code></li>
+<li>FFmpeg <code>6.1.1-3ubuntu5</code></li>
+<li><code>v4l-utils</code> <code>1.26.1-4build3</code></li>
+<li><code>v4l2loopback-dkms</code> <code>0.12.7-2ubuntu5.2</code></li>
+<li>project C17 <code>tca_raw_convert</code>, built natively on the
+VM</li>
+</ul>
+<p>Exact environment output is preserved in
+<code>work/v4l2-bridge-environment-20260929.txt</code>.</p>
+<h2 id="pipeline">Pipeline</h2>
+<p>The native project converter transformed the live Bayer8 frame to a
+921,600 byte RGB24 frame. FFmpeg repeated that frame at 5 fps, converted
+it to YUYV, and wrote it to a temporary <code>v4l2loopback</code>
+node:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> modprobe v4l2loopback video_nr=42 <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  card_label=<span class="st">&quot;TCA Camera Replay&quot;</span> exclusive_caps=1 max_buffers=4</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-re</span> <span class="at">-stream_loop</span> <span class="at">-1</span> <span class="at">-f</span> rawvideo <span class="at">-pixel_format</span> rgb24 <span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-video_size</span> 640x480 <span class="at">-framerate</span> 5 <span class="at">-i</span> work/mode4-live.rgb <span class="dt">\</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">-vf</span> format=yuyv422 <span class="at">-f</span> v4l2 /dev/video42</span></code></pre></div>
+<p>The replay source is deliberately separable from USB acquisition.
+Once the live reader emits exact Bayer8 frames, it can replace the file
+without changing the V4L2-facing half of the pipeline.</p>
+<h2 id="consumer-results">Consumer results</h2>
+<p>First run, <code>v4l2-ctl</code> consumer:</p>
+<ul>
+<li>device named <code>TCA Camera Replay</code>;</li>
+<li>capture format YUYV 4:2:2, 640x480, 1,280-byte line, 614,400-byte
+frame;</li>
+<li>three frames captured through streaming/mmap;</li>
+<li>output length 1,843,200 bytes, exactly three frames;</li>
+<li>output SHA-256
+<code>67bb7619499e46feb623f61e22e660da5c3912424187dffa4162957cbd9214cb</code>.</li>
+</ul>
+<p>Evidence directory:
+<code>work/v4l2-bridge-20260929T1705Z/</code>.</p>
+<p>After stopping the writer, removing the module, and loading a fresh
+loopback node, a second run used FFmpeg as the consumer. It accepted
+three 640x480 YUYV frames. The <code>framemd5</code> file records the
+same 614,400-byte digest for each repeated dark frame:</p>
+<pre class="text"><code>5e0b144c315b994980ff81c06098308e</code></pre>
+<p>Evidence directory:
+<code>work/v4l2-bridge-20260929T1710Z/</code>.</p>
+<h2 id="cleanup-and-remaining-boundary">Cleanup and remaining
+boundary</h2>
+<p>The writer processes were stopped and <code>v4l2loopback</code> was
+unloaded after each run. The final environment record states
+<code>loopback_device_removed=yes</code>; no <code>/dev/video42</code>
+remains. The physical camera still enumerates as <code>0547:c003</code>,
+VirtualHere remains listening on TCP 7575, and the independent
+<code>usbmon3</code> capture remains armed.</p>
+<p>This verifies decode-to-V4L2 negotiation, two application consumers,
+stop/remove/recreate/restart, and clean removal using a real camera
+payload. It does not verify live acquisition, timestamps from the
+camera, slow-consumer policy, controls, or disconnect recovery. D80
+therefore remains proposed until D70 supplies a stable live reader.</p>
+<h2 id="reproducible-reader-core-bridge">Reproducible reader-core
+bridge</h2>
+<p>The manual proof has now been packaged as
+<code>tools/tca_v4l2_replay.sh</code>. The foreground script:</p>
+<ol type="1">
+<li>refuses to alter an existing <code>v4l2loopback</code> setup or
+video node;</li>
+<li>loads one temporary loopback device with exclusive capture
+capabilities;</li>
+<li>grants the invoking user access only to that temporary node;</li>
+<li>continuously replays the authoritative mode-4 raw frame through the
+new transport-neutral <code>camera-reader</code> session and FFmpeg YUYV
+conversion;</li>
+<li>waits until the writer has opened and the device advertises capture
+before reporting readiness; and</li>
+<li>stops the writer and unloads the module on normal exit or a trapped
+signal.</li>
+</ol>
+<p>The packaged script was exercised natively on the Ubuntu ARM64 bench.
+A <code>v4l2-ctl</code> consumer captured three frames totaling
+1,843,200 bytes with the same SHA-256 as the earlier manual bridge:</p>
+<pre class="text"><code>67bb7619499e46feb623f61e22e660da5c3912424187dffa4162957cbd9214cb</code></pre>
+<p>The evidence is preserved in
+<code>work/v4l2-reader-script-20260929T1740Z/</code>. After the scripted
+session, <code>/dev/video42</code> was absent, the module was unloaded,
+no bridge process remained, the camera still enumerated as
+<code>0547:c003</code>, and the independent VirtualHere/ usbmon bench
+remained armed.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

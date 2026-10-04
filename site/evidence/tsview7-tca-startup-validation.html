@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TSView7 TCA startup validation path — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="tsview7-tca-startup-validation-path">TSView7 TCA startup
+validation path</h1>
+<p>Static inspection date: 2026-09-27</p>
+<p>Binary:
+<code>work/vendor-extracted/tsview7/inno/app/TS1000.dll</code></p>
+<p>SHA-256:
+<code>ee9c8ec6a680404c375a6bf0c44ded0486c6e7557cdee379a5f332eb9a8d12ac</code></p>
+<p>No vendor executable was run and this analysis sent no USB
+traffic.</p>
+<h2 id="corrected-startup-control-flow">Corrected startup control
+flow</h2>
+<p>The product-open path beginning near <code>0x10008e3d</code> does the
+following:</p>
+<ol type="1">
+<li>Calls the wrapper at <code>0x100087b0</code>, which issues the
+<code>0xc0/0x02</code> request to index <code>0x000f</code> with a
+zero-length data stage.</li>
+<li>Does <strong>not</strong> test that wrapper’s return value.</li>
+<li>Calls <code>DeviceIoControl(0x22208a)</code> through the wrapper at
+<code>0x10008bc0</code> and does not test that result either. The
+recovered 2011 TCA driver dispatch does not implement this IOCTL, so it
+is not evidence of a missing USB transaction.</li>
+<li>Calls <code>0x10009720</code> and tests its return value.</li>
+<li>On validation failure, sleeps 100 ms and calls
+<code>0x10008eb0</code>, which performs a paired open/state command and
+close/state command.</li>
+</ol>
+<p>This corrects the earlier experimental assumption that a timeout from
+the zero-length <code>0x02</code> command should terminate the
+reconstruction. The vendor DLL continues into register validation even
+when that wrapper reports failure. That fact does not authorize blindly
+continuing on Linux: it defines the next trace question and the exact
+behavior a future bounded fixture must model.</p>
+<h2 id="register-validation">Register validation</h2>
+<p>The routine at <code>0x10009720</code> constructs a 160-byte constant
+table, then reads 80 even-numbered registers from <code>0x0000</code>
+through <code>0x009e</code> using the <code>0xc0/0x11</code> three-byte
+register-read wrapper at <code>0x10009590</code>. Each returned 16-bit
+value is assembled from the first two bytes in big-endian order; the
+third byte must be acknowledgement <code>0x08</code>. The routine stops
+at the first failed transfer, bad acknowledgement, or value
+mismatch.</p>
+<p>The register address is placed in <code>wIndex</code>;
+<code>wValue</code> is zero for these reads. This follows directly from
+the wrapper’s input-record offset 8 and the 2011 driver’s mapping of
+record offset 8 to <code>wIndex</code>. An earlier probe revision
+reversed these fields, so its timeout is not evidence against the
+register-read primitive.</p>
+<p>The complete signature can be reproduced from the preserved
+disassembly with:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> tools/extract_tca_signature.py</span></code></pre></div>
+<p>The extractor is offline-only and rejects incomplete tables. Its
+output has 80 rows and ends with register <code>0x009e</code> expected
+value <code>0x01d0</code>.</p>
+<h2 id="consequence-for-d40">Consequence for D40</h2>
+<p>The current Linux trial stopped earlier than the vendor startup path
+because the opt-in probe treated the open timeout as fatal. After a
+verified device power or port cycle, the next experiment should
+distinguish these hypotheses without guessing request fields:</p>
+<ul>
+<li>the camera accepts <code>0x02</code> only from a genuinely cold
+state;</li>
+<li>Windows records the zero-length transfer differently from libusb
+while the subsequent <code>0x11</code> reads still work; or</li>
+<li>the attached camera implements the alternate IS1000 lineage despite
+its purchase-era and physical TCA evidence.</li>
+</ul>
+<p>A Windows USB trace remains the strongest discriminator if a cold
+Linux attempt cannot obtain the first register response.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

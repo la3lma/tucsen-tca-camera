@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modeled TCA trace plan and comparator — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="modeled-tca-trace-plan-and-comparator">Modeled TCA trace plan
+and comparator</h1>
+<p>Evidence date: 2026-09-29</p>
+<h2 id="purpose-and-boundary">Purpose and boundary</h2>
+<p>The VirtualHere trace gate needs a repeatable comparison against the
+protocol already represented in the portable C core. Two offline tools
+now provide that comparison without opening USB or generating an
+executable request path:</p>
+<ul>
+<li><code>tools/tca_expected_trace.c</code> composes the existing open,
+80-read startup signature, and selected fixed-mode plans into a
+machine-readable TSV. It may optionally append the modeled close
+request.</li>
+<li><code>tools/compare_tca_trace.py</code> aligns that TSV with the
+output of <code>annotate_tca_trace.py</code>, reports matching, missing,
+unexpected, and mismatched wire tuples, and independently checks
+expected response patterns and the annotator’s transport
+validation.</li>
+</ul>
+<p>The generated file is a model-derived expectation, not proof that
+TSView emits no additional request. Sequence differences remain evidence
+for review and do not authorize replay. The generator links only the
+transport-neutral protocol and startup modules; it has no libusb or
+platform-device import. The comparator accepts TSV files only.</p>
+<h2 id="mode-4-expectation">Mode-4 expectation</h2>
+<p>The Ready-state mode-4 model contains 120 controls:</p>
+<ol type="1">
+<li>one <code>0xc0/0x02</code> open request;</li>
+<li>80 exact <code>0xc0/0x11</code> startup-signature reads, including
+expected big-endian values and acknowledgement <code>0x08</code>;
+and</li>
+<li>39 non-delay controls from the fixed mode-4 plan.</li>
+</ol>
+<p>Adding <code>--include-close</code> appends the modeled
+<code>0xc0/0x03</code> close request for 121 controls total. Mode-plan
+sleeps are deliberately not represented as USB transactions. Exact write
+acknowledgements are <code>08</code>; mode calibration-read values use
+the constrained wildcard <code>????08</code> because only their
+acknowledgement is currently modeled.</p>
+<p>Generated reference:</p>
+<ul>
+<li><code>work/trace-captures/expected-mode4-ready.tsv</code></li>
+<li>SHA-256
+<code>6299a0ed41b8e6ef261a57a4c215221b50290427051767986465063ba7895b8b</code></li>
+</ul>
+<h2 id="tests-and-preserved-negative-trace">Tests and preserved negative
+trace</h2>
+<p><code>tests/test_compare_tca_trace.py</code> verifies all 120 mode-4
+Ready controls, exact open and optional close shapes, first and last
+startup signature responses, first decoded mode write, wildcard
+calibration-read acknowledgement, invalid mode refusal, sequence
+insertion alignment, response mismatch detection, and an exact-match
+case.</p>
+<p>The strict C build, Python test, and preserved-capture comparison
+pass on Apple Silicon macOS and AArch64 Ubuntu. The macOS ARM64
+AddressSanitizer and UndefinedBehaviorSanitizer build also passes. Both
+platforms generate identical reference and comparison artifacts.</p>
+<p>Applied to the USB/IP negative trace, the comparison reports zero
+actual vendor controls and all 120 modeled controls missing. This is the
+expected result because that transport failed during a standard
+descriptor request before configuration; it confirms that the comparator
+does not fabricate a partial TCA match.</p>
+<p>Artifacts:</p>
+<ul>
+<li><code>work/trace-captures/usbip-session-local-vm-20260929T1507Z/mode4-alignment.tsv</code></li>
+<li><code>work/trace-captures/usbip-session-local-vm-20260929T1507Z/mode4-alignment-summary.json</code></li>
+<li>alignment TSV SHA-256
+<code>58211414543b380c7e6a3339a2548dbdc119f137e29ef5d17f7a546e4ceeb135</code></li>
+<li>summary SHA-256
+<code>4b7fcedbe657ab8145490f097da2fd20ab6c13b32f4f3619b68287dbffbab9a2</code></li>
+</ul>
+<h2 id="intended-successful-trace-command">Intended successful-trace
+command</h2>
+<p>After extraction and annotation:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> expected-trace MODE=4 <span class="op">&gt;</span> expected-mode4-ready.tsv</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> tools/compare_tca_trace.py <span class="dt">\</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  expected-mode4-ready.tsv annotated-urbs.tsv <span class="dt">\</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> mode4-alignment.tsv <span class="dt">\</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--summary-json</span> mode4-alignment-summary.json</span></code></pre></div>
+<p>The first divergence is a review point. It must be reconciled against
+the captured Windows behavior before any cold-start backend is
+implemented or run.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

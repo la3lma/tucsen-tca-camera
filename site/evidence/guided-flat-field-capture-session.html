@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Guided physical flat-field capture session — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="guided-physical-flat-field-capture-session">Guided physical
+flat-field capture session</h1>
+<p>Date: 2026-10-04</p>
+<p>Public implementation: <code>tucsen-tca-camera</code> commit
+<code>176ef90152cf4acabb7fddbee5439c732c2e9741</code>.</p>
+<h2 id="purpose">Purpose</h2>
+<p>The remaining valid flat-field gate requires coordinated physical
+actions that software cannot infer: illumination must actually be
+blocked for darks, the blank must be translated or defocused between
+flat groups, a fresh blank must be withheld from calibration, and a real
+specimen must verify that correction does not erase structure. Manual
+command sequences made it too easy to reuse a scene as its own flat, mix
+exposure/gain settings, overwrite earlier evidence, or accept a partial
+session.</p>
+<p><code>tools/run_flat_field_capture_session.sh</code> turns that gate
+into one explicit, fail-closed workflow. With no argument it prints its
+usage and:</p>
+<pre class="text"><code>NO USB TRANSFER SENT. NO FILE OR SYSTEM CHANGE MADE.</code></pre>
+<p>Only the exact <code>--run-flat-field-capture-session</code> token
+enables the interactive path. Before creating its output directory it
+validates every option and dependency, requires canonical integer
+ranges, and refuses any existing destination.</p>
+<h2 id="locked-session">Locked session</h2>
+<p>The helper supports preview mode 2 and records one exposure,
+normalized gain, and Bayer phase for the entire session. Its default
+sequence is:</p>
+<ol type="1">
+<li>prompt for physically blocked illumination and capture 16 dark
+frames;</li>
+<li>prompt for four separately translated or defocused blank positions
+and capture four frames at each position;</li>
+<li>build and inspect a <code>TCAFF01</code> map carrying the same
+exposure and gain;</li>
+<li>prompt for a fresh blank not held stationary during calibration,
+preserve its device/Bayer bytes, correct it, analyze both frames, and
+render both;</li>
+<li>prompt for a real specimen, preserve/correct/analyze/render it
+identically; and</li>
+<li>hash every completed artifact.</li>
+</ol>
+<p>Every capture must contain an exact 1,229,312-byte first device
+record and the requested number of exact 1,228,800-byte Bayer frames.
+Any error, EOF, signal, short artifact, tool failure, or interrupted
+operator prompt leaves <code>SESSION-INCOMPLETE.txt</code>. A successful
+session removes the exit trap instead and prints one
+<code>status=ok</code> summary. The helper never loads a kernel module,
+creates a V4L2 node, resets the camera, or exposes arbitrary USB
+operations.</p>
+<h2 id="usb-free-end-to-end-validation">USB-free end-to-end
+validation</h2>
+<p><code>tests/test_flat_field_capture_session.py</code> first verifies
+inert behavior and pre-output rejection of an invalid exposure. It then
+substitutes a fake camera that emits exact-size deterministic dark,
+flat, blank, and specimen frames, while using the real public
+<code>tca-flat-field</code> binary and
+<code>scripts/tca-frame-stats</code>. A fake renderer isolates FFmpeg
+availability from the session semantics.</p>
+<p>The test checks:</p>
+<ul>
+<li>EOF at the first prompt sends no capture and creates an incomplete
+marker;</li>
+<li>two dark and two separately batched flat frames have exact stream
+sizes;</li>
+<li>calibration metadata records 1280x960 GRBG, 100-ms exposure, gain
+20, and the exact frame counts;</li>
+<li>a synthetic 80-count blank becomes 70 after a 10-count dark is
+subtracted;</li>
+<li>a synthetic 60-count specimen becomes 50;</li>
+<li>four PNG derivatives are produced; and</li>
+<li>every manifest entry exists and matches its SHA-256 digest.</li>
+</ul>
+<p>The complete native suite passed on Apple Silicon using the
+project-local ARM64 libusb. A clean shallow clone of exact public commit
+<code>176ef90</code> at
+<code>/home/rmz/tucsen-tca-camera-guided-176ef90</code> then built and
+passed the complete suite on Raspberry Pi AArch64 Linux 6.18.39. The Pi
+had no camera attached, and the dynamic test used only the fake camera,
+so no physical USB transfer was sent.</p>
+<h2 id="exact-pi-artifacts">Exact Pi artifacts</h2>
+<pre class="text"><code>be752cb44596532bd08142f3bb69fabd667419f7dd4c1921c0f5149b1749429b  tools/run_flat_field_capture_session.sh
+30b5b7ca2b6141d7c3dda041dff5f08bd4c12b2aa6846d9a8739b9cea9d6b316  tests/test_flat_field_capture_session.py
+83bf700be8efad320b7f1c55ddafedab2e2e40eb87b0d9545446822240f1b05f  build/tca-flat-field
+65f9f7e73a22128549755871e9d445ff308d7409b3f3cd59bea7387ee2367f9a  scripts/tca-frame-stats</code></pre>
+<h2 id="remaining-gate">Remaining gate</h2>
+<p>This evidence proves workflow safety, portability, exact artifact
+handling, and calibration composition. It does not prove optical
+calibration. The next operator-assisted action is to run the public
+helper with the camera still on the Mac optical bench, follow each
+physical prompt literally, and inspect the fresh-blank and real-specimen
+before/after results. The resulting map can then be used at the same
+settings for the later live Linux V4L2 acceptance run.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

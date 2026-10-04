@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Device identity: legacy AmScope 10 MP microscope camera — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="device-identity-legacy-amscope-10-mp-microscope-camera">Device
+identity: legacy AmScope 10 MP microscope camera</h1>
+<p>Observed on 2026-09-26. This sheet separates direct observations from
+model identification and implementation inferences.</p>
+<h2 id="physical-evidence">Physical evidence</h2>
+<ul>
+<li>Black, finned metal camera body with an <code>AmScope</code>
+logo.</li>
+<li>USB Type-B receptacle.</li>
+<li>No model, serial-number, or regulatory label is visible in the
+supplied views. Gaffer tape covers the exposed sensor/mount area for
+protection.</li>
+<li>Original photographs are retained in <code>evidence/photos/</code>
+and hashed in <code>evidence/hashes.sha256</code>.</li>
+</ul>
+<h2 id="usb-enumeration-on-macos">USB enumeration on macOS</h2>
+<p>Host: macOS 26.5.2 (build 25F84).</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Observed value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Product string</td>
+<td><code>10MP CMOS Camera</code></td>
+</tr>
+<tr>
+<td>Manufacturer string</td>
+<td><code>123456789</code></td>
+</tr>
+<tr>
+<td>Serial-number string</td>
+<td>absent (<code>iSerialNumber = 0</code>)</td>
+</tr>
+<tr>
+<td>Vendor ID</td>
+<td><code>0x0547</code> (1351)</td>
+</tr>
+<tr>
+<td>Product ID</td>
+<td><code>0xC003</code> (49155)</td>
+</tr>
+<tr>
+<td>Device release</td>
+<td><code>0x0000</code></td>
+</tr>
+<tr>
+<td>USB version</td>
+<td>2.0 (<code>bcdUSB = 0x0200</code>)</td>
+</tr>
+<tr>
+<td>Link speed</td>
+<td>high speed, 480 Mbit/s</td>
+</tr>
+<tr>
+<td>Device class</td>
+<td>per-interface (<code>bDeviceClass = 0</code>)</td>
+</tr>
+<tr>
+<td>Configurations</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>The active configuration has one interface and one non-control
+endpoint:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Observed value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Configuration value</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Total descriptor length</td>
+<td>25 bytes</td>
+</tr>
+<tr>
+<td>Attributes</td>
+<td><code>0x80</code> (bus powered)</td>
+</tr>
+<tr>
+<td>Maximum power</td>
+<td>descriptor value 50 (100 mA in USB 2.0 units)</td>
+</tr>
+<tr>
+<td>Interface</td>
+<td>0, alternate setting 0</td>
+</tr>
+<tr>
+<td>Interface class</td>
+<td><code>0xFF</code> (vendor-specific)</td>
+</tr>
+<tr>
+<td>Subclass / protocol</td>
+<td><code>0x00</code> / <code>0x00</code></td>
+</tr>
+<tr>
+<td>Endpoint</td>
+<td><code>0x82</code> (endpoint 2, device-to-host)</td>
+</tr>
+<tr>
+<td>Transfer type</td>
+<td>bulk (<code>bmAttributes = 0x02</code>)</td>
+</tr>
+<tr>
+<td>Maximum packet size</td>
+<td>512 bytes</td>
+</tr>
+<tr>
+<td>Interval</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>Bus and device addresses are deliberately omitted as identity fields
+because they may change after reconnection. The descriptor snapshot was
+read with libusb 1.0.29; only standard descriptors were requested.</p>
+<h2 id="identification">Identification</h2>
+<p>Tucsen’s official discontinued-camera table says that model identity
+can be confirmed using VID/PID. It maps <code>0547:C003</code> to both
+<code>TCA-10.0N</code> and <code>IS1000</code>:</p>
+<ul>
+<li>https://www.tucsen.com/uploads/The-Discontinued-CMOS-Camera-Download-Links.pdf</li>
+</ul>
+<p>The official <code>TCA-10.0-N</code> driver INF binds
+<code>USB\VID_0547&amp;PID_C003</code> and labels it
+<code>Tucsen TCA-10.0-N Camera</code>. The official beta driver binds
+the same ID and labels it <code>IS1000 USB Camera</code>. The physical
+AmScope unit is therefore identified with high confidence as an
+AmScope-branded Tucsen TCA-10.0N / IS1000 hardware family device. The
+USB descriptors alone do not distinguish which Tucsen sales name AmScope
+used.</p>
+<h2 id="static-inspection-of-official-windows-packages">Static
+inspection of official Windows packages</h2>
+<p>The original purchase CD, installer, and manual have been lost and
+are not available for comparison. The packages below are replacement
+reference copies recovered from Tucsen’s official support site.</p>
+<p>The official download table links these packages. They were
+downloaded into the project-local <code>work/vendor-zips/</code>
+directory but not executed:</p>
+<ul>
+<li><code>TCA-10.0-N-Driver-Setup.zip</code></li>
+<li><code>Beta-Camera-Driver.zip</code></li>
+<li><code>ISCapture-3.6.8-En-Setup.zip</code></li>
+</ul>
+<p>The packages contain 32-bit Inno Setup installers. Static extraction
+found:</p>
+<ul>
+<li>A 2011 TCA INF and a 2013 beta INF, both binding
+<code>0547:C003</code> to a KMDF <code>Tucsen64.sys</code> kernel
+driver.</li>
+<li>A registry setting named <code>MaximumTransferSize</code> with value
+65,536 bytes.</li>
+<li>Driver strings referring to bulk and isochronous read/write source
+modules; the live device descriptor, however, exposes only bulk endpoint
+<code>0x82</code>.</li>
+<li>ISCapture contains a dedicated 32-bit <code>TS1000.dll</code>. Its
+exports cover camera initialization, preview, still capture, frame
+grabbing and decoding, exposure, gain, white balance, colour adjustment,
+flat-fielding and dead-pixel correction.</li>
+<li><code>TS1000.dll</code> imports Windows file/device APIs including
+<code>CreateFileA</code>, <code>ReadFile</code>, <code>WriteFile</code>,
+and <code>DeviceIoControl</code>, indicating that much of the
+model-specific protocol and decoding likely lives in this user-mode DLL
+over a relatively thin Windows USB driver.</li>
+</ul>
+<h2 id="conclusions-supported-by-current-evidence">Conclusions supported
+by current evidence</h2>
+<ol type="1">
+<li>The device is <strong>not USB Video Class (UVC)</strong>. Its only
+interface is vendor-specific, so normal macOS AVFoundation and Linux UVC
+drivers will not claim it.</li>
+<li>Host-to-device configuration must use endpoint-zero control
+transfers, because the only additional endpoint is bulk IN. Image data
+is expected on endpoint <code>0x82</code>; this remains an inference
+until a capture is observed.</li>
+<li>A portable user-space implementation using libusb is plausible. The
+next unknowns are the initialization/control requests, frame boundaries,
+pixel format, and any calibration data.</li>
+<li>The safest high-value next experiment is an isolated Windows run of
+the official driver and ISCapture while recording USB traffic. Static
+analysis of <code>TS1000.dll</code> can proceed in parallel and may
+reduce the required capture experiments.</li>
+<li>Tucsen currently advertises a Linux SDK, but no evidence yet shows
+that it supports this discontinued <code>0547:C003</code> family. That
+avenue should be tested, not assumed.</li>
+</ol>
+<h2 id="safety-status">Safety status</h2>
+<p>No vendor-specific request, firmware upload, capture command, or
+persistent device write has been attempted. Work so far consists of
+standard USB descriptor reads and offline inspection of official vendor
+packages.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

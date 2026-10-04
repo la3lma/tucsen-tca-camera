@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Linux USB/IP plus usbmon trace bench — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="linux-usbip-plus-usbmon-trace-bench">Linux USB/IP plus usbmon
+trace bench</h1>
+<p>Prepared 2026-09-29. This bench is the next D40 evidence path after
+the all-root USBPcap run proved blind to UTM’s CocoaSPICE usbredir
+channel.</p>
+<h2 id="purpose">Purpose</h2>
+<p>Route the workstation-attached physical <code>0547:c003</code> camera
+through the project-local ARM64 Linux VM to the already working Windows
+10 x64 Tucsen/TSView7 stack while Linux records the host-controller URBs
+with <code>usbmon</code>. This observes a successful initialization
+without guessing another vendor request. The Raspberry Pi procedure
+remains a later independent deployment check, not a prerequisite for
+this trace.</p>
+<h2 id="pinned-windows-client">Pinned Windows client</h2>
+<p>The project contains the x64 installer for usbip-win2 0.9.8.0:</p>
+<pre class="text"><code>81f426741f7ee2ed991febe24a22daca8400b6ae2f171054e3fb404897e15d39  work/windows-trace-bench/guest-tools/USBip-0.9.8.0-x64.exe
+909717d8e29b45c6a616bb4095f13e0cacd34a994999fff87a2de3523513f0dd  work/windows-trace-bench/tca-usbip-tools.iso</code></pre>
+<p>Version 0.9.8.0 was selected instead of the two-day-old 0.9.8.1
+release. The upstream maintainer describes 0.9.8.0 as highly
+recommended; the 0.9.8.1 notes explicitly warn that its large
+AI-assisted rewrite may contain regressions. The selected release
+supports a Linux USB/IP 1.1.1 server and Windows 10 x64. It remains
+third-party kernel software, so it belongs only in the disposable camera
+VM.</p>
+<p>Primary references:</p>
+<ul>
+<li><a href="https://github.com/vadimgrn/usbip-win2"
+class="uri">https://github.com/vadimgrn/usbip-win2</a></li>
+<li><a
+href="https://github.com/vadimgrn/usbip-win2/releases/tag/v.0.9.8.0"
+class="uri">https://github.com/vadimgrn/usbip-win2/releases/tag/v.0.9.8.0</a></li>
+<li><a href="https://docs.kernel.org/usb/usbmon.html"
+class="uri">https://docs.kernel.org/usb/usbmon.html</a></li>
+</ul>
+<h3 id="windows-client-installation-proof">Windows client installation
+proof</h3>
+<p>Installed and verified in the disposable
+<code>Microscope TCA Trace</code> Windows 10 x64 guest on 2026-09-29.
+Setup used the pinned project-local installer, retained its default
+full-install components and Microsoft Visual C++ runtime prerequisite,
+and completed the requested restart. Post-restart checks
+established:</p>
+<pre class="text"><code>C:\Program Files\USBip&gt;usbip.exe --version
+0.9.8.0
+
+SERVICE_NAME: usbip2_ude
+        TYPE               : 1  KERNEL_DRIVER
+        STATE              : 4  RUNNING
+                                (STOPPABLE, NOT_PAUSABLE, IGNORES_SHUTDOWN)
+        WIN32_EXIT_CODE    : 0  (0x0)
+        SERVICE_EXIT_CODE  : 0  (0x0)</code></pre>
+<p>The installed directory contains <code>usbip.exe</code>,
+<code>wusbip.exe</code>, <code>libusbip.dll</code>,
+<code>devnode.exe</code>, headers, libraries, and matching symbols. The
+installer does not put <code>usbip.exe</code> on the global
+<code>PATH</code>; project scripts therefore intentionally use
+<code>C:\Program Files\USBip\usbip.exe</code> by absolute path.</p>
+<h2 id="primary-linux-vm-side">Primary Linux VM side</h2>
+<p>The project-local <code>Microscope Linux Bench</code> guest is Ubuntu
+24.04 ARM64 at <code>192.168.65.5</code>. UTM passes the physical camera
+to it directly. Windows uses an E1000 shared-network adapter at
+<code>192.168.65.6</code>, so it can reach Linux TCP 3240 without a
+macOS relay. See <a href="linux-vm-bench.html">the VM evidence</a>.</p>
+<p>The capture helper retains its historical Pi-oriented filename but is
+host-neutral. In the Linux VM, inspect the single matching device:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tools/pi_usbip_capture.sh status</span></code></pre></div>
+<p>Start a new immutable session only after the camera has been
+physically power-cycled or after explicitly recording that the run is a
+warm-state trace:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tools/pi_usbip_capture.sh start <span class="at">--record-known-good-init</span></span></code></pre></div>
+<p>The script refuses zero or multiple matching devices, starts
+<code>usbmon</code> before binding, exports only the exact sysfs bus ID,
+and prints the Linux host IP, bus ID, and session directory. It does not
+issue camera controls.</p>
+<h2 id="windows-side">Windows side</h2>
+<p>USBip 0.9.8.0 is installed and its <code>usbip2_ude</code> kernel
+driver is running. In an elevated command prompt, first list without
+attaching:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bat"><code class="sourceCode dosbat"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>usbip-attach-camera.cmd 192.168.65.5 3<span class="at">-3</span></span></code></pre></div>
+<p>Use server <code>192.168.65.5</code>. After checking that bus ID
+<code>3-3</code> is <code>0547:c003</code>, attach with the explicit
+token:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bat"><code class="sourceCode dosbat"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>usbip-attach-camera.cmd 192.168.65.5 3<span class="at">-3</span> -<span class="at">-attach-known-good-camera</span></span></code></pre></div>
+<p>Verify Device Manager reports the remote camera with the already
+installed Tucsen driver. Start TSView7 once, wait for
+<code>Ready</code>, and do not change controls or invoke firmware
+actions.</p>
+<h2 id="stop-and-accept">Stop and accept</h2>
+<p>Close TSView7, detach the USB/IP port in Windows, then stop the Linux
+capture:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tools/pi_usbip_capture.sh stop work/usbip-session-TIMESTAMP</span></code></pre></div>
+<p>The stop action unbinds the physical device and writes a session
+manifest. Accept the run only if the pcapng begins before Windows
+attaches, includes the first successful vendor response and the first
+mode-4 bulk data, and the camera still enumerates normally after unbind.
+Preserve the raw pcapng before any filtering or tuple extraction.</p>
+<h2 id="raspberry-pi-fallback-and-validation">Raspberry Pi fallback and
+validation</h2>
+<p>The identical helper can run on <code>rpios-17</code> if UTM USB
+forwarding or its shared network proves unreliable. The Pi also remains
+the independent hardware target for the later install, reconnect, and
+endurance acceptance runs.</p>
+<h2 id="executed-result-windows-enumeration-failure">Executed result:
+Windows enumeration failure</h2>
+<p>The prepared path was executed on 2026-09-29. Windows listed
+<code>0547:c003</code> and reported a successful attach to virtual port
+1, but the captured sequence stopped before configuration or any vendor
+request. Valid device, configuration, language, and product-string
+descriptors were followed by a second device-descriptor request that
+timed out after 5.004272 seconds and was reset as
+<code>-ECONNRESET</code>. TSView therefore never received a configured
+camera.</p>
+<p>The stopped session is preserved under
+<code>work/trace-captures/usbip-session-local-vm-20260929T1507Z</code>;
+its pcapng SHA-256 is
+<code>ff33d5e7ab7ffbd9dcf1b0771ad5baba288c364dfea7497aa6daccd8f57ca11c</code>.
+This is accepted negative transport evidence. The next trace attempt
+uses the <a href="virtualhere-trace-bench.html">VirtualHere fallback</a>,
+not another USB/IP retry.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

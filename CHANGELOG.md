@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.2.0-alpha.7 — 2026-10-04
+
+- Add optional per-frame `CLOCK_MONOTONIC` timestamp CSV output to the capture
+  CLI without changing the USB protocol or default Bayer output format.
+- Flush each timestamp row for useful bounded and interrupted-run timing
+  evidence, and reject conflicting or stdout timestamp paths before transfer.
+- Document the distinction between measured capture timing and an FFmpeg
+  playback time base.
 - Add `tca-flat-field`, a dependency-free C17 calibrator and streaming
   corrector for per-pixel dark subtraction and per-Bayer-plane flat-field
   gain correction before demosaicing.
@@ -14,6 +22,9 @@
 - Add a token-gated ARM64 Linux preflight that exercises calibration,
   correction, Bayer conversion, a temporary V4L2 loopback device, application
   consumption, evidence hashing, and cleanup without requiring the camera.
+- Add an inert-by-default guided physical-calibration session that keeps dark,
+  repositioned-flat, withheld-blank, and specimen captures at locked settings,
+  validates exact sizes, renders comparisons, and hashes the completed bundle.
 
 ## 0.2.0-alpha.6 — 2026-10-04
 

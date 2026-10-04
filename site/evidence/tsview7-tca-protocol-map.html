@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TSView7 TCA-10.0N protocol map — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="tsview7-tca-10.0n-protocol-map">TSView7 TCA-10.0N protocol
+map</h1>
+<p>Static inspection performed 2026-09-27. No extracted Windows
+executable was run and this analysis, by itself, sent no request to the
+camera.</p>
+<h2 id="source-lineage">Source lineage</h2>
+<p>The official Tucsen discontinued-camera matrix maps USB identity
+<code>0547:c003</code> to both the older TCA-10.0N and later IS1000
+names. Crucially, it assigns the TCA model to TSView6 or TSView7,
+whereas IS1000 is assigned to ISCapture 3.6.8. The camera’s purchase
+period and the exact identity therefore make the TCA software a
+necessary protocol source rather than an optional comparison.</p>
+<p>Downloaded official archives and hashes:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Archive</th>
+<th>SHA-256</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>work/vendor-zips/TSview6.2.3.3-eng-Setup.zip</code></td>
+<td><code>d6a0302832894531085fb58d15cfb694fca777efc48888e269f8a5393771b6d8</code></td>
+</tr>
+<tr>
+<td><code>work/vendor-zips/TSView-7.3.1.8-En-Setup.zip</code></td>
+<td><code>1afb0f263127c12c9add1b09fcc720900163a210d3c6ef1374f22b09b5b0144b</code></td>
+</tr>
+</tbody>
+</table>
+<p>The TSView7 installer contains the 32-bit DLL
+<code>work/vendor-extracted/tsview7/inno/app/TS1000.dll</code>, linked
+2010-06-29, with SHA-256
+<code>ee9c8ec6a680404c375a6bf0c44ded0486c6e7557cdee379a5f332eb9a8d12ac</code>.
+It opens the TCA device path literal <code>\\.\tca000-0</code>. This is
+not the same binary as the later ISCapture <code>TS1000.dll</code> whose
+hash begins <code>8262ee47</code>.</p>
+<h2 id="matched-transport">Matched transport</h2>
+<p>This DLL and the 2011 TCA driver agree on IOCTL
+<code>0x222059</code>. The driver’s TCA handler hard-codes
+<code>bmRequestType=0xc0</code> and copies record offsets 4, 6, and 8 to
+<code>bRequest</code>, <code>wValue</code>, and <code>wIndex</code>. The
+direct-I/O output-buffer size becomes the USB control response
+length.</p>
+<p>The TCA DLL uses a substantially different request family from the
+later ISCapture DLL. Confirmed TCA requests include:</p>
+<table>
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 36%" />
+<col style="width: 27%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: right;">Request</th>
+<th style="text-align: right;">Direction/length</th>
+<th>Observed role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;"><code>0x02</code></td>
+<td style="text-align: right;"><code>0xc0</code>, zero bytes</td>
+<td>Called during open/initialization with
+<code>wIndex=0x000f</code></td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x03</code></td>
+<td style="text-align: right;"><code>0xc0</code>, zero bytes</td>
+<td>Paired state command with <code>wIndex=0x000e</code></td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x09</code></td>
+<td style="text-align: right;"><code>0xc0</code>, variable</td>
+<td>Two wrappers associated with device state</td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x0a</code></td>
+<td style="text-align: right;"><code>0xc0</code>, one byte</td>
+<td>Sensor-register write with one-byte acknowledgement</td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x10</code></td>
+<td style="text-align: right;"><code>0xc0</code>, one byte</td>
+<td>Register write with acknowledgement <code>0x08</code></td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x11</code></td>
+<td style="text-align: right;"><code>0xc0</code>, three bytes</td>
+<td>Register read: two-byte big-endian value plus <code>0x08</code>
+acknowledgement</td>
+</tr>
+</tbody>
+</table>
+<p>Although the transfer direction is IN, requests <code>0x0a</code> and
+<code>0x10</code> are device-changing writes. Direction alone is not a
+safety classification.</p>
+<h2 id="evidence-backed-read-candidate">Evidence-backed read
+candidate</h2>
+<p>The wrapper at <code>0x10009590</code> constructs:</p>
+<pre class="text"><code>bmRequestType = 0xc0
+bRequest      = 0x11
+wValue        = 0x0000
+wIndex        = register address
+wLength       = 3</code></pre>
+<p>This field order is confirmed independently at both sides of the ABI.
+The DLL stores its register argument at input-record offset 8; the 2011
+driver copies offset 8 to <code>wIndex</code> and offset 6 to
+<code>wValue</code>. The earlier interpretation put the register in
+<code>wValue</code> and was incorrect.</p>
+<p>It requires response byte 2 to equal <code>0x08</code>, then
+interprets bytes 0 and 1 as a big-endian 16-bit register value. The
+caller at <code>0x10008780</code> uses the fixed register address
+<code>0x3ff0</code>; another caller writes and reads that address back
+as a verification pair. The standalone read is therefore the first
+concrete, non-mutating, nonzero-response candidate for a bounded Linux
+experiment.</p>
+<p><code>tools/tca_register_probe.c</code> encodes only that fixed
+tuple. It accepts no arbitrary request fields, performs no bulk read or
+reset, has a one-second timeout, and is inert without an exact opt-in
+token.</p>
+<h2 id="required-open-prefix">Required open prefix</h2>
+<p>A standalone <code>0x11</code> read may still depend on the DLL’s
+open state. In the successful-open path at <code>0x10008e3d</code>, the
+DLL first sends request <code>0x02</code> with
+<code>wIndex=0x000f</code>, then performs a driver-local IOCTL, and only
+then begins the sensor-register validation reads. On close,
+<code>0x10008ea0</code> sends request <code>0x03</code> with
+<code>wIndex=0x000e</code>.</p>
+<p>The request values depend on a product-string flag. The DLL compares
+<code>manufacturer + "-" + product</code> with the de-obfuscated literal
+<code>DO3THINK-10M USBCam</code>. The observed camera strings
+(<code>123456789</code> and <code>10MP CMOS Camera</code>) do not match,
+selecting value zero for both the open and close requests. The resulting
+fixed prefix is:</p>
+<pre class="text"><code>c0 02 0000 000f length 0
+c0 11 0000 3ff0 length 3, final byte expected 08
+c0 03 0000 000e length 0</code></pre>
+<p><code>tools/tca_open_read_probe.c</code> version 2 implements exactly
+this bounded prefix. It records an open timeout but still attempts the
+one fixed read, matching the vendor DLL’s unchecked open-wrapper result.
+It then attempts close after the read. Other open failures remain
+terminal.</p>
+<h2 id="consequence-for-prior-trials">Consequence for prior trials</h2>
+<p>The five earlier bounded Linux control-transfer attempts used
+requests from the later ISCapture DLL (<code>b4</code>, <code>ba</code>,
+or <code>bb</code>). Their stalls do not falsify the TCA protocol. They
+demonstrate that the two software generations cannot be mixed merely
+because both packages claim <code>0547:c003</code>.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

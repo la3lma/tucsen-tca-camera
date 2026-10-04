@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Deterministic usbmon trace extractor and TCA annotator — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1
+id="deterministic-usbmon-trace-extractor-and-tca-annotator">Deterministic
+usbmon trace extractor and TCA annotator</h1>
+<p>Evidence date: 2026-09-29</p>
+<h2 id="purpose">Purpose</h2>
+<p><code>tools/extract_tca_usbmon.py</code> turns a Linux usbmon
+pcap/pcapng capture into one deterministic TSV row per correlated
+submit/completion URB. It is the prepared analysis half of the
+VirtualHere Windows-positive-control experiment: once the armed capture
+records the known-good TSView7 session, the same command will separate
+enumeration, vendor control requests, and bulk traffic without manual
+packet transcription.</p>
+<p>For every pair the output records submit/completion frames, elapsed
+milliseconds, URB id, bus/device, transfer type, endpoint and direction,
+statuses, setup request fields, requested/actual lengths, and the first
+available decoded or captured payload. Unmatched submissions and orphan
+completions are counted explicitly. A sorted compact JSON summary
+reports standard versus vendor controls, bulk-IN versus bulk-OUT,
+errors, and pairing gaps.</p>
+<p>The implementation invokes the installed <code>tshark</code> field
+interface and never modifies a capture. Optional bus/device filters keep
+unrelated USB traffic out of the protocol table.</p>
+<p><code>tools/annotate_tca_trace.py</code> is the second, fully offline
+stage. It accepts only the extractor’s paired TSV and adds four columns:
+TCA event kind, decoded register, decoded value, and validation result.
+It recognizes the recovered TCA open/close, device-state, sensor-write,
+acknowledged-write, sensor-read, and endpoint-<code>0x82</code>
+bulk-frame shapes. Sensor writes reverse the <code>0x17a0</code> XOR
+encoding; sensor reads decode the first two response bytes as big-endian
+and require acknowledgement <code>0x08</code>. Unknown vendor requests
+are retained as <code>unknown-vendor-control</code>; the tool never
+treats an unknown row as safe and cannot emit or execute USB
+operations.</p>
+<h2 id="tests">Tests</h2>
+<p><code>tests/test_extract_tca_usbmon.py</code> includes a synthetic
+vendor register-read pair with a three-byte <code>12 34 08</code>
+response, a bulk-IN completion with payload, and an unmatched bulk-OUT
+submission. It checks exact setup formatting, timing, payload
+normalization, direction, pairing, and all summary counters.</p>
+<p><code>tests/test_annotate_tca_trace.py</code> checks exact open
+recognition, read-value decoding, write XOR reversal, acknowledgement
+failure, endpoint-<code>0x82</code> bulk classification, unknown-request
+retention, deterministic TSV round-trip, and strict input-header
+rejection.</p>
+<p>The annotator test and the preserved-capture integration run pass
+independently on Apple Silicon macOS and the AArch64 Ubuntu bench. Both
+platforms produce byte-identical annotated TSV and JSON hashes:
+<code>52900b7152ec93b050be2eb0c7b6c3572e1689a143d4458202a0f3aa6b0e4a1c</code>
+and
+<code>fe49582152a4239f6ea13b5ea8304c426ebf7bd976b28a9fe70105f4eef9a697</code>,
+respectively.</p>
+<p>The integration test processes the preserved USB/IP failure capture
+at bus 3, device 2. It reconstructs ten standard-control pairs, no
+vendor control, no bulk transfer, no pairing gaps, and one completion
+error. The final row is the already documented descriptor failure with a
+5,004.272 ms duration and status <code>-104</code>. Generated
+artifacts:</p>
+<ul>
+<li><code>work/trace-captures/usbip-session-local-vm-20260929T1507Z/paired-urbs.tsv</code></li>
+<li><code>work/trace-captures/usbip-session-local-vm-20260929T1507Z/paired-summary.json</code></li>
+<li><code>work/trace-captures/usbip-session-local-vm-20260929T1507Z/annotated-urbs.tsv</code></li>
+<li><code>work/trace-captures/usbip-session-local-vm-20260929T1507Z/annotated-summary.json</code></li>
+</ul>
+<p>This independently reproduces the earlier manual finding that USB/IP
+failed before <code>SET_CONFIGURATION</code> or any vendor request.
+Tests pass with Python 3 and tshark on macOS and the Ubuntu ARM64
+VM.</p>
+<h2 id="intended-virtualhere-use">Intended VirtualHere use</h2>
+<p>After the Windows reference program reaches <code>Ready</code>, stop
+the existing <code>dumpcap</code> process cleanly, copy the immutable
+pcapng into a new timestamped project evidence directory, hash it,
+identify the camera’s observed bus/device, and run:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> tools/extract_tca_usbmon.py CAPTURE.pcapng <span class="dt">\</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--bus</span> BUS <span class="at">--device</span> DEVICE <span class="op">&gt;</span> paired-urbs.tsv <span class="dv">2</span><span class="op">&gt;</span> paired-summary.json</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> tools/annotate_tca_trace.py paired-urbs.tsv <span class="dt">\</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> annotated-urbs.tsv <span class="at">--summary-json</span> annotated-summary.json</span></code></pre></div>
+<p>The annotated sequence is the first comparison surface for the
+portable open/signature/mode/control plans; bulk-IN requested and actual
+lengths are then compared to the fixed frame scheduler. Unknown requests
+remain evidence for review; neither stage labels them safe or generates
+executable code.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

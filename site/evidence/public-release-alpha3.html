@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Public release v0.2.0-alpha.3 — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="public-release-v0.2.0-alpha.3">Public release
+v0.2.0-alpha.3</h1>
+<p>Date: 2026-10-03</p>
+<p>Release: <a
+href="https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.3"
+class="uri">https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.3</a></p>
+<p>The annotated tag <code>v0.2.0-alpha.3</code> resolves to exact
+source commit <code>3c16d2ae560ae0668033b70c42ce881d78197959</code>. It
+packages the optical-validation procedure and Bayer statistics/focus
+tool from <code>a61c044</code>, plus the documented and tested
+install/removal operations from <code>fb502c1</code>.</p>
+<h2 id="hosted-validation">Hosted validation</h2>
+<p>The source commit passed Ubuntu and macOS CI on public main:</p>
+<p><a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37151187248"
+class="uri">https://github.com/la3lma/tucsen-tca-camera/actions/runs/37151187248</a></p>
+<p>Pushing the annotated tag triggered a second independent Ubuntu/macOS
+run, which also passed:</p>
+<p><a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37151241568"
+class="uri">https://github.com/la3lma/tucsen-tca-camera/actions/runs/37151241568</a></p>
+<p>The GitHub release is published as a prerelease rather than a final
+release. Its notes explicitly preserve the open physical camera-cable
+reconnect and microscope optical checks, as well as the non-blocking
+native-cable macOS and AVFoundation deferrals.</p>
+<h2 id="downloaded-source-archive">Downloaded source archive</h2>
+<p>The public tag archive was downloaded into the report project, rather
+than a global downloads directory:</p>
+<pre class="text"><code>aa8a7c7fd6827d0a06c8fbb657c43f769b841466c78783c9a0d34502e70af63e  tucsen-tca-camera-v0.2.0-alpha.3.tar.gz</code></pre>
+<p>It was extracted into a new directory with no repository metadata.
+From that clean source archive, Apple Silicon
+<code>make clean all test</code> rebuilt the reader and passed all four
+suites, including staged installation and exact-file removal. This
+confirms that the public archive contains the documented optical
+procedure, analyzer, tests, and required source rather than relying on
+files in the development checkout.</p>
+<h2 id="exact-tag-raspberry-pi-validation">Exact-tag Raspberry Pi
+validation</h2>
+<p>A fresh detached worktree on <code>rpios-17</code> checked out exact
+commit <code>3c16d2a</code>. <code>make clean all test</code> rebuilt
+the reader and passed the reader, V4L2, Bayer statistics, and staged
+install/removal suites. The install/removal test kept an unrelated
+same-directory sentinel intact.</p>
+<p>That exact build then cold-opened the attached physical
+<code>0547:c003</code> camera, applied normalized gain 20 and 100-ms
+exposure, captured one mode-2 frame, ran the released analyzer, and
+exited zero with <code>frames=1 status=ok</code>.</p>
+<pre class="text"><code>f6f616099ff80093de15ddc34f228e089b9225d85fb86f6ff486c9519b56d0c5  one-device-frame.raw
+4227f9e9b0db7a6b2fddf68582f16617df7a5f2510bcc5f28a5d3cdb9767a258  one-frame.bayer
+aa962bebbed86e017ccde05b9af217d78dbfe9b5bc3fea3f96fbb32497b3dfd9  one-frame.stats.json</code></pre>
+<p>The raw device frame is exactly 1,229,312 bytes and its Bayer payload
+is exactly 1,228,800 bytes. The local evidence is preserved under
+<code>work/public-release-validation-20261003/alpha3-live-20261003T202050Z/</code>.</p>
+<p>The sensor remained covered. This exact-tag run proves source
+identity, build/test reproducibility, physical transport, controls,
+frame sizes, and the analysis path; it does not establish Bayer phase,
+color, orientation, or focus.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

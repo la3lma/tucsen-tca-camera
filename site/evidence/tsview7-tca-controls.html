@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TSView7 TCA control-surface reconstruction — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="tsview7-tca-control-surface-reconstruction">TSView7 TCA
+control-surface reconstruction</h1>
+<p>Verification performed 2026-09-27. This work combined static
+disassembly, offline x86 emulation, and portable C tests. No USB
+transfer was sent to the physical camera during this work.</p>
+<h2 id="sources-and-scope">Sources and scope</h2>
+<p>The matching private reference binary is
+<code>work/vendor-extracted/tsview7/inno/app/TS1000.dll</code>, SHA-256
+<code>ee9c8ec6a680404c375a6bf0c44ded0486c6e7557cdee379a5f332eb9a8d12ac</code>.
+Its exported camera-control wrappers were traced into the internal
+camera object and then executed in the existing Unicorn fixture with the
+Windows driver boundary stubbed. The original TSView manual
+<code>work/vendor-extracted/tsview7/inno/app/TSView.pdf</code> was
+inspected as a UI-level cross-check. Manual pages 16–21 describe
+exposure, gain, automatic white balance, gamma, contrast, saturation,
+color enhancement, monochrome, mirrors, frame speed, and 50/60 Hz
+illumination selection.</p>
+<p>The manual establishes what the application presented to a user. The
+DLL establishes which settings become hardware requests and which remain
+host image-processing state. Neither source proves that this physical
+camera accepts a request; that remains behind the D40/D50 live
+gates.</p>
+<h2 id="hardware-versus-host-processing">Hardware versus host
+processing</h2>
+<p>The emulated driver boundary observed hardware records for only three
+control families:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Control</th>
+<th>Hardware operation</th>
+<th>Recovered public semantics</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Exposure</td>
+<td>one request-<code>0x0a</code> write to sensor register
+<code>0x3012</code></td>
+<td>input is milliseconds; register value is
+<code>ceil(ms * 1000 / row_time_us)</code></td>
+</tr>
+<tr>
+<td>Analog gain</td>
+<td>one request-<code>0x09</code>, <code>wIndex=1</code>, no
+response</td>
+<td>normalized input <code>0..320</code> is encoded piecewise in
+<code>wValue</code></td>
+</tr>
+<tr>
+<td>Frame speed</td>
+<td>11 request-<code>0x0a</code> register writes with 1 ms and 10 ms
+delays</td>
+<td>internal API accepts four values <code>0..3</code>; TSView exposes
+Normal/High</td>
+</tr>
+</tbody>
+</table>
+<p>Automatic-exposure state and target, automatic white balance, RGB
+processing gains, gamma, color enhancement, saturation, contrast,
+horizontal/vertical mirror, monochrome, light-frequency choice, and
+white-balance windows produced no driver IOCTL in isolated setter calls.
+They are host algorithm or image processing settings. Automatic exposure
+can subsequently drive the hardware exposure setter, so “host state”
+does not mean it has no eventual camera-side effect.</p>
+<p>The raw DLL defaults after fixed-mode initialization were AE on, AWB
+on, AE target 120, 262 ms exposure, analog gain 20, RGB processing gains
+74/64/96, gamma 100, color enhancement on, saturation 100, contrast 30,
+mirrors off, monochrome off, frame speed 0, and light-frequency state 0.
+TSView labels gamma, contrast, and saturation as <code>-20..20</code>;
+their exact UI-to-DLL normalization is not yet recovered, so the
+portable API must not expose the internal numbers as user-facing
+values.</p>
+<h2 id="exposure-capabilities">Exposure capabilities</h2>
+<p>The sensor maximum is 4000 exposure lines. The recovered row time and
+floor-derived maximum public exposure are:</p>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>Fixed mode</th>
+<th style="text-align: right;">Speed 0</th>
+<th style="text-align: right;">Speed 1</th>
+<th style="text-align: right;">Speed 2</th>
+<th style="text-align: right;">Speed 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td style="text-align: right;">309 µs / 1236 ms</td>
+<td style="text-align: right;">247 µs / 988 ms</td>
+<td style="text-align: right;">206 µs / 824 ms</td>
+<td style="text-align: right;">195 µs / 780 ms</td>
+</tr>
+<tr>
+<td>1</td>
+<td style="text-align: right;">166 µs / 664 ms</td>
+<td style="text-align: right;">133 µs / 532 ms</td>
+<td style="text-align: right;">111 µs / 444 ms</td>
+<td style="text-align: right;">105 µs / 420 ms</td>
+</tr>
+<tr>
+<td>2</td>
+<td style="text-align: right;">120 µs / 480 ms</td>
+<td style="text-align: right;">96 µs / 384 ms</td>
+<td style="text-align: right;">80 µs / 320 ms</td>
+<td style="text-align: right;">76 µs / 304 ms</td>
+</tr>
+<tr>
+<td>3</td>
+<td style="text-align: right;">125 µs / 500 ms</td>
+<td style="text-align: right;">100 µs / 400 ms</td>
+<td style="text-align: right;">83 µs / 332 ms</td>
+<td style="text-align: right;">78 µs / 312 ms</td>
+</tr>
+<tr>
+<td>4</td>
+<td style="text-align: right;">125 µs / 500 ms</td>
+<td style="text-align: right;">100 µs / 400 ms</td>
+<td style="text-align: right;">83 µs / 332 ms</td>
+<td style="text-align: right;">78 µs / 312 ms</td>
+</tr>
+</tbody>
+</table>
+<p>The vendor setter does not safely reject every invalid value. The
+portable plan API therefore accepts only
+<code>1..maximum_exposure_milliseconds</code>, computes the line value
+with a ceiling, and rejects rather than silently overflowing.</p>
+<h2 id="analog-gain-encoding">Analog-gain encoding</h2>
+<p>For normalized gain <code>g</code>, the request-<code>0x09</code>
+value is:</p>
+<pre class="text"><code>  0.. 63: 0x1040 + g
+ 64..127: 0x1800 + g
+128..191: 0x1bc0 + g
+192..255: 0x1c00 + g
+256..319: 0x1cc0 + g
+320:      0x1dff</code></pre>
+<p>The vendor code clamps values above 320. The portable plan rejects
+them so a caller cannot mistake a coerced value for the requested
+setting.</p>
+<h2 id="frame-speed-sequence">Frame-speed sequence</h2>
+<p>Each internal speed uses the same guarded PLL sequence. Only
+registers <code>0x0304</code> and <code>0x0306</code> vary:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Speed</th>
+<th style="text-align: right;"><code>0x0304</code></th>
+<th style="text-align: right;"><code>0x0306</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;"><code>0x0002</code></td>
+<td style="text-align: right;"><code>0x0028</code></td>
+</tr>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;"><code>0x0002</code></td>
+<td style="text-align: right;"><code>0x0032</code></td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;"><code>0x0002</code></td>
+<td style="text-align: right;"><code>0x003c</code></td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;"><code>0x0001</code></td>
+<td style="text-align: right;"><code>0x0020</code></td>
+</tr>
+</tbody>
+</table>
+<p>The complete sequence is <code>0104=0001</code>,
+<code>0100=0000</code>, the two variable writes, <code>0300=0005</code>,
+<code>0302=0001</code>, <code>0308=000a</code>, <code>030a=0002</code>,
+delay 1 ms, <code>301a=90d8</code>, <code>0104=0000</code>, delay 10 ms,
+and <code>0100=0100</code>.</p>
+<h2 id="portable-implementation-and-verification">Portable
+implementation and verification</h2>
+<p><code>src/tca_controls.c</code> and <code>src/tca_controls.h</code>
+describe the hardware controls as transport-neutral plan steps. They
+allocate no memory, contain no USB imports, and do not execute delays.
+<code>tests/test_tca_controls.c</code> verifies all 20 mode/speed
+capability cells, exposure boundaries and line conversion, every
+piecewise gain boundary, all four exact frame-speed plans, size queries,
+capacity refusal, and invalid inputs. Strict C17 and Apple
+AddressSanitizer/UndefinedBehaviorSanitizer runs pass.</p>
+<p>The emulator golden test independently invokes the vendor DLL
+setters. It now checks the same 20 row-time/maximum-exposure cells, four
+PLL sequences, an exposure conversion, and all gain encoding boundaries.
+<code>make test-emulator</code> passes with no host USB module
+imported.</p>
+<p>The portable sources also compiled and passed natively on
+<code>rpios-17</code> as an AArch64 executable without accessing the
+camera:</p>
+<pre class="text"><code>tca controls tests: PASS
+58c0bb8f9ec5ff2fee3f9fd9beaa83454a2884c290e9300c113a186349bafdef  test_tca_controls</code></pre>
+<h2 id="boundary-and-next-gate">Boundary and next gate</h2>
+<p>This closes the offline packet-construction problem for exposure,
+analog gain, and frame speed. It does not authorize sending them to the
+device. D40 still requires the single corrected open/read/close prefix
+immediately after a true camera USB cold cycle. Only after a stable live
+read should D50 connect these plans to the checked executor and validate
+one conservative setting at a time. Raw and decoded values must be
+logged for every live control experiment.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

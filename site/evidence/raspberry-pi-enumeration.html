@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Raspberry Pi Linux enumeration — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="raspberry-pi-linux-enumeration">Raspberry Pi Linux
+enumeration</h1>
+<p>Captured 2026-09-27 from the Raspberry Pi test bench through a
+one-time SSH connection over link-local IPv6. No vendor-specific USB
+request was sent.</p>
+<h2 id="test-host">Test host</h2>
+<ul>
+<li>Hostname: <code>rpios-17</code></li>
+<li>Board: Raspberry Pi 5 Model B Rev 1.1</li>
+<li>Architecture: <code>aarch64</code></li>
+<li>OS: Debian GNU/Linux 13 (trixie)</li>
+<li>Kernel: <code>6.18.39+rpt-rpi-2712</code></li>
+<li>Ethernet: <code>eth0</code>, <code>10.0.0.90/24</code>, MAC
+<code>98:fe:54:1d:dc:ff</code>, link-local IPv6
+<code>fe80::9afe:54ff:fe1d:dcff/64</code></li>
+<li>Wi-Fi: <code>wlan0</code>, <code>10.0.0.91/24</code>, MAC
+<code>98:fe:54:1d:dd:00</code>, link-local IPv6
+<code>fe80::9afe:54ff:fe1d:dd00/64</code></li>
+</ul>
+<p>The OUI <code>98-FE-54</code> is registered to Raspberry Pi (Trading)
+Ltd in the IEEE OUI registry. IPv4 traffic to the Pi was filtered, while
+SSH was available on both link-local IPv6 addresses.</p>
+<p>The host presented ED25519 fingerprint
+<code>SHA256:X9aMGsUKGhnI/v9AwCOIIh4KaX4duGlskDg2TtSSYFw</code>, which
+differed from the historical <code>rpios-16.local</code> key. Both
+hardware interfaces presented the same new fingerprint. The owner
+explicitly authorized a one-time connection without changing the
+workstation’s <code>known_hosts</code> file.</p>
+<h2 id="camera-identity-and-topology">Camera identity and topology</h2>
+<p><code>lsusb</code> reported:</p>
+<pre class="text"><code>Bus 001 Device 002: ID 0547:c003 Anchor Chips, Inc. 10MP CMOS Camera</code></pre>
+<p><code>lsusb -t</code> reported:</p>
+<pre class="text"><code>/:  Bus 001.Port 001: Dev 001, Class=root_hub, Driver=xhci-hcd/2p, 480M
+    |__ Port 002: Dev 002, If 0, Class=Vendor Specific Class, Driver=[none], 480M</code></pre>
+<p>The standard USB descriptors agree with the macOS inventory:</p>
+<ul>
+<li>USB 2.0 high-speed, 480 Mbit/s</li>
+<li>Bus-powered, declared maximum power 100 mA</li>
+<li>Manufacturer string <code>123456789</code></li>
+<li>Product string <code>10MP CMOS Camera</code></li>
+<li>No serial-number string</li>
+<li>One configuration and one interface</li>
+<li>Interface class <code>0xff</code> (vendor-specific),
+subclass/protocol zero</li>
+<li>One non-control endpoint, bulk IN <code>0x82</code></li>
+<li>Endpoint maximum packet size 512 bytes</li>
+</ul>
+<p>The kernel log showed the camera enumerating cleanly on path
+<code>1-2</code> about 21 seconds after boot. There were no camera
+resets, disconnects, or driver errors in the captured log.</p>
+<h2 id="driver-and-media-device-state">Driver and media-device
+state</h2>
+<p>Sysfs and udev reported:</p>
+<pre class="text"><code>idVendor=0547
+idProduct=c003
+speed=480
+power/control=on
+power/runtime_status=active
+interface_driver=none
+ID_USB_INTERFACES=:ff0000:
+DEVNAME=/dev/bus/usb/001/002</code></pre>
+<p>No driver was bound to interface <code>1-2:1.0</code>. The camera
+created no V4L2 node. The existing <code>/dev/video19</code> through
+<code>/dev/video35</code> nodes were mapped by
+<code>v4l2-ctl --list-devices</code> to the Raspberry Pi platform HEVC
+decoder and PISP image-processing hardware, not to USB device
+<code>0547:c003</code>. The <code>uvcvideo</code> module was not loaded;
+loading it would not match the camera’s vendor-specific interface in any
+case.</p>
+<h2 id="interpretation">Interpretation</h2>
+<p>The Linux result independently confirms that the camera hardware is
+alive, enumerates reliably, and presents the same vendor-specific
+bulk-IN topology seen on macOS. It also rules out accidental UVC/V4L2
+support in the current Raspberry Pi kernel. The next implementation step
+should be a user-space libusb fixture, beginning with open/claim/release
+only and adding vendor-specific control requests only after static
+analysis or a Windows USB trace establishes their exact semantics.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

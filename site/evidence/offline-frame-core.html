@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Offline TCA frame-core verification — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="offline-tca-frame-core-verification">Offline TCA frame-core
+verification</h1>
+<p>Verification performed 2026-09-27. These tests contain no USB
+transport code and did not access the camera.</p>
+<h2 id="implemented-slice">Implemented slice</h2>
+<p><code>src/tca_frame.c</code> and <code>src/tca_frame.h</code> provide
+two bounded, portable pieces needed by the eventual reader:</p>
+<ol type="1">
+<li>the five fixed TSView7 TCA mode geometries and the recovered
+bulk-chunk scheduler; and</li>
+<li>a caller-owned frame assembler that accepts arbitrary transfer
+fragments, emits completion only at the exact expected byte count,
+reports an incomplete frame, and rejects overflow without silently
+truncating data.</li>
+</ol>
+<p>The implementation allocates no memory and owns no USB handle. The
+caller supplies both the destination buffer and its capacity.</p>
+<h2 id="test-coverage">Test coverage</h2>
+<p><code>tests/test_tca_frame.c</code> verifies:</p>
+<ul>
+<li>all five fixed dimensions, frame byte counts, chunk sizes, remainder
+sizes, and scheduled-read counts against the independently recovered
+constants;</li>
+<li>assembly using the vendor scheduler for every mode, including the
+10,068,672-byte full-sensor frame;</li>
+<li>byte-for-byte preservation across arbitrary fragments including 1,
+7, 511, 512, 513, 4093, and 16384-byte boundaries;</li>
+<li>invalid arguments and undersized destination capacity;</li>
+<li>incomplete-frame reporting; and</li>
+<li>overflow rejection before a partial overrun can be copied.</li>
+</ul>
+<p>Host build and run:</p>
+<pre class="text"><code>clang -O2 -std=c17 -Wall -Wextra -Werror -pedantic -Isrc \
+  src/tca_frame.c tests/test_tca_frame.c -o work/test_tca_frame
+./work/test_tca_frame
+tca frame tests: PASS</code></pre>
+<p>Apple Clang AddressSanitizer plus UndefinedBehaviorSanitizer, with
+leak detection disabled because Darwin’s ASan runtime reports it
+unsupported:</p>
+<pre class="text"><code>/usr/bin/clang ... -fsanitize=address,undefined ...
+ASAN_OPTIONS=detect_leaks=0:abort_on_error=1 ./work/test_tca_frame_apple_san
+tca frame tests: PASS</code></pre>
+<p>The same sources were copied to <code>rpios-17</code>, compiled
+natively with GCC as an AArch64 PIE, and passed there:</p>
+<pre class="text"><code>/home/rmz/microscope-window-sensor-probe/reader/test_tca_frame:
+  ELF 64-bit LSB pie executable, ARM aarch64
+tca frame tests: PASS</code></pre>
+<p>The macOS undefined-symbol audit contains only assertion,
+stack-protection, allocation, <code>memcpy</code>, and output functions.
+The Pi binary links only libc. Neither binary imports libusb or another
+device-access library.</p>
+<h2 id="boundary">Boundary</h2>
+<p>This is an offline core slice, not evidence that a physical frame has
+been captured or decoded. It can accept a future bulk transfer without
+changing the byte-count contract, but D40/D50 must still establish the
+camera’s working state-entry and initialization sequence before the
+transport calls it.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

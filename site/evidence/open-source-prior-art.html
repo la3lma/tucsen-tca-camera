@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Open-source prior art and its boundary — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="open-source-prior-art-and-its-boundary">Open-source prior art
+and its boundary</h1>
+<p>Original search date: 2026-09-27</p>
+<p>Updated after live protocol capture: 2026-10-03</p>
+<p>Historical repository: <a
+href="https://github.com/JohnDMcMaster/uvscopetek"
+class="uri">https://github.com/JohnDMcMaster/uvscopetek</a></p>
+<p>Inspected commit:
+<code>db9681b64353c899fff74be28105e6ea19373b53</code></p>
+<h2 id="what-the-repository-establishes">What the repository
+establishes</h2>
+<p>The historical <code>devices.txt</code> inventory explicitly
+records:</p>
+<pre class="text"><code>TS IS1000, 10.0 MP              0547:C003   Tucsen   tucsen.inf, JM has one</code></pre>
+<p>This independently corroborates the Tucsen/IS1000 identity and shows
+that an open-source camera-recovery project knew of a physical C003
+unit.</p>
+<h2 id="what-it-does-not-establish">What it does not establish</h2>
+<p>The implemented <code>scopetek</code> driver and replay code target
+ScopeTek/AmScope <code>0547:4d88</code>, not Tucsen
+<code>0547:c003</code>. Its control protocol is structurally similar but
+numerically different. A successful reference trace has now removed the
+earlier uncertainty about which C003 software lineage controls the
+physical unit:</p>
+<ul>
+<li>request <code>0x01</code> for open/state transitions at index
+<code>0x000f</code>;</li>
+<li>request <code>0x0b</code> for one-byte acknowledgements; and</li>
+<li>request <code>0x0a</code> for three-byte register reads.</li>
+</ul>
+<p>The physical C003 session uses the <code>b3</code>, <code>b4</code>,
+<code>b5</code>, <code>b7</code>, and <code>bb</code> request families
+recovered from the 2011 Windows stack. In particular, trace-confirmed
+<code>b7</code> writes program exposure register <code>0x3012</code> and
+gain register <code>0x305e</code>. The older TCA/TSView7 static package
+remains useful comparative evidence, but neither its
+<code>0x02</code>/<code>0x03</code>/<code>0x10</code>/<code>0x11</code>
+plans nor the 4D88 replay are the validated physical protocol and must
+not be sent to this unit.</p>
+<h2 id="engineering-use">Engineering use</h2>
+<p>Use this repository only as comparative evidence for the broader
+Anchor-Chips camera architecture: vendor control setup, sensor-register
+access, bulk-IN frame transport, and explicit frame geometry. It is
+useful when designing the reader and capture tooling, but it is not a
+protocol oracle for C003.</p>
+<p>The local checkout is preserved at
+<code>work/reference-source/uvscopetek</code>; the two key files are
+hashed in <code>evidence/hashes.sha256</code>.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

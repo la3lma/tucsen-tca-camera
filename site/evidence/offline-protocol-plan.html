@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Offline TCA protocol-plan verification — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="offline-tca-protocol-plan-verification">Offline TCA
+protocol-plan verification</h1>
+<p>Verification performed 2026-09-27. The module described here contains
+no USB transport code and did not access the camera.</p>
+<h2 id="implemented-slice">Implemented slice</h2>
+<p><code>src/tca_protocol.c</code> and <code>src/tca_protocol.h</code>
+convert the byte-accurate TSView7 reconstruction into portable, typed
+protocol records. They provide:</p>
+<ul>
+<li>the corrected open (<code>c0 02 0000 000f</code>) and close
+(<code>c0 03 0000 000e</code>) records;</li>
+<li>a register read with the address in <code>wIndex</code>, zero in
+<code>wValue</code>, a three-byte response, and acknowledgement
+<code>response[2] == 0x08</code>;</li>
+<li>request-<code>0x0a</code> register writes with both the sensor
+register and data encoded by XOR with <code>0x17a0</code>, plus
+<code>response[0] == 0x08</code>;</li>
+<li>all five fixed-mode initialization plans recovered by the offline
+x86 emulator, including state requests, calibration reads, and the exact
+300/1/10/200 ms delays; and</li>
+<li>a size-query/capacity API that refuses partial plan output.</li>
+</ul>
+<p>The module allocates no memory, imports no USB API, and does not
+sleep. It only describes operations for a future checked transport
+executor. Dynamic ROI mode 5 remains deliberately unsupported.</p>
+<p><code>tools/tca_plan_dump.c</code> is an offline renderer. For
+example, <code>make plan-dump MODE=4</code> prints the 43-step 640x480
+plan and labels itself <code>offline-only=yes</code>.</p>
+<h2 id="golden-tests">Golden tests</h2>
+<p><code>tests/test_tca_protocol.c</code> independently carries the
+decoded register/value pairs for every fixed mode. It verifies all 154
+writes, plan ordering, both state records, calibration-read addresses,
+acknowledgement offsets, delays, invalid modes, size queries, and
+insufficient-capacity refusal.</p>
+<p>The macOS build uses strict C17 warnings as errors:</p>
+<pre class="text"><code>cc -O2 -std=c17 -Wall -Wextra -Werror -pedantic -Isrc \
+  src/tca_protocol.c tests/test_tca_protocol.c -o work/test_tca_protocol
+./work/test_tca_protocol
+tca protocol tests: PASS</code></pre>
+<p>The same sources compiled natively on <code>rpios-17</code> as
+AArch64 and passed. A dynamic undefined-symbol audit of both the test
+and plan renderer found no <code>usb</code> or <code>libusb</code>
+symbol. The Pi binary hashes were:</p>
+<pre class="text"><code>e2e927a3356863bf7f24709bc39a0a9c728887d2ec37cbc828d65d5c87a3d20a  test_tca_protocol
+d109e9a24e54011034650c33b9b7e83793bc2c001f4803c93a78f0d834ebfd0d  tca_plan_dump</code></pre>
+<p>The Python emulator golden test and the existing frame-core test also
+passed after this module was added.</p>
+<h2 id="fail-fast-executor">Fail-fast executor</h2>
+<p><code>src/tca_executor.c</code> and <code>src/tca_executor.h</code>
+add the transport-neutral execution contract. A caller supplies
+control-transfer and sleep callbacks; the executor itself still has no
+libusb dependency. It performs each step once with no retry, requires
+the exact response length, validates the declared acknowledgement byte,
+and stops before the next step on any transport, length,
+acknowledgement, malformed-plan, or excessive-response error. Its report
+names the zero-based failing step, number of completed steps, raw
+transport status, and expected/observed response facts.</p>
+<p><code>tests/test_tca_executor.c</code> uses only a mock transport. It
+proves a complete 43-step mode-4 run, injects a transport failure
+independently at every step, and verifies that no later operation runs.
+It also covers short responses, bad acknowledgements, bad step types,
+invalid acknowledgement offsets, oversized responses, and API argument
+errors. Strict C17 and Apple AddressSanitizer/UndefinedBehaviorSanitizer
+runs passed. The same source passed natively on the Pi with no USB
+symbols; its AArch64 binary hash was:</p>
+<pre class="text"><code>fd0f6f9bbe2c8c473191043ef520591e2746ce3d099068ff74a102bf014cc8da  test_tca_executor</code></pre>
+<h2 id="boundary">Boundary</h2>
+<p>These plans are derived from emulated vendor code with synthetic read
+replies. They prove packet construction and make the future executor
+reviewable; they do not prove that the physical camera accepts any
+mutating initialization write. D40 still requires the corrected bounded
+read after a true USB power cycle. The executor now supplies the
+length/acknowledgement and stop-on-first- fault mechanics, but it must
+not be connected to a live libusb transport for full initialization
+until D50. A live adapter must also retain raw evidence.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

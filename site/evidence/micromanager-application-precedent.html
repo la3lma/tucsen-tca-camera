@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Historical Micro-Manager application precedent — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="historical-micro-manager-application-precedent">Historical
+Micro-Manager application precedent</h1>
+<p>Evidence date: 2026-09-29</p>
+<h2 id="confirmed-exact-model-use">Confirmed exact-model use</h2>
+<p>Nilay Jayant Lakhkar’s 2014 University College London PhD thesis,
+<em>Phosphate Glass Microspheres as Cell Microcarrier Substrates for
+Bone Tissue Engineering Applications</em>, identifies a “Tucsen
+TCA-10.0-N camera” running with Micro-Manager for live view and an
+80-hour, one-frame-per-hour time-lapse. The equipment appendix specifies
+Micro-Manager 1.4, and the procedure uses its <code>Live</code> view and
+<code>Multi-D Acq.</code> workflow.</p>
+<p>This is direct historical evidence that the exact camera model was
+usable from a general scientific-imaging application. It is not evidence
+that the camera used UVC, nor does it identify the adapter or Windows
+transport path.</p>
+<p>Source:</p>
+<ul>
+<li>UCL Discovery thesis PDF: <a
+href="https://discovery.ucl.ac.uk/id/eprint/1436722/2/Nilay_Jayant_Lakhkar_PhD_Thesis.pdf._redacted.pdf"
+class="uri">https://discovery.ucl.ac.uk/id/eprint/1436722/2/Nilay_Jayant_Lakhkar_PhD_Thesis.pdf._redacted.pdf</a></li>
+<li>Local preserved copy:
+<code>work/reference-source/lakhkar-phd-thesis.pdf</code></li>
+<li>PDF SHA-256:
+<code>f898da66ecd51fa10a13d8bd844bfb113bc30eb6f03cab5d75404ce1f402db36</code></li>
+<li>Relevant printed pages: 76 and 222–223 (PDF pages 77 and 223–224
+when counted from zero by common PDF tooling).</li>
+</ul>
+<p>The URL was opened successfully on 2026-09-29. The author, title,
+institution, year, camera model, Micro-Manager version, and described
+workflow were checked against the preserved PDF text.</p>
+<h2 id="historical-adapter-tree-boundary">Historical adapter-tree
+boundary</h2>
+<p>The official Micro-Manager <code>mmCoreAndDevices</code> repository
+was cloned to <code>work/reference-source/mmCoreAndDevices</code>. The
+nearest commit before the thesis PDF creation date is:</p>
+<pre class="text"><code>ebaa59d726b96870a1beb9efe1de9f6dec47e804
+2014-07-11T10:42:40Z
+Adding new SW Release.</code></pre>
+<p>At that commit, <code>DeviceAdapters/</code> contains generic
+<code>TwainCamera</code> and <code>OpenCVgrabber</code> adapters. A
+case-insensitive search of the adapter tree finds no <code>Tucsen</code>
+or <code>TCA-10</code> string and no legacy Tucsen-specific adapter. The
+generic TWAIN adapter advertises <code>Twain camera</code>, enumerates
+installed TWAIN sources, implements still capture, and provides sequence
+acquisition. The OpenCV adapter opens the first system camera through
+<code>cvCaptureFromCAM</code>.</p>
+<p>This narrows the plausible historical paths to a generic
+system-camera source, a generic TWAIN source supplied separately by
+Tucsen, or an adapter not present in the public tree. It does
+<strong>not</strong> distinguish among those paths. No recovered file
+currently proves that TSView7 or the matched TCA driver registered a
+DirectShow or TWAIN source.</p>
+<p>Official repository: <a
+href="https://github.com/micro-manager/mmCoreAndDevices"
+class="uri">https://github.com/micro-manager/mmCoreAndDevices</a></p>
+<p>Current preserved checkout commit:
+<code>e28c50d10c522c4f2329d3a6a9ac74cb7b7c190e</code></p>
+<h2 id="engineering-consequence">Engineering consequence</h2>
+<p>Micro-Manager is a credible real-application acceptance target after
+the portable reader works. On Linux, the shortest first bridge remains a
+standard V4L2 loopback or media pipeline, because it can serve
+Micro-Manager’s generic camera path as well as FFmpeg, GStreamer, and
+ordinary V4L2 consumers without duplicating USB protocol logic. A
+dedicated modern Micro-Manager adapter may be considered later if it
+materially improves controls, metadata, or reliability.</p>
+<p>This precedent does not change the D40 initialization evidence gate
+and does not authorize any new live USB transaction.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

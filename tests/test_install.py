@@ -10,7 +10,7 @@ import sys
 import tempfile
 
 
-PROGRAMS = ("tca-camera", "tca-v4l2", "tca-frame-stats",
+PROGRAMS = ("tca-camera", "tca-v4l2", "tca-frame-stats", "tca-timing-stats",
             "tca-white-balance", "tca-flat-field")
 
 

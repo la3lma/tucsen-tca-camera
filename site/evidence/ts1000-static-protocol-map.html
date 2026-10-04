@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TS1000.dll static protocol map — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="ts1000.dll-static-protocol-map">TS1000.dll static protocol
+map</h1>
+<p>Static inspection performed 2026-09-27. No extracted executable was
+run and no vendor-specific request was sent to the camera.</p>
+<h2 id="binary-and-method">Binary and method</h2>
+<ul>
+<li>File:
+<code>work/vendor-extracted/iscapture/app/TS1000.dll</code></li>
+<li>SHA-256:
+<code>8262ee4723bb5df0f680b04b1d3a4562525bf7139e414aa263195c9db2cb357f</code></li>
+<li>Format: 32-bit x86 Windows DLL, linked in December 2012</li>
+<li>Method: LLVM PE headers, import-table inspection, Intel-syntax
+disassembly, call-site tracing, and direct inspection of initialized
+data</li>
+</ul>
+<p>Addresses below use the DLL’s preferred image base
+<code>0x10000000</code>. Names for non-exported routines are descriptive
+analysis labels, not original symbols.</p>
+<h2 id="windows-transport-split">Windows transport split</h2>
+<p>The DLL enumerates a SetupAPI device-interface GUID whose bytes
+decode to <code>{00873fdf-61a8-11d1-aa5e-00c04fb1728b}</code>. It opens
+a control handle and a second path formed with the literal suffix
+<code>PIPE00</code>. <code>ReadFile</code> is used on the pipe handle,
+while <code>DeviceIoControl</code> is used on the control handle. This
+supports the earlier inference that the kernel driver exposes a thin
+control channel plus a read pipe corresponding to the camera’s sole
+bulk-IN endpoint.</p>
+<p>The relevant import address table entries and observed call sites
+are:</p>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 40%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr>
+<th>API</th>
+<th style="text-align: right;">IAT address</th>
+<th>Direct call sites</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DeviceIoControl</code></td>
+<td style="text-align: right;"><code>0x100351ec</code></td>
+<td>one, <code>0x1001c552</code></td>
+</tr>
+<tr>
+<td><code>CreateFileA</code></td>
+<td style="text-align: right;"><code>0x10035210</code></td>
+<td>device/pipe open helpers</td>
+</tr>
+<tr>
+<td><code>ReadFile</code></td>
+<td style="text-align: right;"><code>0x1003522c</code></td>
+<td>pipe and unrelated file helpers; camera wrapper at
+<code>0x1001c4ba</code></td>
+</tr>
+<tr>
+<td><code>WriteFile</code></td>
+<td style="text-align: right;"><code>0x10035228</code></td>
+<td>unrelated file helpers; no demonstrated camera write path</td>
+</tr>
+</tbody>
+</table>
+<h2 id="control-transfer-wrapper">Control-transfer wrapper</h2>
+<p>The only direct <code>DeviceIoControl</code> call is in the routine
+beginning at <code>0x1001c4e0</code>. It always uses IOCTL
+<code>0x222059</code>, decoded as Windows device type <code>0x22</code>,
+function <code>0x816</code>, <code>METHOD_IN_DIRECT</code>, and
+unrestricted access bits. The routine supplies a ten-byte input record
+and a caller-provided output buffer.</p>
+<p>The record construction is consistent with these logical fields:</p>
+<table>
+<thead>
+<tr>
+<th>Logical field</th>
+<th>Observed value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>direction</td>
+<td><code>0</code></td>
+</tr>
+<tr>
+<td>request type</td>
+<td><code>2</code> (vendor)</td>
+</tr>
+<tr>
+<td>recipient</td>
+<td><code>0</code> (device)</td>
+</tr>
+<tr>
+<td>request</td>
+<td>caller-supplied byte</td>
+</tr>
+<tr>
+<td>value</td>
+<td>caller-supplied 16-bit value</td>
+</tr>
+<tr>
+<td>index</td>
+<td>caller-supplied 16-bit value</td>
+</tr>
+</tbody>
+</table>
+<p>Both generations of the driver’s IOCTL handler have now been
+inspected in x86 and x86-64 builds. The 2011 TCA driver ignores the
+record’s first four bytes and hard-codes <code>bmRequestType</code> to
+<code>0xc0</code>. The matched 2013 IS1000 driver instead uses record
+byte 0 as the direction bit and sets vendor/device type; the DLL sets
+that byte to zero, producing <code>bmRequestType=0x40</code>. Both
+generations copy record offsets 4, 6, and 8 to <code>bRequest</code>,
+<code>wValue</code>, and <code>wIndex</code>. Exact addresses and the
+cross-architecture instruction trace are preserved in
+<code>evidence/tucsen-driver-ioctl-handler.md</code>.</p>
+<h2 id="embedded-request-records">Embedded request records</h2>
+<p>The DLL contains eight-byte records laid out as request byte,
+padding, 16-bit value, 16-bit index, and 16-bit data-stage length. It
+sets the length to ten bytes immediately before most calls. In the
+matched 2013 transport these are zero-filled OUT command payloads, not
+responses. Observed request bytes include:</p>
+<pre class="text"><code>b3 b4 b5 b6 b7 b8 ba bb bd be</code></pre>
+<p>Observed parameter families include:</p>
+<pre class="text"><code>b4 value=c0..c4
+b5 value=a0..a4
+b8 value=60..62
+b7 index=305e
+b7 index=3012</code></pre>
+<p>These are facts about the DLL’s records; the semantic names of the
+requests are not yet known.</p>
+<h2 id="capture-path">Capture path</h2>
+<p>The capture routine computes its planned <code>ReadFile</code> size
+at <code>0x1001aa51</code>–<code>0x1001aa5d</code> as:</p>
+<pre class="text"><code>pixel_bytes = width * height
+read_bytes = ((pixel_bytes &gt;&gt; 9) + 1) &lt;&lt; 9</code></pre>
+<p>This selects the next 512-byte boundary, including one additional
+packet when the pixel count is already aligned, matching endpoint
+<code>0x82</code>’s high-speed bulk maximum packet size. A separate
+<code>width * height + 0x200</code> allocation is buffer headroom rather
+than the requested transfer length. The later successful mode-2 physical
+trace confirms the formula: 1,228,800 pixel bytes become a
+1,229,312-byte device frame.</p>
+<p>Immediately before the read loop the routine invokes the control
+wrapper with request <code>0xb3</code>, zero value, zero index, and zero
+response length. The routine then reads from the pipe and searches
+incoming data for a run of ten <code>0x88</code> bytes or, as an
+alternative mode marker, ten <code>0x99</code> bytes.</p>
+<p>This makes <code>0xb3</code> a strong candidate for a stream/capture
+trigger and the repeated-byte runs candidates for frame synchronization.
+Those roles remain inferences and must not yet be encoded as confirmed
+protocol semantics.</p>
+<h2 id="next-static-targets">Next static targets</h2>
+<p>This DLL belongs to the later ISCapture lineage. Its call order, mode
+table, and fixed dry/live fixtures have been preserved, but a bounded
+matched-<code>0x40</code> trial returned <code>LIBUSB_ERROR_PIPE</code>.
+The official compatibility matrix assigns the purchase-era TCA-10.0N to
+TSView6/7, whose distinct protocol is now mapped in
+<code>tsview7-tca-protocol-map.md</code>. No more ISCapture-family
+request should be sent unless later evidence shows the camera actually
+implements that lineage.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

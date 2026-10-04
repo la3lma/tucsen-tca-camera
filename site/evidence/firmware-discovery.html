@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Updated-firmware discovery (non-gating) — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="updated-firmware-discovery-non-gating">Updated-firmware
+discovery (non-gating)</h1>
+<p>Search dates: 2026-09-27, 2026-09-29, and 2026-10-03</p>
+<p>This is the low-priority research lane requested by the camera owner.
+It does not gate the Linux reader plan, and no firmware image will be
+uploaded merely because a filename or updater appears to match.</p>
+<h2 id="identity-searched">Identity searched</h2>
+<ul>
+<li>USB identity: <code>0547:c003</code></li>
+<li>Official model names: <code>TCA-10.0N</code>,
+<code>TCA-10.0-N</code>, and <code>IS1000</code></li>
+<li>Vendor/reseller names: Tucsen and AmScope</li>
+</ul>
+<p>The official Tucsen discontinued-camera matrix maps the same VID/PID
+to two software lineages:</p>
+<ul>
+<li><code>TCA-10.0N</code> -&gt; TCA driver plus TSView6 or TSView7</li>
+<li><code>IS1000</code> -&gt; Beta Camera Driver plus ISCapture
+3.6.8</li>
+</ul>
+<p>Source: <a
+href="https://www.tucsen.com/uploads/Software-and-Driver-download-links.pdf"
+class="uri">https://www.tucsen.com/uploads/Software-and-Driver-download-links.pdf</a>
+(preserved locally as
+<code>work/tucsen-discontinued-camera-download-links.pdf</code>).</p>
+<h2 id="surfaces-checked">Surfaces checked</h2>
+<ul>
+<li>Tucsen’s discontinued-camera matrix and linked packages.</li>
+<li>Tucsen’s current support/download surfaces.</li>
+<li>AmScope’s current MU-series camera support surface.</li>
+<li>The recovered TCA, Beta/IS1000, TSView6, TSView7, ISCapture, and
+AmScope v3 installers already preserved under <code>work/</code>.</li>
+<li>Package contents and filenames for common firmware/updater forms,
+including <code>.hex</code>, <code>.iic</code>, <code>.bin</code>,
+<code>.fw</code>, <code>firmware</code>, and <code>update</code>.</li>
+<li>Public-web searches combining the VID/PID and both model names with
+<code>firmware</code>, <code>update</code>, <code>updater</code>,
+<code>EEPROM</code>, and <code>FX2</code>.</li>
+</ul>
+<h2 id="current-package-refresh">2026-09-29 current-package refresh</h2>
+<p>AmScope’s official MU-series support page currently offers AmLite for
+ARM64 Linux dated 2026-04-13 and AmScope for Windows v4.12.31631. Both
+packages were downloaded into
+<code>work/firmware-search/amscope-current/</code>, hash-pinned, and
+extracted statically without running an installer or opening the
+camera.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Official package</th>
+<th>SHA-256</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AmScopeAmLite.arm64-20260413.tar.bz2</code></td>
+<td><code>a25fb2b6c9c04f7cf1c4888bd0a1fe188f1fa517c7bd11a4ff4ae41418c1aef4</code></td>
+</tr>
+<tr>
+<td><code>AmScopeSetup_v4.12.31631.zip</code></td>
+<td><code>8629021144d1d369dce22d132b3a31410c8f293eb840509becbd2e61611bd5d1</code></td>
+</tr>
+</tbody>
+</table>
+<p>Primary source: <a
+href="https://amscope.com/pages/camera-support-mu-series"
+class="uri">https://amscope.com/pages/camera-support-mu-series</a>.</p>
+<p>Artifact URLs:</p>
+<ul>
+<li><a
+href="https://storage.googleapis.com/software-download-d79bb.appspot.com/software/AmLite/Linux/20260413/AmScopeAmLite.arm64.tar.bz2"
+class="uri">https://storage.googleapis.com/software-download-d79bb.appspot.com/software/AmLite/Linux/20260413/AmScopeAmLite.arm64.tar.bz2</a></li>
+<li><a
+href="https://storage.googleapis.com/software-download-d79bb.appspot.com/software/AmScope/v4.12.31631/AmScopeSetup_v4.12.31631.zip"
+class="uri">https://storage.googleapis.com/software-download-d79bb.appspot.com/software/AmScope/v4.12.31631/AmScopeSetup_v4.12.31631.zip</a></li>
+</ul>
+<p>Static inspection produced the following bounded result:</p>
+<ul>
+<li>The Linux archive contains 29 installed files, including an ARM64
+AmLite executable, <code>libamcam.so</code>, and
+<code>99-amcam.rules</code>. The udev rule grants access to all devices
+from vendors <code>0547</code> and <code>04b4</code>; this is not a
+supported-model list and does not establish compatibility.</li>
+<li>Neither the Linux nor Windows extracted tree contains the strings
+<code>c003</code>, <code>TCA-10.0N</code>, <code>IS1000</code>, or
+<code>Tucsen</code>.</li>
+<li>The current Windows x86 and x64 <code>amcam.inf</code> files each
+enumerate 232 hardware IDs and identify driver version
+<code>1.0.0.29904</code> dated 2025-11-02. Neither INF contains
+<code>USB\\VID_0547&amp;PID_C003</code>.</li>
+<li>No extracted filename uses a recognized standalone firmware form
+such as <code>.hex</code>, <code>.iic</code>, <code>.fw</code>,
+<code>.rom</code>, <code>.eep</code>, or <code>.eeprom</code>, and no
+filename contains <code>firmware</code>, <code>update</code>, or
+<code>updater</code>.</li>
+<li>The user-interface resources contain generic
+<code>Firmware Version</code> and <code>Software upgrade</code> labels.
+Those strings are application features, not an exact-device firmware
+claim or a separately recoverable image.</li>
+</ul>
+<p>This refresh does not prove that <code>libamcam.so</code> could never
+communicate with the camera, because a binary may discover devices
+without embedding an obvious textual ID. It does show that the current
+MU-series Windows driver will not bind to <code>0547:c003</code> through
+its supplied INF, and it found no candidate firmware payload. No current
+package was executed against the camera.</p>
+<h2 id="official-web-refresh">2026-10-03 official-web refresh</h2>
+<p>Fresh searches of the official Tucsen and AmScope domains combined
+each exact identity (<code>0547:c003</code>, <code>TCA-10.0N</code>, and
+<code>IS1000</code>) with <code>firmware</code>, <code>update</code>,
+and <code>updater</code>. Tucsen’s two currently indexed
+discontinued-camera endpoints still resolve to the same three-page
+matrix:</p>
+<ul>
+<li><a href="https://www.tucsen.com/Home/Product/info/dataid/31.html"
+class="uri">https://www.tucsen.com/Home/Product/info/dataid/31.html</a></li>
+<li><a href="https://www.tucsen.com/Home/Product/info/dataid/35.html"
+class="uri">https://www.tucsen.com/Home/Product/info/dataid/35.html</a></li>
+</ul>
+<p>The matrix still maps <code>TCA-10.0N</code> and <code>IS1000</code>
+to <code>0547:C003</code>, the TCA row to the TCA driver/TSView lineage,
+and the Beta row to the ISCapture lineage. It does not name a firmware
+image or updater for either exact model. Official search results do
+expose firmware-update tools and <code>.bin</code>/<code>.hex</code>
+procedures for newer Dhyana and GT camera families, but those pages
+claim different models and do not claim VID/PID <code>0547:C003</code>.
+They are therefore evidence that Tucsen publishes firmware when
+applicable, not compatible candidates for this device. No new package
+was downloaded or executed during this refresh.</p>
+<h2 id="result">Result</h2>
+<p>No standalone firmware image, firmware manifest, or official updater
+claiming compatibility with <code>0547:c003</code> was found. The
+official archived material provides Windows drivers and applications,
+not a separately identified camera firmware payload. The 2026 AmScope
+packages add no exact C003 claim, and the current Windows INF omits the
+device. Current Tucsen and AmScope support pages do not list a C003
+firmware updater.</p>
+<p>This is a bounded negative result, not proof that no such artifact
+ever existed. Periodic archive and mirror searches remain worthwhile,
+but they must not delay protocol recovery or the Linux reader.</p>
+<h2 id="important-ambiguity">Important ambiguity</h2>
+<p>The recovered Windows INF files call the device a
+<code>Firmware Device</code> in comments:</p>
+<ul>
+<li>TCA INF: <code>Tucsen Firmware Device</code></li>
+<li>Beta INF: <code>IS1000 Firmware Device</code></li>
+</ul>
+<p>That label is not evidence of an uploadable firmware image. Neither
+inspected driver package contains a separately named firmware file, and
+the current USB device already enumerates with stable descriptors and
+one bulk-IN endpoint. Treat the wording only as a historical driver
+label unless runtime tracing proves a volatile upload step.</p>
+<h2 id="adoption-gate-for-any-future-candidate">Adoption gate for any
+future candidate</h2>
+<p>Before any firmware transfer, require all of the following:</p>
+<ol type="1">
+<li>Exact VID/PID and model/revision claim from an attributable
+source.</li>
+<li>Cryptographic hash and preserved original package.</li>
+<li>Static proof of transfer target, format, and whether the write is
+volatile or non-volatile.</li>
+<li>Recovery and rollback method, including behavior on power loss.</li>
+<li>A separately reviewed experiment and explicit owner
+authorization.</li>
+</ol>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

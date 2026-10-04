@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VirtualHere fallback trace bench — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="virtualhere-fallback-trace-bench">VirtualHere fallback trace
+bench</h1>
+<p>Prepared 2026-09-29 after the Linux USB/IP to <code>usbip-win2</code>
+0.9.8.0 path failed during Windows enumeration.</p>
+<h2 id="why-the-fallback-is-justified">Why the fallback is
+justified</h2>
+<p>Windows successfully listed <code>0547:c003</code> and reported
+<code>successfully attached to port 1</code>. Linux <code>usbmon3</code>
+captured 26 URBs. The Windows attach began at frame 15: it read the
+18-byte device descriptor twice, the complete 25-byte configuration
+descriptor, language ID <code>0409</code>, and the 36-byte product
+string <code>10MP CMOS Camera</code>. It did not issue
+<code>SET_CONFIGURATION</code> or any vendor request. Its next 18-byte
+device-descriptor request remained pending for 5.004272 seconds and
+completed as <code>-ECONNRESET</code>.</p>
+<p>This establishes a transport/enumeration incompatibility before the
+Tucsen driver or TSView protocol can run. It is consistent with open
+usbip-win2 reports in which a device works directly but the UDE client
+fails during descriptor/endpoint setup:</p>
+<ul>
+<li><a href="https://github.com/vadimgrn/usbip-win2/issues/144"
+class="uri">https://github.com/vadimgrn/usbip-win2/issues/144</a></li>
+<li><a href="https://github.com/vadimgrn/usbip-win2/issues/114"
+class="uri">https://github.com/vadimgrn/usbip-win2/issues/114</a></li>
+</ul>
+<p>The immutable capture is:</p>
+<pre class="text"><code>ff33d5e7ab7ffbd9dcf1b0771ad5baba288c364dfea7497aa6daccd8f57ca11c  work/trace-captures/usbip-session-local-vm-20260929T1507Z/known-good-init.pcapng</code></pre>
+<p>The historical filename records the intended test, not its outcome;
+this is an accepted negative USB/IP-enumeration trace, not a known-good
+initialization.</p>
+<h2 id="prepared-alternative">Prepared alternative</h2>
+<p>VirtualHere keeps Linux <code>usbmon</code> below the forwarding
+transport but uses its own userspace server and Windows virtual USB
+client. The vendor documents that the generic server trial shares one
+device without a time limit. Version 4.8.8 of the generic ARM64 server
+and version 6.0.2 of the Windows x86-64 client were downloaded into
+<code>work/virtualhere-bench/downloads</code>; both SHA-1 values match
+the vendor checksum files:</p>
+<pre class="text"><code>f000ef0aa8306d62a109a235e7830f7d9b52f214  vhusbdarm64
+f90867a86c18b217543a2f8407a48333a7960623  vhui64.exe</code></pre>
+<p>Primary documentation:</p>
+<ul>
+<li><a href="https://www.virtualhere.com/usb_server_software"
+class="uri">https://www.virtualhere.com/usb_server_software</a></li>
+<li><a href="https://www.virtualhere.com/usb_client_software"
+class="uri">https://www.virtualhere.com/usb_client_software</a></li>
+<li><a href="https://www.virtualhere.com/configuration_faq"
+class="uri">https://www.virtualhere.com/configuration_faq</a></li>
+</ul>
+<p>The server at <code>192.168.65.5:7575</code> is running with
+<code>AllowedDevices=547/c003</code>, <code>UseAVAHI=0</code>,
+<code>AutoAttachToKernel=0</code>, and <code>ClaimPorts=1</code>. Its
+log identifies only the expected high-speed <code>0547:c003</code>
+product at address 33. <code>usbmon3</code> was armed before server
+start in the verified active session
+<code>work/virtualhere-session-local-vm-20260929T140811Z</code> inside
+the Linux guest. Its live capture is
+<code>/tmp/virtualhere-20260929T140811Z.pcapng</code>; before any
+Windows client use it contained 14 preflight packets and was still
+recording.</p>
+<p>The project-local Windows client ISO is:</p>
+<pre class="text"><code>d93df14f79c595842eb2e1f660ff21b10a8eca1d342b4a68093552db38a5b17a  work/virtualhere-bench/virtualhere-client.iso</code></pre>
+<h2 id="reboot-recovery-and-exact-device-automation">Reboot recovery and
+exact-device automation</h2>
+<p>After the macOS reboot on 2026-10-03, the iSCSI volume was present
+but UTM’s library no longer contained the two externally stored VM
+bundles. Opening the bundles in place re-registered and started them
+without copying their disks. The shared network was recreated as
+<code>192.168.64.0/24</code>: the Linux bench is
+<code>192.168.64.4</code> (MAC <code>52:54:00:4d:4c:42</code>) and the
+Windows trace VM is <code>192.168.64.5</code> (MAC
+<code>52:54:00:54:43:41</code>). The SSH key was reloaded from the macOS
+keychain; Linux SSH and <code>usbmon1</code> through
+<code>usbmon4</code> were verified.</p>
+<p>The original ISO was retained as
+<code>Microscope TCA Trace.utm/Data/virtualhere-client-v1.iso</code>.
+The VM’s active <code>virtualhere-client.iso</code> is now
+byte-identical to the v3 project image:</p>
+<pre class="text"><code>55c301dd0e9a8fcf17c77898d3928930f4c87b829db875c2a31993771a237901  work/virtualhere-bench/virtualhere-client-v3.iso
+950caf1dd32bd2bd3415b7d9f49c4cf57e6dcd33747efbf29bfed1297aeba587  work/virtualhere-bench/iso-root/DISCONNECT-CAMERA.cmd</code></pre>
+<p>Those scripts parse the one <code>10MP CMOS Camera</code> line
+returned by the official client API, strip the surrounding parentheses,
+and issue <code>USE</code> or <code>STOP USING</code> only for that
+exact address. The pre-reboot listing established the address as
+<code>microscope-linux.33</code>; the scripts do not hard-code it.</p>
+<p>After moving the physical host to the Pi, v4 media removed the last
+stale server address from the source script.
+<code>CONNECT-CAMERA.cmd</code> now accepts an optional
+<code>server:port</code> argument and defaults to the UTM host gateway
+relay at <code>192.168.64.1:7575</code>; its exact-device parsing and
+<code>USE</code> behavior are unchanged. The ISO was rebuilt and its
+embedded script and README were verified directly with
+<code>bsdtar</code>:</p>
+<pre class="text"><code>29311e3b6c1f5c2e82c7905879e516e071405a66f82afba5030b84bdfa56450f  work/virtualhere-bench/virtualhere-client-v4.iso
+edaafb7a268eca14284120f9974b1de36dcb134b2e6f292ae26c53a7496cf59c  work/virtualhere-bench/iso-root/CONNECT-CAMERA.cmd
+a2782b9d5732f76cb074c7009dc8a6d50688b1362c7711b6c14674f05e838702  work/virtualhere-bench/iso-root/README.txt</code></pre>
+<p>The camera remained visible to macOS as exactly one
+<code>0547:c003</code>, but UTM’s first post-reboot redirection attempt
+reported <code>disconnected (fatal IO error)</code>. <code>ioreg</code>
+showed the device active, configured, and <code>busy 0</code>.
+<code>tools/usb_reset_exact.c</code> was therefore added as a narrowly
+token-gated recovery operation. Its source and unresolved binary imports
+are statically audited: the live path contains one
+<code>libusb_reset_device</code> call and no control, bulk, interrupt,
+configuration, alternate-setting, or firmware operation. Both the inert
+run and the explicit reset succeeded against one match. A subsequent UTM
+attachment and Windows trace remain pending; this section is recovery
+evidence, not a successful initialization claim.</p>
+<p>The pinned server and configuration were also restored to the Linux
+guest and verified against the project copies before any new capture was
+armed:</p>
+<pre class="text"><code>09deced5586ed37b8b3db7a6187d84029f65d487c3c2b24a949b993b3d582077  vhusbdarm64
+2417600d331a9c582562d7f0fd974f85a8449ca50250a28c6b56479cc997e481  config.ini</code></pre>
+<p><code>tools/virtualhere_capture.sh</code> now makes the Linux side
+reproducible and fail-closed. It requires one exact sysfs match and the
+token <code>--record-exact-virtualhere-init</code>, verifies both hashes
+above and every exact-only configuration line, refuses a second server,
+and starts <code>dumpcap</code> on the physical camera bus before
+starting VirtualHere. Stop uses only the recorded process IDs and writes
+a session manifest. Its shell/static audit is part of
+<code>make test-core</code> and passes. Deployment to the restored ARM64
+guest also reached the expected pre-attachment refusal:</p>
+<pre class="text"><code>expected exactly one 0547:c003 device; found 0</code></pre>
+<p>That result proves the staged guest harness sees no unintended match
+while UTM has not attached the camera; it is not a device failure.</p>
+<p>Run only the portable client, add the live Linux-bench address
+(<code>192.168.64.4</code> after the 2026-10-03 reboot), select only
+<code>10MP CMOS Camera</code>, and start TSView once. Do not change
+controls or invoke any firmware operation. A successful run must contain
+configuration, the first vendor response, and mode-4 bulk data, then
+pass the usual descriptor and claim/release post-check.</p>
+<h2 id="direct-qemu-result-and-raspberry-pi-handoff">Direct-QEMU result
+and Raspberry Pi handoff</h2>
+<p>Repeated post-reboot CocoaSPICE attachment attempts failed with the
+same fatal I/O disconnect after a physical reconnect, an exact-device
+libusb reset, a Linux-guest restart, and a full UTM/application restart.
+A second UTM path was then tested using QEMU’s bundled libusb
+<code>usb-host</code> backend instead of the USB menu. UTM’s scripting
+API stored these two arguments on the stopped Linux VM:</p>
+<pre class="text"><code>-device
+usb-host,bus=usb-controller-0.0,vendorid=0x0547,productid=0xc003</code></pre>
+<p>The launched QEMU command line contained the exact argument, but
+Linux exposed no <code>0547:c003</code> device while macOS continued to
+enumerate the camera normally. The custom arguments were removed again
+before the VM was left stopped. This closes both UTM-hosted attachment
+branches for the present macOS/UTM build; it does not implicate the
+camera or the Linux reader.</p>
+<p>The physical trace host has therefore moved to <code>rpios-17</code>,
+a Raspberry Pi 5 on wired link-local IPv6
+<code>fe80::9afe:54ff:fe1d:dcff%en0</code>. Key-only SSH and
+passwordless sudo were verified. Debian’s <code>tshark</code>,
+<code>wireshark-common</code>, <code>libusb-1.0-0-dev</code>,
+<code>pkg-config</code>, and <code>usbutils</code> are installed,
+<code>usbmon</code> is loaded, and root <code>dumpcap -D</code> lists
+<code>usbmon0</code> through <code>usbmon4</code>. The exact server,
+configuration, and capture harness were copied to
+<code>/home/rmz/microscope-window-sensor</code> and re-hashed on the
+Pi:</p>
+<pre class="text"><code>08c698427d805a03a38327df888542be0b9c3d898b8a9f3a16693608e7951675  tools/virtualhere_capture.sh
+2417600d331a9c582562d7f0fd974f85a8449ca50250a28c6b56479cc997e481  work/virtualhere-bench/config.ini
+09deced5586ed37b8b3db7a6187d84029f65d487c3c2b24a949b993b3d582077  work/virtualhere-bench/downloads/vhusbdarm64</code></pre>
+<p>Current ARM64 warm-reader, warm-control, exact-reset, and inert
+bulk-reader binaries were built in the Ubuntu ARM64 bench, copied
+through the project-local <code>work/pi-stage</code> directory, and
+verified byte-for-byte on the Pi. The camera is not yet attached there,
+so no capture or vendor transaction has been started.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

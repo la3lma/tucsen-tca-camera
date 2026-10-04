@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Public package install and removal operations — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="public-package-install-and-removal-operations">Public package
+install and removal operations</h1>
+<p>Date: 2026-10-03</p>
+<p>Scope: public repository commit
+<code>fb502c1d58252c7168f68b873ff1ab51aa431ca8</code>.</p>
+<p>Commit <code>fb502c1</code> closes the remaining software-only D110
+operations gap. The public Makefile now installs exactly these
+executable files below the selected <code>PREFIX</code> and optional
+<code>DESTDIR</code>:</p>
+<ul>
+<li><code>tca-camera</code>;</li>
+<li><code>tca-v4l2</code>; and</li>
+<li><code>tca-frame-stats</code>.</li>
+</ul>
+<p>Its <code>uninstall</code> target removes exactly those three paths.
+It does not remove the containing <code>bin</code> directory, an
+optional udev rule, a distribution-managed <code>v4l2loopback</code>
+package, or unrelated files.</p>
+<p><code>tests/test_install.py</code> stages installation under a new
+temporary <code>DESTDIR</code>, requires all three regular files to be
+owner-executable, creates an unrelated sentinel in the same
+<code>bin</code> directory, runs <code>make uninstall</code>, and
+requires the three project files to be absent while the sentinel remains
+unchanged.</p>
+<p>The complete test suite, including that install/removal test, passed
+on Apple Silicon and on a clean detached Raspberry Pi worktree at exact
+commit <code>fb502c1</code>. GitHub Actions run <a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37151022334"
+class="uri">https://github.com/la3lma/tucsen-tca-camera/actions/runs/37151022334</a>
+also completed successfully on Ubuntu and macOS.</p>
+<p>This validates staged package operations without mutating the Pi’s
+live system installation. It does not replace the still-open physical
+camera-cable or microscope optical checks.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

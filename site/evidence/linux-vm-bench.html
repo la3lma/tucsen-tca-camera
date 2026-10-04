@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Project-local Linux VM bench — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="project-local-linux-vm-bench">Project-local Linux VM bench</h1>
+<p>Prepared and first booted 2026-09-29. This is the primary development
+and trace host while the camera remains physically connected to the
+macOS workstation. The Raspberry Pi remains the independent
+deployment-validation target.</p>
+<h2 id="reproducible-image-and-configuration">Reproducible image and
+configuration</h2>
+<p>The ARM64 Ubuntu 24.04 cloud image and every generated VM artifact
+are stored under <code>work/linux-vm-bench/</code>; no download used a
+global downloads directory.</p>
+<pre class="text"><code>1d6bffe64b848468ac97f821d369a4846d983de1800ccf6b5ec8853e85cefc55  noble-server-cloudimg-arm64.img
+b61a6497608cdea66f54968d52d3457365b0645ccb2b1371c8f092ecce806183  SHA256SUMS
+0b8d21a6c4a3f4a8eee6e3bc0589161d05481212b893857c7ef898eb68761395  Microscope Linux Bench.utm/config.plist
+3bb9b4a218cf7627029f9004d19b7e2f9abb5f970ed43d4b4977a6387ea528db  cloud-init/user-data
+70b9c304817dc856d5ab7978b9321d73d7eb5bd44e812c2137394d49b841281a  cloud-init/meta-data
+1af04bf867c4cd2d1079743e04bb1cb62a5f9d4ff8350f4b89cee43db9df1871  Microscope Linux Bench.utm/Data/cloud-init.iso</code></pre>
+<p>The registered VM is <code>Microscope Linux Bench</code>, UUID
+<code>6020A011-1F8B-485B-9493-066B54B034DC</code>: native ARM64/HVF, six
+vCPUs, 6 GiB RAM, a sparse 32 GiB project-local QCOW2 disk, shared
+networking, USB 3 sharing, and MAC <code>52:54:00:4d:4c:42</code>.
+Cloud-init created key-only user <code>rmz</code> with passwordless sudo
+and installed the build, libusb, USB/IP, usbmon, SSH, and packet-capture
+tools.</p>
+<h2 id="boot-and-usb-proof">Boot and USB proof</h2>
+<p>The first boot completed with <code>cloud-init status: done</code>;
+SSH and <code>qemu-guest-agent</code> are active. The guest obtained
+IPv4 <code>192.168.65.5</code> and Ubuntu kernel
+<code>6.8.0-142-generic</code>. The lean cloud image omitted the USB/IP
+and usbmon modules, so matching package
+<code>linux-modules-extra-6.8.0-142-generic</code> was installed. The
+loaded modules are <code>usbmon</code>, <code>usbip_core</code>, and
+<code>usbip_host</code>.</p>
+<p>UTM attached the workstation-owned camera to the guest. Linux
+independently reported:</p>
+<pre class="text"><code>Bus 003 Device 002: ID 0547:c003 Anchor Chips, Inc. 10MP CMOS Camera
+interface 0: vendor specific, one bulk-IN endpoint 0x82, 512-byte packets</code></pre>
+<p>The project source was copied without the large VM/vendor artifacts.
+All six portable C core test programs passed natively on ARM64. The
+libusb descriptor probe opened, claimed, released, and closed interface
+zero successfully.</p>
+<h2 id="executed-usbip-path-and-active-fallback">Executed USB/IP path
+and active fallback</h2>
+<p><code>tools/pi_usbip_capture.sh</code> is host-neutral despite its
+historical name. On this VM it resolved bus ID <code>3-3</code>, armed
+<code>dumpcap</code> on <code>usbmon3</code>, started
+<code>usbipd</code> on TCP 3240, and exported only
+<code>0547:c003</code>. The Windows trace VM was given an emulated Intel
+E1000 adapter and obtained <code>192.168.65.6</code>, placing both
+guests on the same UTM shared network. Windows usbip-win2 attached
+directly to server <code>192.168.65.5</code>, bus ID <code>3-3</code>;
+no host relay was required.</p>
+<p>The stopped capture is preserved on the host under
+<code>work/trace-captures/usbip-session-local-vm-20260929T1507Z</code>.
+It proved that usbip-win2 received valid descriptors but failed on a
+repeated device- descriptor read before configuration. The active
+replacement is a one-device VirtualHere server on
+<code>192.168.65.5:7575</code>, with <code>usbmon3</code> recording to
+<code>work/virtualhere-session-local-vm-20260929T140811Z</code> inside
+the guest. The corresponding live capture is
+<code>/tmp/virtualhere-20260929T140811Z.pcapng</code> and contained 14
+preflight packets before client attachment. See the <a
+href="virtualhere-trace-bench.html">fallback evidence</a>.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

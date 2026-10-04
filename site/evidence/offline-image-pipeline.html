@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Offline Bayer and application-pipeline verification — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="offline-bayer-and-application-pipeline-verification">Offline
+Bayer and application-pipeline verification</h1>
+<p>Verification performed 2026-09-27. All input frames in this note are
+synthetic; no USB request or camera capture was performed.</p>
+<h2 id="vendor-memory-convention">Vendor memory convention</h2>
+<p>The matching TSView7 DLL’s default bilinear routine at
+<code>0x10005250</code> was called inside the offline Unicorn
+environment with a four-phase 8x8 mosaic. Distinct values were assigned
+to each position of a 2x2 tile. The routine’s interior output was
+uniformly <code>30 25 20</code>, establishing:</p>
+<pre class="text"><code>raw phase at memory origin:  G R
+                             B G    (GRBG)
+
+DLL 24-bit byte order:       B G R  (Windows BGR24)</code></pre>
+<p>The deterministic check is part of
+<code>tests/test_emulate_tca_init.py</code>. It does not establish
+physical microscope orientation or prove that a live crop begins on the
+same phase; those require a captured target.</p>
+<h2 id="portable-decoder">Portable decoder</h2>
+<p><code>src/tca_image.c</code> and <code>src/tca_image.h</code>
+implement a bounded bilinear Bayer8 decoder. All four phase conventions
+are explicit (<code>RGGB</code>, <code>BGGR</code>, <code>GRBG</code>,
+and <code>GBRG</code>) and callers choose RGB24 or BGR24 output. The
+implementation accepts strides, validates source/destination capacities
+and multiplication bounds, allocates no memory, and handles edges using
+only available neighbours.</p>
+<p>This is a conventional portable bilinear decoder, not a claim of
+byte-for-byte equivalence with every proprietary TSView interpolation
+mode. Keeping phase and byte order explicit lets a live color target
+correct either convention without changing transport or frame
+assembly.</p>
+<p><code>tests/test_tca_image.c</code> verifies constant color planes
+for all four Bayer patterns and both output orders, padded strides,
+unchanged padding, and error boundaries. Strict C17, Apple
+AddressSanitizer/UndefinedBehaviorSanitizer, and native Pi AArch64 runs
+pass. The Pi test binary SHA-256 is:</p>
+<pre class="text"><code>56b333b2aa6dfd5bf15c087b5e0b7dfb9388b1e23db86c082186a39055b804bb  test_tca_image</code></pre>
+<h2 id="replay-and-standard-media-handoff">Replay and standard-media
+handoff</h2>
+<p><code>tools/tca_raw_convert.c</code> consumes one or more exact
+fixed-mode frames from a file or standard input. It emits Bayer8, PGM,
+RGB24, BGR24, or PPM to a file or standard output. A short trailing
+frame is a hard error and is never padded or silently emitted. The
+binary links only the portable frame and image modules; it has no USB
+import.</p>
+<p><code>tests/test_tca_raw_convert.py</code> exercises a 640x480
+synthetic GRBG frame, Netpbm headers, RGB values at both image corners,
+two-frame streaming through stdin/stdout, a short-frame failure, and
+argument refusal. It passes on macOS and natively on the Pi. The Pi
+converter hash is:</p>
+<pre class="text"><code>e56f68eb54c5d8de0098d72063557aea644a469dc690045c0dcc2245ad0e1f7f  tca_raw_convert</code></pre>
+<p>An application-path smoke test streamed three synthetic mode-4 frames
+through the converter into FFmpeg 8.1.1 as <code>rgb24</code> raw video.
+FFmpeg accepted 640x480 at 5 fps and produced
+<code>work/tca-replay-smoke.mkv</code> using lossless FFV1. Its SHA-256
+is:</p>
+<pre class="text"><code>3d5ffde27625901b41f69b2225f19a3bf2b80727a13ff77ead797e23cffa8e35  work/tca-replay-smoke.mkv</code></pre>
+<p>Example handoff once a raw stream exists:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">work/tca_raw_convert</span> <span class="at">--mode</span> 4 <span class="at">--pattern</span> grbg <span class="at">--format</span> rgb24 <span class="at">-</span> <span class="at">-</span> <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">ffmpeg</span> <span class="at">-f</span> rawvideo <span class="at">-pixel_format</span> rgb24 <span class="at">-video_size</span> 640x480 <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">-framerate</span> 5 <span class="at">-i</span> <span class="at">-</span> output.mkv</span></code></pre></div>
+<h2 id="boundary">Boundary</h2>
+<p>This proves deterministic decode, framing refusal, portability, and a
+standard media handoff using synthetic inputs. D50/D60 remain incomplete
+until the camera accepts initialization, returns authoritative bulk
+bytes, and a physical target confirms frame phase, orientation, crop,
+and color. The raw capture must remain the authoritative artifact even
+after decoding.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

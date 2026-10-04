@@ -34,6 +34,11 @@ URLs.
 Reproducible physical checks and their evidence hashes are summarized in the
 [validation record](docs/validation.md).
 
+Raw disassemblies, Ghidra databases, vendor binaries/drivers, firmware, and
+packet captures are deliberately kept out of this public repository. The
+[public publication boundary](PUBLICATION_POLICY.md) is CI-enforced against
+both the current tree and the complete public Git filename history.
+
 The remaining microscope-mounted checks have a reproducible
 [optical validation procedure](docs/optical-validation.md), including Bayer
 phase, orientation, exposure/gain sweeps, focus scoring, and a full-resolution
@@ -81,8 +86,8 @@ optional rule in [`udev/99-tucsen-tca-camera.rules`](udev/99-tucsen-tca-camera.r
 
 ## Install and remove
 
-Install the reader, V4L2 helper, frame analyzer, white-balance estimator, and
-flat-field calibration/filter tool under the selected prefix:
+Install the reader, V4L2 helper, frame and timing analyzers, white-balance
+estimator, and flat-field calibration/filter tool under the selected prefix:
 
 ```sh
 sudo make install PREFIX=/usr/local
@@ -108,6 +113,7 @@ mkdir -p capture
   --frames 3 \
   --raw-first capture/first-device-frame.raw \
   --bayer capture/three-frames.bayer \
+  --timestamps capture/three-frames-timestamps.csv \
   --exposure-ms 400 \
   --gain 20
 ```
@@ -158,13 +164,28 @@ Capture a motion sequence directly to a broadly playable MP4 file:
     -vf scale=640:480 -c:v libx264 -pix_fmt yuv420p capture/stream.mp4
 ```
 
-Raw Bayer has no timestamps, so `-framerate` sets the recording/playback time
-base; it is not a measurement of the camera's delivered frame rate. Use
+Raw Bayer carries no embedded timestamps. Add `--timestamps FILE.csv` to write
+one `CLOCK_MONOTONIC` capture-completion timestamp per assembled frame. The
+sidecar uses `frame,monotonic_ns` columns and is flushed after every row so a
+bounded or interrupted run retains its measurements. It is never sent to the
+camera and cannot share a path with either image output. Without that sidecar,
+`-framerate` only sets the recording/playback time base; it is not a
+measurement of the camera's delivered frame rate. Use
 `Ctrl-C` to stop an unbounded capture cleanly. On Linux, the V4L2 bridge below
 lets ordinary camera applications consume the same corrected live stream.
 On the tested microscope, 100 ms with gain 256 was bright with only about
 0.0007% saturated raw pixels; illumination and specimens will require their
 own settings.
+
+Validate a completed sidecar and summarize its measured cadence:
+
+```sh
+scripts/tca-timing-stats capture/three-frames-timestamps.csv \
+  --json capture/three-frames-timing.json
+```
+
+The analyzer rejects a wrong header, missing or repeated frame numbers,
+non-monotonic timestamps, fewer than two frames, and output overwrite.
 
 Current controls are intentionally narrow and mode-aware:
 

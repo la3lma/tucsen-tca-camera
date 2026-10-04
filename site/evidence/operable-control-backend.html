@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Opt-in operable libusb control backend — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="opt-in-operable-libusb-control-backend">Opt-in operable libusb
+control backend</h1>
+<p>Evidence date: 2026-09-29</p>
+<h2 id="scope-and-separation">Scope and separation</h2>
+<p><code>src/tca_libusb_operable.[ch]</code> composes the read-only warm
+bulk backend with the already recovered control planners and fail-fast
+executor. It is a separate opt-in module: the existing
+<code>camera-reader-warm</code> binary still links no control-transfer
+API. Only a separately named, inert-by-default, one-control CLI
+instantiates the operable module. This preserves the reviewed read-only
+streaming gate while preparing the control portion of D70 for a
+known-good warm handoff.</p>
+<p>The operable backend supports only the public reader’s three
+recovered hardware controls:</p>
+<ul>
+<li>exposure in checked milliseconds, implemented by one acknowledged
+write to sensor register <code>0x3012</code>;</li>
+<li>normalized analog gain <code>0..320</code>, implemented by one
+request-<code>0x09</code> state update; and</li>
+<li>frame-speed value <code>0..3</code>, implemented by the exact
+eleven-write/two-delay PLL plan.</li>
+</ul>
+<p>No arbitrary request tuple, firmware path, reset, configuration
+change, alternate setting, or retry is exposed.</p>
+<h2 id="composition-and-diagnostics">Composition and diagnostics</h2>
+<p>The operable object embeds <code>struct tca_libusb_warm</code> as its
+first member. A compile-time offset assertion protects the
+callback-context composition. All descriptor, claim, bulk-read, stop,
+and close operations therefore remain the reviewed warm implementation.
+The added <code>set_control</code> callback:</p>
+<ol type="1">
+<li>requires successful fixed mode-4/speed-0 configuration;</li>
+<li>asks <code>tca_controls</code> to construct a checked fixed
+plan;</li>
+<li>executes it through <code>tca_executor</code> with a bounded timeout
+and no retry;</li>
+<li>retains the complete execution report, including failed step,
+transport status, expected/actual length, and acknowledgement; and</li>
+<li>updates frame-speed state only after every plan step succeeds.</li>
+</ol>
+<p>The production defaults are <code>libusb_control_transfer</code> and
+interrupt-resilient <code>nanosleep</code>. Both boundaries are
+injectable for offline tests.</p>
+<h2 id="native-fault-injection-proof">Native fault-injection proof</h2>
+<p><code>tests/test_tca_libusb_operable.c</code> performs no enumeration
+and sends no USB operation. With a dummy shared handle and injected
+callbacks it verifies:</p>
+<ul>
+<li>the exact exposure tuple for 10 ms in mode 4/speed 0, including 80
+sensor lines, XOR encoding, one-byte acknowledgement, and 1000 ms
+timeout;</li>
+<li>the exact normalized-gain tuple at boundary value 64;</li>
+<li>eleven writes and delays of 1 ms and 10 ms for frame speed 2;</li>
+<li>refusal before configuration, of other initial modes/speeds, and of
+an unknown control;</li>
+<li>fail-fast transport timeout, short response, bad acknowledgement,
+and delay failure reports; and</li>
+<li>no frame-speed state update after a partial failed plan.</li>
+</ul>
+<p>Strict C17 builds and all tests pass natively on Apple Silicon macOS
+and the Ubuntu ARM64 VM. The macOS sanitizer build also passes
+AddressSanitizer and UndefinedBehaviorSanitizer.</p>
+<p>The resulting test binaries import the same
+descriptor/open/claim/release and bulk APIs as the read-only warm
+backend plus exactly <code>libusb_control_transfer</code>. Their SHA-256
+values are:</p>
+<pre class="text"><code>04da3fa95fabd6f06021e78a06436ca78141f85837ff5cd2d5e5e96d98b7d6b7  work/test_tca_libusb_operable
+5c44e25b557935c3eba7ce5e0c2b0b4c6063c8d757d17386c578204e1ead8518  work/test_tca_libusb_operable-linux-arm64</code></pre>
+<h2 id="bounded-control-cli">Bounded control CLI</h2>
+<p><code>tools/tca_control_warm.c</code> is a separately named command
+that applies exactly one checked control and exits. With no arguments it
+is inert. It accepts only one of three explicit tokens whose names
+include the already-streaming mode-4 precondition, followed by one
+decimal value. Exposure, gain, and frame-speed range validation occurs
+before libusb initialization or device open; malformed, negative, and
+out-of-range values exit 64 while explicitly reporting that no USB
+transfer was sent.</p>
+<p>An accepted invocation opens and claims the exact device, records
+fixed mode 4 and speed 0 as the handoff metadata, executes one plan
+through the reader API, prints the full step-level diagnostic on
+failure, then releases the interface. It never starts acquisition and
+its source contains no reader start/pump or USB reset call. Static/inert
+tests and the exact import allowlist pass on both architectures. The
+binaries have SHA-256:</p>
+<pre class="text"><code>f415131f480cdf4e4b6ff2d9ce226040c5e0fc24b5c3d9087a33508a3fd54e28  work/camera-control-warm
+6992db88b7463e7bc536aa0e4ffde758661fd2ceab9f74a7e8419bfdc481da42  work/camera-control-warm-linux-arm64</code></pre>
+<h2 id="remaining-live-gate">Remaining live gate</h2>
+<p>This is verified implementation evidence, not physical-camera control
+proof. The command has not been run with an execution token. After the
+known-good Windows sequence is traced and a warm handoff is available,
+it can test one bounded control at a time while preserving raw frames
+and usbmon evidence. A successful warm control session still would not
+by itself prove cold initialization, reconnect, or endurance.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

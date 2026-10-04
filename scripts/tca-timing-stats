@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+"""Validate a tca-camera timestamp sidecar and report cadence statistics."""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import json
+import math
+import pathlib
+import statistics
+import sys
+
+
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Validate frame,monotonic_ns CSV output from tca-camera and "
+            "report delivered-frame cadence."
+        )
+    )
+    parser.add_argument("timestamps", type=pathlib.Path)
+    parser.add_argument(
+        "--json",
+        type=pathlib.Path,
+        help="write JSON to this new file instead of standard output",
+    )
+    return parser.parse_args()
+
+
+def read_timestamps(path: pathlib.Path) -> list[int]:
+    with path.open(newline="", encoding="utf-8") as source:
+        reader = csv.reader(source)
+        try:
+            header = next(reader)
+        except StopIteration as error:
+            raise ValueError("empty timestamp file") from error
+        if header != ["frame", "monotonic_ns"]:
+            raise ValueError("expected exact frame,monotonic_ns header")
+        timestamps: list[int] = []
+        for line_number, row in enumerate(reader, start=2):
+            if len(row) != 2:
+                raise ValueError(f"line {line_number} must contain two columns")
+            try:
+                frame = int(row[0], 10)
+                timestamp = int(row[1], 10)
+            except ValueError as error:
+                raise ValueError(f"line {line_number} is not decimal integer data") from error
+            expected = len(timestamps) + 1
+            if frame != expected:
+                raise ValueError(
+                    f"line {line_number} frame {frame} is not expected {expected}"
+                )
+            if timestamp < 0:
+                raise ValueError(f"line {line_number} has a negative timestamp")
+            if timestamps and timestamp <= timestamps[-1]:
+                raise ValueError(
+                    f"line {line_number} timestamp is not strictly increasing"
+                )
+            timestamps.append(timestamp)
+    if len(timestamps) < 2:
+        raise ValueError("at least two frames are required for cadence statistics")
+    return timestamps
+
+
+def nearest_rank(values: list[int], fraction: float) -> int:
+    ordered = sorted(values)
+    rank = max(1, math.ceil(fraction * len(ordered)))
+    return ordered[rank - 1]
+
+
+def summarize(path: pathlib.Path, timestamps: list[int]) -> dict[str, object]:
+    intervals = [right - left for left, right in zip(timestamps, timestamps[1:])]
+    duration_ns = timestamps[-1] - timestamps[0]
+    return {
+        "schema": "tca-timing-stats-v1",
+        "file": str(path),
+        "clock": "CLOCK_MONOTONIC",
+        "frame_count": len(timestamps),
+        "interval_count": len(intervals),
+        "first_monotonic_ns": timestamps[0],
+        "last_monotonic_ns": timestamps[-1],
+        "duration_seconds": duration_ns / 1_000_000_000,
+        "delivered_fps": len(intervals) * 1_000_000_000 / duration_ns,
+        "interval_ms": {
+            "min": min(intervals) / 1_000_000,
+            "p50": nearest_rank(intervals, 0.50) / 1_000_000,
+            "p95": nearest_rank(intervals, 0.95) / 1_000_000,
+            "mean": statistics.fmean(intervals) / 1_000_000,
+            "max": max(intervals) / 1_000_000,
+            "population_stddev": statistics.pstdev(intervals) / 1_000_000,
+        },
+    }
+
+
+def main() -> int:
+    arguments = parse_arguments()
+    try:
+        result = summarize(arguments.timestamps, read_timestamps(arguments.timestamps))
+    except (OSError, ValueError) as error:
+        print(f"tca-timing-stats: {error}", file=sys.stderr)
+        return 64
+
+    encoded = json.dumps(result, indent=2, sort_keys=True) + "\n"
+    if arguments.json is None:
+        sys.stdout.write(encoded)
+        return 0
+    try:
+        with arguments.json.open("x", encoding="utf-8") as output:
+            output.write(encoded)
+    except OSError as error:
+        print(f"tca-timing-stats: {error}", file=sys.stderr)
+        return 73
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

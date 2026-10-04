@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Candidate microscopy application stack above the C003 reader — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1
+id="candidate-microscopy-application-stack-above-the-c003-reader">Candidate
+microscopy application stack above the C003 reader</h1>
+<p>Search date: 2026-10-03</p>
+<h2 id="scope">Scope</h2>
+<p>This note evaluates a suggested higher-level stack: ToupCam,
+Micro-Manager or Pycro-Manager for acquisition and stage control,
+preview-stream autofocus, and Fiji or MIST for tile stitching. It
+separates camera transport support from software that becomes useful
+only after a working frame source exists.</p>
+<h2 id="micro-manager-camera-paths">Micro-Manager camera paths</h2>
+<p>The current Micro-Manager source was inspected at commit
+<code>e28c50d10c522c4f2329d3a6a9ac74cb7b7c190e</code>.</p>
+<h3 id="amscope-adapter-not-this-camera">AmScope adapter: not this
+camera</h3>
+<p>Micro-Manager does contain <code>DeviceAdapters/AmScope</code>, but
+its own readme calls it an adapter for AmScope MU-series USB 3 cameras
+on Windows. Its source fixes the offered model to <code>MU1403</code>,
+its Visual Studio project links ToupTek’s 2016 ToupCam SDK, and the
+runtime instructions require the AmScope Windows driver package. It is
+therefore corroborating evidence for the AmScope/ToupTek relationship,
+not support for the USB 2.0 Tucsen TCA-10.0N/IS1000
+<code>0547:c003</code>. The adapter’s BSD-licensed source can still
+inform a future native Micro-Manager adapter at the application-API
+level.</p>
+<p>Source:</p>
+<p><a
+href="https://github.com/micro-manager/mmCoreAndDevices/tree/e28c50d10c522c4f2329d3a6a9ac74cb7b7c190e/DeviceAdapters/AmScope"
+class="uri">https://github.com/micro-manager/mmCoreAndDevices/tree/e28c50d10c522c4f2329d3a6a9ac74cb7b7c190e/DeviceAdapters/AmScope</a></p>
+<h3
+id="video4linux-adapter-the-shortest-linux-integration-path">Video4Linux
+adapter: the shortest Linux integration path</h3>
+<p>The same source tree contains a Linux <code>Video4Linux</code> device
+adapter. It accepts a configurable <code>/dev/video*</code> path and
+resolution and includes YUYV input handling. This matches the boundary
+already proven by this project: the camera-specific libusb reader
+publishes a temporary 1280-by-960 YUYV <code>v4l2loopback</code> device
+which ordinary consumers have opened successfully.</p>
+<p>The next Micro-Manager experiment should therefore be:</p>
+<pre class="text"><code>0547:c003 camera
+  -&gt; tucsen-tca-camera userspace reader
+  -&gt; temporary V4L2 YUYV device
+  -&gt; Micro-Manager Video4Linux adapter
+  -&gt; Micro-Manager/Pycro-Manager acquisition</code></pre>
+<p>This keeps the recovered protocol in the public userspace reader and
+avoids a second camera-specific USB implementation. It must still be
+tested because the adapter may impose format, buffer, or
+sequence-acquisition assumptions not covered by the short FFmpeg
+consumer test.</p>
+<p>Source:</p>
+<p><a
+href="https://github.com/micro-manager/mmCoreAndDevices/blob/e28c50d10c522c4f2329d3a6a9ac74cb7b7c190e/DeviceAdapters/Video4Linux/video4linux2.cpp"
+class="uri">https://github.com/micro-manager/mmCoreAndDevices/blob/e28c50d10c522c4f2329d3a6a9ac74cb7b7c190e/DeviceAdapters/Video4Linux/video4linux2.cpp</a></p>
+<h2 id="pycro-managers-role">Pycro-Manager’s role</h2>
+<p>Pycro-Manager is an acquisition and automation layer above
+Micro-Manager Core; it does not independently add support for an
+unrecognized camera. Once the Video4Linux adapter (or a future native
+C003 adapter) supplies frames, its Python APIs and acquisition hooks can
+coordinate Z stacks, tiled XY acquisitions, stages, processing, storage,
+and adaptive actions.</p>
+<p>The practical order is therefore camera reader, V4L2/Micro-Manager
+acceptance, stage identification and configuration, then Pycro-Manager
+automation. This also lets camera support remain usable outside the
+microscopy stack.</p>
+<p>Sources:</p>
+<ul>
+<li><a
+href="https://pycro-manager.readthedocs.io/en/latest/backends.html"
+class="uri">https://pycro-manager.readthedocs.io/en/latest/backends.html</a></li>
+<li><a
+href="https://pycro-manager.readthedocs.io/en/latest/acq_hooks.html"
+class="uri">https://pycro-manager.readthedocs.io/en/latest/acq_hooks.html</a></li>
+<li><a
+href="https://github.com/micro-manager/pycro-manager/blob/c9c8acd1969fb5e55619d8284b6c1fd96fc236b4/docs/source/application_notebooks/Single_shot_autofocus_pycromanager.ipynb"
+class="uri">https://github.com/micro-manager/pycro-manager/blob/c9c8acd1969fb5e55619d8284b6c1fd96fc236b4/docs/source/application_notebooks/Single_shot_autofocus_pycromanager.ipynb</a></li>
+</ul>
+<h2 id="autofocus-after-the-optical-system-is-present">Autofocus after
+the optical system is present</h2>
+<p>A coarse-to-fine Z search on the preview mode is a sensible first
+software autofocus baseline. For each candidate Z position, hold
+exposure, gain, illumination, Bayer conversion, and crop constant; score
+a central or sample-appropriate grayscale ROI; and use the variance of a
+Laplacian-filtered image as the initial sharpness metric. Search a
+bounded coarse interval, rescan a narrower interval around the best
+coarse plane, then optionally take the final image in 3664-by-2748
+mode.</p>
+<p>This is a future optical experiment, not a transport acceptance test.
+The sensor is presently covered, the microscope and sample are not
+attached, and no motorized Z stage has been identified. The Laplacian
+score must be checked against real brightfield specimens because noise,
+low texture, saturation, illumination changes, and Bayer artifacts can
+produce false maxima. Preserve the whole focus curve and compare at
+least one alternative gradient or frequency-domain metric before making
+autofocus a release claim.</p>
+<p>The suggestion to focus on preview rather than full resolution is
+consistent with the transport geometry. A full device frame is
+10,068,992 bytes, so USB 2.0’s 480-Mbit/s signalling rate gives an
+absolute, overhead-free ceiling of about 5.96 frames/s before control,
+scheduling, exposure, and conversion costs. The actual steady-state
+full-mode rate has not yet been benchmarked; “a few frames per second”
+is a reasonable expectation, not a measured result.</p>
+<h2 id="tile-acquisition-and-stitching">Tile acquisition and
+stitching</h2>
+<p>Fiji’s Grid/Collection Stitching plugin and NIST’s MIST are credible
+downstream choices once an XY stage and reproducible, overlapping tile
+acquisition exist. Fiji accepts grids or collections, can use
+approximate positions or metadata, and offers virtual-stack/disk-backed
+operation for large datasets. MIST is specifically designed for 2D
+microscopy mosaics, models stage placement error, and can treat time
+points as independent 2D datasets; it is not a volumetric 3D
+stitcher.</p>
+<p>The acquisition layer should preserve raw tiles, calibrated pixel
+size, commanded and reported XY/Z positions, overlap, exposure/gain,
+illumination, focus score, and capture time. A first benchmark should
+use a small 3-by-3 grid with roughly 10–20 percent overlap and compare
+the resulting placement against stage coordinates before scaling up.</p>
+<p>Sources:</p>
+<ul>
+<li><a href="https://imagej.net/plugins/grid-collection-stitching"
+class="uri">https://imagej.net/plugins/grid-collection-stitching</a></li>
+<li><a
+href="https://github.com/usnistgov/MIST/tree/26481de8dccf7f7c58ba86549556e8544368d1e4"
+class="uri">https://github.com/usnistgov/MIST/tree/26481de8dccf7f7c58ba86549556e8544368d1e4</a></li>
+</ul>
+<h2 id="decision">Decision</h2>
+<p>The suggested stack does not replace the C003 reader, but it improves
+the application roadmap:</p>
+<ol type="1">
+<li>retain the trace-derived userspace driver as the camera
+transport;</li>
+<li>validate Micro-Manager through its Linux Video4Linux adapter;</li>
+<li>add Pycro-Manager only after camera and stage devices work in
+MMCore;</li>
+<li>implement and measure preview-mode coarse-to-fine autofocus after
+optical and motorized-Z hardware are available; and</li>
+<li>evaluate Fiji and MIST on a small, metadata-rich tile grid before
+choosing a production stitching path.</li>
+</ol>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

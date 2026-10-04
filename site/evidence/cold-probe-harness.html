@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>D40 cold-session evidence harness — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="d40-cold-session-evidence-harness">D40 cold-session evidence
+harness</h1>
+<p>Prepared and dry-run on <code>rpios-17</code> on 2026-09-27, then
+executed exactly once after an owner-confirmed physical USB cold
+cycle.</p>
+<p><code>tools/run_tca_cold_probe.sh</code> wraps only the already
+reviewed version-2 open/read/close binary. It hard-codes that binary’s
+SHA-256, refuses a mismatch, and is inert without the exact token that
+asserts the operator has physically disconnected camera USB power for at
+least ten seconds.</p>
+<p>On an authorized run the harness:</p>
+<ol type="1">
+<li>requires exactly one sysfs device with identity
+<code>0547:c003</code>;</li>
+<li>records UTC and monotonic time, host/kernel identity,
+<code>lsusb</code>, USB topology, udev properties, selected sysfs
+fields, and the kernel log;</li>
+<li>records the probe’s own dry-run profile;</li>
+<li>runs the descriptor-only claim/release fixture before the vendor
+probe;</li>
+<li>invokes the reviewed v2 execution token exactly once and retains
+separate standard output, standard error, and exit status even on
+timeout;</li>
+<li>repeats enumeration, descriptor claim/release, and kernel-log
+capture if the camera remains present; and</li>
+<li>hashes every resulting evidence file.</li>
+</ol>
+<p>It does not call reset, set-configuration, bulk I/O, firmware
+operations, the initialization planner, or any control plan. The harness
+source SHA-256 is:</p>
+<pre class="text"><code>910b11a92bb41753bc106d5789ef9ba9504eb0a79933a5baa271214cd9826f0d  tools/run_tca_cold_probe.sh</code></pre>
+<p>The staged copy is
+<code>/home/rmz/microscope-window-sensor-probe/v2/run_tca_cold_probe.sh</code>.
+Its Pi dry run verified the embedded probe hash
+<code>612d50fa3daf99b22a90e8de8afdd76a91f2e4e8936c7f49dffe840e218ccb1a</code>
+and printed the corrected fixed tuple:</p>
+<pre class="text"><code>c0 02 0000 000f length=0
+c0 11 0000 3ff0 length=3 expected-ack=08
+c0 03 0000 000e length=0</code></pre>
+<p>The dry run ended with <code>NO TRANSFER SENT</code>. After the
+camera was physically disconnected for more than ten seconds and
+re-enumerated at a new USB address, the authorized run captured one live
+result. Open, the corrected register read, and close each returned
+<code>LIBUSB_ERROR_TIMEOUT</code>; the before/after safe descriptor and
+claim/release probes both passed, the device records were
+byte-identical, and no kernel USB fault appeared. The result and hashes
+are recorded in <a href="d40-cold-result.html">D40 physical-cold probe
+result</a>. The harness must not be executed again for request
+variation.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

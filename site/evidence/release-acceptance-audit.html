@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Release acceptance audit — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="release-acceptance-audit">Release acceptance audit</h1>
+<p>Date: 2026-10-04</p>
+<p>Scope: public Linux-first prerelease <code>v0.2.0-alpha.6</code>,
+including optically validated record-boundary assembly, gain, motion,
+and white-balance evidence.</p>
+<p>This is a readiness audit, not owner acceptance. It distinguishes a
+useful Linux alpha from completion of every item in the Docstack
+Definition of Done.</p>
+<h2 id="definition-of-done">Definition of Done</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Evidence and remaining work</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Still acquisition</td>
+<td>Pass for spatial capture; color calibration partial</td>
+<td>Correct record assembly produces coherent 1280x960 and complete
+3664x2748 Bayer rasters. Three consecutive full-resolution frames have
+distinct hashes and no left strip. Multi-resolution PNGs are verified. A
+10x configuration produced unclipped preview and full-resolution stills
+at 250 ms/gain 0 after a bounded sweep. Final Bayer phase and
+known-target color response remain open.</td>
+</tr>
+<tr>
+<td>2. Streaming</td>
+<td>Pass for userspace stream; Linux application retest partial</td>
+<td>A corrected 16-frame run produced 16 distinct coherent frames and an
+H.264 proof clip. Earlier 14,400-frame testing establishes USB/process
+endurance but used the superseded multi-request image assembly. Post-fix
+Linux V4L2 should be retested.</td>
+</tr>
+<tr>
+<td>3. Operation</td>
+<td>Partial</td>
+<td>Cold start, mode 0/mode 2 selection, start/stop lifecycle, exposure,
+and analog gain are bounded. A 100-ms optical sweep verified monotonic
+gain 0..320, and one stale pre-control record is now discarded before
+frame zero. Neutral-background white-balance estimation is verified. New
+flat-field maps bind exposure/gain and the V4L2 path fails before camera
+or loopback mutation on mismatch; true blocked-light dark and
+blank-field calibration, automatic exposure, and adaptive color
+correction remain open.</td>
+</tr>
+<tr>
+<td>4. Reader API</td>
+<td>Pass</td>
+<td>Portable C17 userspace core and CLI provide deterministic raw/Bayer
+capture, structured diagnostics, bounded controls, dry-run output, and
+no arbitrary USB request surface. Ubuntu and macOS CI pass.</td>
+</tr>
+<tr>
+<td>5. Application path</td>
+<td>Partial</td>
+<td>FFmpeg creates coherent stills and H.264 from the corrected macOS
+reader. The existing Linux V4L2 adapter consumes reader stdout; a
+synthetic corrected-stream preflight delivered six frames through a
+temporary loopback to a separate consumer, but the live-camera proof
+still predates the assembly correction. AVFoundation remains
+deferred.</td>
+</tr>
+<tr>
+<td>6. Evidence and recovery</td>
+<td>Pass for reconnect; ongoing for calibration</td>
+<td>Protocol notes, hashes, safety boundaries, tests, process-kill
+recovery, repeated reopen, endurance, host reboot, ownership hand-back,
+physical cable reconnect, microscope-mounted capture, and a clearly
+labeled physical-size self-flat diagnostic are recorded. The diagnostic
+proves correction plumbing while explicitly rejecting its scene-erasing
+output as optical calibration.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="non-functional-requirements">Non-functional requirements</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Status</th>
+<th>Evidence and remaining work</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NFR-01 safety</td>
+<td>Pass</td>
+<td>Live behavior is opt-in, bounded, and based on trace-confirmed
+tuples; no reset, firmware upload, non-volatile write, arbitrary control
+request, or kernel camera driver is exposed.</td>
+</tr>
+<tr>
+<td>NFR-02 portability</td>
+<td>Pass for the direct reader API</td>
+<td>The core builds and tests on AArch64 Linux and Apple Silicon macOS.
+The exact-tag Apple Silicon binary captured the physical camera directly
+in both supported modes with exact frame sizes and exit zero, then
+reopened preview in a fresh process. Byte layout and packing are
+explicit. An AVFoundation surface remains deferred.</td>
+</tr>
+<tr>
+<td>NFR-03 determinism</td>
+<td>Pass</td>
+<td>Offline tests and known evidence hashes are stable without the
+camera.</td>
+</tr>
+<tr>
+<td>NFR-04 observability</td>
+<td>Pass</td>
+<td>Diagnostics identify stage, transfer tuple, expected/actual lengths,
+and outcome without credentials.</td>
+</tr>
+<tr>
+<td>NFR-05 stability</td>
+<td>Pass for preview endurance</td>
+<td>The 40-minute preview run exceeded the 30-minute target without
+unrecovered timeout, parser loss, or observed memory growth.</td>
+</tr>
+<tr>
+<td>NFR-06 resource use</td>
+<td>Pass for the current synchronous reader</td>
+<td>USB and frame buffers are fixed and bounded. The synchronous CLI
+applies producer back-pressure rather than an unbounded queue; the
+optional V4L2 path delegates downstream buffering to FFmpeg and
+v4l2loopback.</td>
+</tr>
+<tr>
+<td>NFR-07 reproducibility</td>
+<td>Pass</td>
+<td>Exact tag <code>v0.2.0-alpha.6</code> is published from commit
+<code>0fded6e</code>. Its release binary passed the complete local suite
+and an exact-size physical preview smoke capture; the unchanged frame
+assembler passed exact-size physical captures in both modes immediately
+before release. Prior exact-tag Pi and independent CI evidence remains
+recorded.</td>
+</tr>
+<tr>
+<td>NFR-08 legal hygiene</td>
+<td>Pass</td>
+<td>The public Apache-2.0 repository contains independently developed
+source and documentation, not vendor drivers, SDK binaries, firmware, or
+captured proprietary packages.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="exit-decision">Exit decision</h2>
+<p>The present release is a useful userspace alpha, but D120 remains
+open. The minimum remaining acceptance path is:</p>
+<ol type="1">
+<li>capture a same-settings blocked-light dark and translated/defocused
+blank flat, then verify a fresh blank and specimen through the
+settings-bound map;</li>
+<li>validate Bayer phase/color against a known target;</li>
+<li>retest the corrected stream through Linux V4L2 and record measured
+timing;</li>
+<li>validate a manual focus curve and choose calibrated exposure/gain
+defaults;</li>
+<li>retain the recorded Linux-first deferral for AVFoundation, or reopen
+the application-surface portion of D90 if the owner changes scope;
+and</li>
+<li>review and accept each row above against the final release commit
+and hash.</li>
+</ol>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

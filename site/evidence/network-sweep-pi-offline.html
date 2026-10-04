@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Network sweep while the Raspberry Pi was offline — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="network-sweep-while-the-raspberry-pi-was-offline">Network sweep
+while the Raspberry Pi was offline</h1>
+<p>The user disconnected the complete Raspberry Pi, not merely the USB
+camera. The initial offline sweep began at 2026-09-26T19:49:01Z
+(2026-09-26T21:49:01+0200). A stronger follow-up used five ARP retries
+across the complete <code>10.0.0.0/24</code> network and five IPv6
+all-nodes multicast probes.</p>
+<h2 id="stable-ipv4mac-responders">Stable IPv4/MAC responders</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>IPv4</th>
+<th>MAC</th>
+<th>Reported vendor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10.0.0.1</td>
+<td>9c:a2:f4:6c:f1:36</td>
+<td>TP-Link Corporation Limited</td>
+</tr>
+<tr>
+<td>10.0.0.2</td>
+<td>d0:14:11:90:53:b2</td>
+<td>Airthings</td>
+</tr>
+<tr>
+<td>10.0.0.4</td>
+<td>c8:2e:18:f9:ae:f4</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td>10.0.0.6</td>
+<td>8c:86:1e:64:1b:93</td>
+<td>Apple, Inc.</td>
+</tr>
+<tr>
+<td>10.0.0.7</td>
+<td>10:20:ba:43:a6:24</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td>10.0.0.9</td>
+<td>34:90:ea:c6:80:86</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td>10.0.0.10</td>
+<td>98:ec:65:06:2e:6f</td>
+<td>Cosesy ApS</td>
+</tr>
+<tr>
+<td>10.0.0.17</td>
+<td>f8:71:a6:b7:aa:f4</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td>10.0.0.21</td>
+<td>68:63:59:db:18:e4</td>
+<td>Advanced Digital Broadcast SA</td>
+</tr>
+<tr>
+<td>10.0.0.32</td>
+<td>78:45:58:e5:5b:58</td>
+<td>Ubiquiti Networks Inc.</td>
+</tr>
+<tr>
+<td>10.0.0.33</td>
+<td>44:09:da:1a:ad:7f</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td>10.0.0.43</td>
+<td>94:dd:f8:28:ee:7c</td>
+<td>Brother Industries, LTD.</td>
+</tr>
+<tr>
+<td>10.0.0.45</td>
+<td>1c:69:7a:4c:50:37</td>
+<td>EliteGroup Computer Systems Co., LTD</td>
+</tr>
+<tr>
+<td>10.0.0.50</td>
+<td>c6:82:18:24:5f:2c</td>
+<td>Locally administered</td>
+</tr>
+<tr>
+<td>10.0.0.53</td>
+<td>34:2f:bd:e3:61:e3</td>
+<td>Nintendo Co., Ltd.</td>
+</tr>
+<tr>
+<td>10.0.0.59</td>
+<td>30:05:5c:4d:8c:a5</td>
+<td>Brother Industries, LTD.</td>
+</tr>
+<tr>
+<td>10.0.0.63</td>
+<td>d4:f3:2d:fb:de:61</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td>10.0.0.74</td>
+<td>a8:3f:a1:7c:95:a5</td>
+<td>Plejd AB</td>
+</tr>
+<tr>
+<td>10.0.0.80</td>
+<td>9c:75:6e:39:b8:7c</td>
+<td>Ajax Systems DMCC</td>
+</tr>
+<tr>
+<td>10.0.0.85</td>
+<td>9c:75:6e:39:b8:7d</td>
+<td>Ajax Systems DMCC</td>
+</tr>
+<tr>
+<td>10.0.0.93</td>
+<td>30:56:0f:5e:d0:fc</td>
+<td>Unknown; known host <code>agogo</code></td>
+</tr>
+<tr>
+<td>10.0.0.95</td>
+<td>ca:68:03:29:97:8a</td>
+<td>Locally administered; confirmed <code>Gourd.local</code></td>
+</tr>
+<tr>
+<td>10.0.0.109</td>
+<td>d4:ce:40:38:5b:59</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td>10.0.0.123</td>
+<td>90:09:d0:a0:bb:a2</td>
+<td>Synology Incorporated</td>
+</tr>
+<tr>
+<td>10.0.0.138</td>
+<td>f4:4d:5c:57:28:d0</td>
+<td>Zyxel Communications Corporation</td>
+</tr>
+</tbody>
+</table>
+<p>The first offline sweep missed <code>10.0.0.50</code>, but a direct
+three-retry ARP probe and the five-retry full sweep both proved that it
+remained online. It is therefore not the disconnected Pi.</p>
+<h2 id="ipv6-all-nodes-responders">IPv6 all-nodes responders</h2>
+<p>The robust offline probe observed these remote link-local
+addresses:</p>
+<ul>
+<li><code>fe80::3035:f174:ca61:3faa%en0</code></li>
+<li><code>fe80::3256:fff:fe5:d0fc%en0</code></li>
+<li><code>fe80::f64d:5cff:fe57:28d0%en0</code></li>
+<li><code>fe80::7a45:58ff:fee5:5b58%en0</code></li>
+<li><code>fe80::aa3f:a1ff:fe7c:95a5%en0</code></li>
+<li><code>fe80::1c7d:374b:1ecc:e1a8%en0</code></li>
+<li><code>fe80::96dd:f8ff:fe28:ee7c%en0</code></li>
+<li><code>fe80::a4:1719:e433:83c0%en0</code></li>
+<li><code>fe80::14ea:f6e1:52b6:143a%en0</code></li>
+</ul>
+<h2 id="interpretation">Interpretation</h2>
+<p>No device from the original one-pass connected-state ARP list was
+reliably absent in the offline state. The connected snapshot was too
+shallow for a definitive negative comparison: several ordinary LAN
+devices responded only in the later, stronger sweep. The next
+discriminating test is a positive one: power the Pi back on, run the
+same five-retry sweep, and identify the new IPv4/MAC and IPv6 neighbor
+that is absent from this robust offline baseline.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

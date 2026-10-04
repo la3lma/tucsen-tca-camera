@@ -398,3 +398,29 @@ checks exact sizes, settings metadata, corrected pixel values, PNG production,
 manifest integrity, inert behavior, and pre-output validation. The full native
 suite passes on Apple Silicon; physical dark/flat execution remains the next
 operator-assisted gate.
+
+## Measured delivered-frame cadence
+
+The alpha-7 reader can write a `frame,monotonic_ns` CSV row after each complete
+Bayer frame has been accepted by the output stream. `tca-timing-stats` validates
+the header, consecutive frame numbers, and strictly increasing timestamps, then
+reports interval and delivered-frame-rate statistics. This measures the reader
+and selected output path; it is not a sensor exposure-time measurement or an
+FFmpeg playback time base.
+
+Three direct Apple Silicon runs against the physical microscope camera used
+the final alpha-7 implementation. Every command exited zero, every sidecar had
+exactly one row per frame, byte counts were exact, and all frames within each
+run had distinct SHA-256 hashes:
+
+| Mode and requested controls | Frames | Measured span | Delivered fps | Interval p50 / p95 / max |
+|---|---:|---:|---:|---:|
+| 1280×960, 1 ms, gain 0 | 60 | 3.401246 s | 17.3466 | 55.782 / 68.478 / 101.744 ms |
+| 1280×960, 250 ms, gain 0 | 30 | 3.050803 s | 9.5057 | 105.179 / 105.799 / 105.973 ms |
+| 3664×2748, 250 ms, gain 0 | 12 | 3.941140 s | 2.7911 | 357.589 / 363.621 / 363.621 ms |
+
+The control labels remain the nominal values derived from the recovered row-
+time mapping. The timing result does not independently prove the true sensor
+integration time, and the 1-ms preview run includes a small number of longer
+intervals. It does establish realistic application-facing cadence for both
+recovered modes without inventing timestamps inside the headerless Bayer data.

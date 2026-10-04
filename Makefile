@@ -30,12 +30,14 @@ test: $(TARGET) $(FLAT_FIELD_TARGET)
 	python3 tests/test_static.py $(TARGET) src/tca_camera.c
 	python3 tests/test_v4l2_static.py scripts/tca-v4l2
 	python3 tests/test_frame_stats.py scripts/tca-frame-stats
+	python3 tests/test_timing_stats.py scripts/tca-timing-stats
 	python3 tests/test_white_balance.py scripts/tca-white-balance
 	python3 tests/test_flat_field.py $(FLAT_FIELD_TARGET)
 	python3 tests/test_flat_field_v4l2_static.py tools/run_flat_field_v4l2_preflight.sh
 	python3 tests/test_flat_field_capture_session.py \
 		tools/run_flat_field_capture_session.sh $(FLAT_FIELD_TARGET) scripts/tca-frame-stats
 	python3 tests/test_install.py .
+	python3 tests/test_publication_policy.py .
 	python3 tests/test_pages_static.py .
 
 .PHONY: install
@@ -44,6 +46,7 @@ install: $(TARGET)
 	install -m 0755 $(TARGET) "$(DESTDIR)$(PREFIX)/bin/tca-camera"
 	install -m 0755 scripts/tca-v4l2 "$(DESTDIR)$(PREFIX)/bin/tca-v4l2"
 	install -m 0755 scripts/tca-frame-stats "$(DESTDIR)$(PREFIX)/bin/tca-frame-stats"
+	install -m 0755 scripts/tca-timing-stats "$(DESTDIR)$(PREFIX)/bin/tca-timing-stats"
 	install -m 0755 scripts/tca-white-balance "$(DESTDIR)$(PREFIX)/bin/tca-white-balance"
 	install -m 0755 $(FLAT_FIELD_TARGET) "$(DESTDIR)$(PREFIX)/bin/tca-flat-field"
 
@@ -52,6 +55,7 @@ uninstall:
 	rm -f "$(DESTDIR)$(PREFIX)/bin/tca-camera"
 	rm -f "$(DESTDIR)$(PREFIX)/bin/tca-v4l2"
 	rm -f "$(DESTDIR)$(PREFIX)/bin/tca-frame-stats"
+	rm -f "$(DESTDIR)$(PREFIX)/bin/tca-timing-stats"
 	rm -f "$(DESTDIR)$(PREFIX)/bin/tca-white-balance"
 	rm -f "$(DESTDIR)$(PREFIX)/bin/tca-flat-field"
 

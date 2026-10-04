@@ -53,6 +53,9 @@ def main() -> None:
     assert "TCA_MODE0_ROW_TIME_US 309u" in source
     assert "0x3012u" in source and "0x305eu" in source
     assert '"--exposure-ms"' in source and '"--gain"' in source
+    assert '"--timestamps"' in source
+    assert "CLOCK_MONOTONIC" in source
+    assert '"frame,monotonic_ns\\n"' in source
     assert 'perror("flush raw-first")' in source
     assert "fflush(raw_first)" in source
     assert "discarding bounded warm-up record %u/%u" in source
@@ -69,7 +72,7 @@ def main() -> None:
     version = subprocess.run(
         [str(binary), "--version"], check=True, capture_output=True, text=True
     )
-    assert version.stdout.strip() == "tca-camera 0.2.0-alpha.6"
+    assert version.stdout.strip() == "tca-camera 0.2.0-alpha.7"
     with tempfile.TemporaryDirectory(prefix="tca-linux-stream-") as directory:
         raw = pathlib.Path(directory, "no.raw")
         bayer = pathlib.Path(directory, "no.bayer")
@@ -90,6 +93,16 @@ def main() -> None:
         )
         assert out_of_range.returncode == 64
         assert "NO TRANSFER SENT" in out_of_range.stderr
+        assert not raw.exists() and not bayer.exists()
+        invalid_timestamps = subprocess.run(
+            [str(binary), "capture", "--frames", "1",
+             "--raw-first", str(raw), "--bayer", str(bayer),
+             "--timestamps", "-"],
+            capture_output=True,
+            text=True,
+        )
+        assert invalid_timestamps.returncode == 64
+        assert "NO TRANSFER SENT" in invalid_timestamps.stderr
         assert not raw.exists() and not bayer.exists()
         invalid_mode = subprocess.run(
             [str(binary), "capture", "--frames", "1",

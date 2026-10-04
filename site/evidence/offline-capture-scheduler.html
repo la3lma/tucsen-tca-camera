@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Offline four-lane capture scheduler — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="offline-four-lane-capture-scheduler">Offline four-lane capture
+scheduler</h1>
+<p>Verification performed 2026-09-27. All transfers in this note use a
+mock transport and synthetic frame data. No USB API is linked and no
+request was sent to the camera.</p>
+<h2 id="implemented-slice">Implemented slice</h2>
+<p><code>src/tca_capture.c</code> and <code>src/tca_capture.h</code>
+turn the statically recovered TSView7 bulk scheduler into a portable
+transport-neutral operation. For one fixed-mode frame the core:</p>
+<ul>
+<li>obtains the authoritative geometry and chunk lengths from
+<code>tca_frame</code>;</li>
+<li>primes up to four full-chunk reads into caller-supplied lane staging
+buffers;</li>
+<li>completes and resubmits lanes in the vendor scheduler’s round-robin
+order;</li>
+<li>copies completed staging data into non-overlapping frame
+offsets;</li>
+<li>requires a full chunk for every ordinary completion and the exact
+recovered remainder for the intentionally short final completion;</li>
+<li>performs no retry;</li>
+<li>cancels every still-active lane after submit, completion, or length
+failure;</li>
+<li>reports the failed lane, frame offset, requested/expected/actual
+lengths, raw transport status, completed bytes, and cancellation
+results; and</li>
+<li>returns success only when the accumulated byte count exactly equals
+<code>width * height</code>.</li>
+</ul>
+<p>The distinction between requested and expected length is essential.
+The DLL requests one full <code>chunk_bytes</code> transfer every time,
+including the last read. The camera is expected to end that last
+transfer after exactly <code>final_bytes</code>. Any other short or long
+completion may be a stall, truncation, or frame-boundary loss.
+Continuing while later lanes are already queued could silently shift
+frames, so the reader preserves an unexpected length as an error rather
+than padding, concatenating, or guessing.</p>
+<p>The module allocates no memory and knows nothing about libusb,
+threads, files, or image decoding. A future Linux adapter will implement
+the three callbacks: submit one endpoint-<code>0x82</code> read, wait
+for its completion, and cancel an outstanding lane. The same core can be
+used by macOS or a recorded fixture.</p>
+<h2 id="independent-vendor-path-confirmation">Independent vendor-path
+confirmation</h2>
+<p>The Unicorn fixture now stubs <code>ReadFile</code> and
+<code>GetOverlappedResult</code> and invokes the DLL’s real
+<code>GrabFrame</code> routine. Across all five modes it independently
+confirms every full-chunk request, <code>0,1,2,3</code> lane rotation,
+expected completion length, resubmission, frame offset, and output byte.
+This check caught and rejected an earlier scheduler draft that submitted
+a reduced final request; the corrected implementation instead matches
+the vendor request size while using staging memory to keep the smaller
+output frame safe.</p>
+<h2 id="golden-and-fault-injection-tests">Golden and fault-injection
+tests</h2>
+<p><code>tests/test_tca_capture.c</code> runs all five fixed modes with
+deterministic bytes. It checks frame contents, all recovered read counts
+and lane rotations, and a mode with a fifth read that resubmits lane
+zero. Every test asserts that all submissions request a full chunk while
+the final actual length equals the mode-specific remainder. It then
+injects independently:</p>
+<ul>
+<li>a submit failure at every read boundary;</li>
+<li>a completion failure at every read boundary;</li>
+<li>a one-byte-short completion at every read boundary; and</li>
+<li>a cancellation failure while unwinding a primary completion
+failure.</li>
+</ul>
+<p>Every failing case proves that no lane remains active. Argument,
+unsupported mode, and capacity boundaries are also covered. Strict C17
+and Apple AddressSanitizer/UndefinedBehaviorSanitizer runs pass.</p>
+<p>The same sources compiled and passed natively on
+<code>rpios-17</code> as AArch64. A dynamic-symbol audit found no USB
+symbol:</p>
+<pre class="text"><code>tca capture scheduler tests: PASS
+dynamic-usb-symbols=none
+28e5c634fb6bc1d23c8662116c454f7af5d4b29e30b8d20f7a1ceef819b7fa66  test_tca_capture</code></pre>
+<h2 id="boundary">Boundary</h2>
+<p>This proves scheduler ordering, staged memory safety, the
+full-request/final- remainder distinction, unexpected-length refusal,
+and fail-fast cancellation using synthetic data. It is not a live
+capture and does not establish endpoint behavior, timing, phase,
+orientation, or sustained throughput. The module remains disconnected
+from libusb until D40 provides a stable control response and D50
+validates initialization. D60 must retain the first raw frames and
+actual transfer-length trace before changing this policy.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

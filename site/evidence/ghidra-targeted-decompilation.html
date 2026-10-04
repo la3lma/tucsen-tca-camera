@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Targeted Ghidra decompilation of the TCA software stack — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1
+id="targeted-ghidra-decompilation-of-the-tca-software-stack">Targeted
+Ghidra decompilation of the TCA software stack</h1>
+<p>Static analysis performed 2026-09-29. No analyzed Windows binary was
+executed, no driver was loaded, and this work sent no USB request to the
+camera.</p>
+<h2 id="tool-provenance-and-reproducibility">Tool provenance and
+reproducibility</h2>
+<p>Ghidra 12.1.4 was downloaded from the <a
+href="https://github.com/NationalSecurityAgency/ghidra/releases/tag/Ghidra_12.1.4_build">official
+NSA release</a>, whose page and published checksum were verified
+accessible on 2026-09-29. The archive remained inside the project and
+its SHA-256 matched the release value:</p>
+<pre class="text"><code>ddac49f903da9d5bac833e5cc79395098b9c33cfd3279be5f31bd00387d2d4db  work/ghidra/downloads/ghidra_12.1.4_PUBLIC_20260921.zip</code></pre>
+<p>The distribution identifies itself as version 12.1.4, public build
+2026-09-21. Because the release archive does not ship a macOS x86-64
+decompiler binary, <code>./gradlew buildNatives</code> was run with JDK
+21 and a project-local Gradle cache at
+<code>work/ghidra/gradle-home</code>. The build completed successfully.
+Headless imports and decompilation used the two checked-in helper
+scripts:</p>
+<pre class="text"><code>263bc6e5a8f32c7f459621eb1d3ed433ae331c3539354ae81577d0c7fc5f6370  tools/ghidra/DecompileTargets.java
+1b6d2749eda33afc5d05e539a60f386891dbd291862583ae0ac5cffed5a45e9e  tools/ghidra/ListFunctions.java</code></pre>
+<p>The imported binaries were the purchase-era application DLL and its
+matching 2011 x86-64 KMDF driver:</p>
+<pre class="text"><code>ee9c8ec6a680404c375a6bf0c44ded0486c6e7557cdee379a5f332eb9a8d12ac  work/vendor-extracted/tsview7/inno/app/TS1000.dll
+01c8fdc3b34c0d13cf67c550968d7ae0236e633cb66154a67c04bd10e9326987  work/vendor-extracted/tca/app/tucsen64.sys</code></pre>
+<p>The persistent headless projects are
+<code>work/ghidra/projects/microscope-tca-ghidra</code> and
+<code>work/ghidra/projects/microscope-tca-driver</code>. Generated
+decompiler outputs are under <code>work/analysis/ghidra/</code>; their
+hashes are recorded in <code>evidence/hashes.sha256</code>.</p>
+<h2 id="application-side-control-abi">Application-side control ABI</h2>
+<p>The decompiler independently confirms the ten-byte command record
+already recovered from disassembly and emulation.
+<code>TS1000.dll</code> always calls
+<code>DeviceIoControl(..., 0x222059, record, 10, response, response_length, ...)</code>.
+The matching driver reads:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Record offset</th>
+<th>USB setup field</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">4</td>
+<td><code>bRequest</code></td>
+</tr>
+<tr>
+<td style="text-align: right;">6</td>
+<td><code>wValue</code>, little endian</td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td><code>wIndex</code>, little endian</td>
+</tr>
+</tbody>
+</table>
+<p>The 2011 driver hard-codes <code>bmRequestType=0xc0</code>. In
+particular:</p>
+<ul>
+<li><code>FUN_10008ed0</code> is the sensor-register write wrapper. It
+sends request <code>0x0a</code>, <code>wValue = data XOR 0x17a0</code>,
+<code>wIndex = register XOR 0x17a0</code>, asks for one byte, and
+accepts only acknowledgement <code>0x08</code>.</li>
+<li><code>FUN_10009590</code> is the sensor-register read wrapper. It
+sends request <code>0x11</code>, zero <code>wValue</code>, the register
+address in <code>wIndex</code>, asks for three bytes, requires byte 2 to
+equal <code>0x08</code>, and interprets bytes 0 and 1 as a big-endian
+16-bit value.</li>
+<li><code>FUN_100087b0</code> emits request <code>0x02</code>, value
+zero for this camera’s observed product-string branch, index
+<code>0x000f</code>, and zero response bytes.</li>
+<li><code>FUN_10008810</code> emits the paired request
+<code>0x03</code>, value zero on close, index <code>0x000e</code>, and
+zero response bytes.</li>
+</ul>
+<p>These results match <code>src/tca_protocol.c</code> exactly; no
+protocol correction was needed.</p>
+<h2 id="driver-side-kmdf-path">Driver-side KMDF path</h2>
+<p>The driver imports KMDF through a function table rather than named
+functions. Its package includes <code>WdfCoInstaller01009.dll</code>,
+identifying the KMDF 1.9 generation. The table address corresponding to
+index 322 is <code>0x00016c80</code>, so the inferred base is
+<code>0x00016270</code>. The USB-region indices and call signatures
+agree with Microsoft’s current <a
+href="https://github.com/microsoft/Windows-Driver-Frameworks/blob/main/src/publicinc/wdf/kmdf/1.27/wdffuncenum.h">official
+KMDF function enumeration</a>, verified accessible 2026-09-29 and
+preserved locally as
+<code>work/ghidra/reference/wdffuncenum-kmdf-1.27.h</code>.</p>
+<table>
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 28%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: right;">Driver slot</th>
+<th style="text-align: right;">Index</th>
+<th>Resolved KMDF call</th>
+<th>Observed purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;"><code>0x16c80</code></td>
+<td style="text-align: right;">322</td>
+<td><code>WdfUsbTargetDeviceCreate</code></td>
+<td>Create USB target in prepare-hardware</td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x16c88</code></td>
+<td style="text-align: right;">323</td>
+<td><code>WdfUsbTargetDeviceRetrieveInformation</code></td>
+<td>Read USB capability information</td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x16c90</code></td>
+<td style="text-align: right;">324</td>
+<td><code>WdfUsbTargetDeviceGetDeviceDescriptor</code></td>
+<td>Cache device descriptor</td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x16c98</code></td>
+<td style="text-align: right;">325</td>
+<td><code>WdfUsbTargetDeviceRetrieveConfigDescriptor</code></td>
+<td>Two-pass configuration descriptor retrieval</td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x16cb8</code></td>
+<td style="text-align: right;">329</td>
+<td><code>WdfUsbTargetDeviceGetNumInterfaces</code></td>
+<td>Validate interface count</td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x16cc0</code></td>
+<td style="text-align: right;">330</td>
+<td><code>WdfUsbTargetDeviceSelectConfig</code></td>
+<td>Select the single-interface configuration</td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x16cd8</code></td>
+<td style="text-align: right;">333</td>
+<td><code>WdfUsbTargetDeviceSendControlTransferSynchronously</code></td>
+<td>Submit IOCTL <code>0x222059</code> as endpoint-zero control
+transfer</td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x16ce8</code></td>
+<td style="text-align: right;">335</td>
+<td><code>WdfUsbTargetDeviceIsConnectedSynchronous</code></td>
+<td>First half of IOCTL <code>0x220004</code> recovery path</td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x16cf0</code></td>
+<td style="text-align: right;">336</td>
+<td><code>WdfUsbTargetDeviceResetPortSynchronously</code></td>
+<td>Second half of IOCTL <code>0x220004</code> recovery path</td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x16d18</code></td>
+<td style="text-align: right;">341</td>
+<td><code>WdfUsbTargetPipeGetInformation</code></td>
+<td>Classify selected pipe</td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x16d38</code></td>
+<td style="text-align: right;">345</td>
+<td><code>WdfUsbTargetPipeSetNoMaximumPacketSizeCheck</code></td>
+<td>Allow large application reads</td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x16d78</code></td>
+<td style="text-align: right;">353</td>
+<td><code>WdfUsbTargetPipeResetSynchronously</code></td>
+<td>Reset a selected pipe</td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x16d90</code></td>
+<td style="text-align: right;">356</td>
+<td><code>WdfUsbTargetPipeFormatRequestForUrb</code></td>
+<td>Format split bulk requests</td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x16dd8</code></td>
+<td style="text-align: right;">365</td>
+<td><code>WdfUsbInterfaceGetConfiguredPipe</code></td>
+<td>Select pipe by index</td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>0x16de0</code></td>
+<td style="text-align: right;">366</td>
+<td><code>WdfUsbTargetPipeWdmGetPipeHandle</code></td>
+<td>Populate each bulk URB</td>
+</tr>
+</tbody>
+</table>
+<p><code>FUN_00019008</code>, the device-add path, creates the device
+and request queues. <code>FUN_0001953c</code>, its prepare-hardware
+callback, creates the USB target, obtains the device and configuration
+descriptors, selects one configuration, and records the
+configured-interface handle and pipe count. There is no separate
+firmware-loader call in this path.</p>
+<p>The read path accepts bulk or interrupt IN pipes, splits large
+application reads into at most <code>0x80000</code>-byte URBs, and
+supports multiple outstanding requests. This is consistent with TSView’s
+four-lane overlapped reader and with the successful direct 640-by-480
+bulk capture.</p>
+<h2 id="ioctl-consequence">IOCTL consequence</h2>
+<p>The decompiled <code>FUN_00019988</code> dispatches only
+<code>0x220000</code>, <code>0x220004</code>, <code>0x220008</code>, and
+<code>0x222059</code>. It does not dispatch the DLL’s
+<code>0x22208a</code> call. That call therefore cannot conceal a USB
+control transaction in this matched driver; its failure is ignored by
+the application. Conversely, IOCTL <code>0x220004</code> performs a
+connectivity check and port reset, but the TSView open sequence does not
+call it.</p>
+<h2 id="what-this-proves-and-what-remains-open">What this proves and
+what remains open</h2>
+<p>The Ghidra lane raises confidence in the existing portable protocol,
+geometry, and bulk scheduler. It also narrows the cold-start gap: the
+Windows driver performs ordinary KMDF enumeration/configuration before
+the application’s first request and contains no discovered firmware
+upload in that path.</p>
+<p>It does <strong>not</strong> explain why the exact
+<code>c0 02 0000 000f</code> request stalls from a physical-cold Linux
+session. The next evidence gate remains a successful Windows
+initialization observed below the forwarding layer. Static output is not
+authorization to add or transmit speculative requests.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

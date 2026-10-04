@@ -4,3 +4,37 @@
 *.mkv
 *.mp4
 .DS_Store
+
+# Public-repository publication boundary. Raw reverse-engineering artifacts
+# belong only in the private investigation tree.
+/work/
+/analysis/
+/ghidra/
+/vendor-zips/
+/vendor-static/
+/vendor-extracted/
+*.disasm
+*.disasm.*
+*.gpr
+*.rep
+*.gzf
+*.bndb
+*.i64
+*.idb
+*.dll
+*.sys
+*.exe
+*.msi
+*.cab
+*.cat
+*.pcap
+*.pcapng
+*.etl
+*.hex
+*.fw
+*.bin
+*.zip
+*.7z
+*.rar
+*.strings.txt
+*.headers.txt

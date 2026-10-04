@@ -84,7 +84,7 @@ static const struct init_step init_steps[] = {
 };
 
 static const char execution_token[] = "capture";
-static const char version[] = "0.2.0-alpha.6";
+static const char version[] = "0.2.0-alpha.7";
 static volatile sig_atomic_t stop_requested;
 
 static size_t pixel_bytes(const struct mode_profile *mode)
@@ -347,11 +347,13 @@ int main(int argc, char **argv)
     unsigned char *pixels = NULL;
     FILE *raw_first = NULL;
     FILE *bayer = NULL;
+    FILE *timestamps = NULL;
     uint64_t requested_frames = 0;
     uint64_t frames = 0;
     unsigned initial_resyncs = 0u;
     const char *raw_path = NULL;
     const char *bayer_path = NULL;
+    const char *timestamps_path = NULL;
     uint32_t exposure_ms = 0u;
     uint32_t gain = 0u;
     uint32_t mode_number = 2u;
@@ -375,7 +377,8 @@ int main(int argc, char **argv)
         fprintf(stdout,
                 "NO TRANSFER SENT. usage: %s %s --frames COUNT "
                 "--raw-first RAW --bayer OUTPUT|- "
-                "[--mode 0|2] [--exposure-ms MS] [--gain 0..320]\n",
+                "[--timestamps CSV] [--mode 0|2] "
+                "[--exposure-ms MS] [--gain 0..320]\n",
                 argv[0], execution_token);
         return EXIT_SUCCESS;
     }
@@ -406,6 +409,11 @@ int main(int argc, char **argv)
             bayer_path = argv[argument + 1];
             continue;
         }
+        if (strcmp(argv[argument], "--timestamps") == 0 &&
+            timestamps_path == NULL) {
+            timestamps_path = argv[argument + 1];
+            continue;
+        }
         if (strcmp(argv[argument], "--mode") == 0 && !mode_set &&
             parse_u32(argv[argument + 1], 0u, 2u, &mode_number) &&
             find_mode(mode_number) != NULL) {
@@ -431,7 +439,11 @@ int main(int argc, char **argv)
     }
     if (!frames_set || raw_path == NULL || bayer_path == NULL ||
         strcmp(raw_path, "-") == 0 ||
-        strcmp(raw_path, bayer_path) == 0) {
+        strcmp(raw_path, bayer_path) == 0 ||
+        (timestamps_path != NULL &&
+         (strcmp(timestamps_path, "-") == 0 ||
+          strcmp(timestamps_path, raw_path) == 0 ||
+          strcmp(timestamps_path, bayer_path) == 0))) {
         fputs("NO TRANSFER SENT: missing or conflicting output paths\n", stderr);
         return 64;
     }
@@ -452,6 +464,18 @@ int main(int argc, char **argv)
     if (bayer == NULL) {
         perror(bayer_path);
         goto done;
+    }
+    if (timestamps_path != NULL) {
+        timestamps = fopen(timestamps_path, "wx");
+        if (timestamps == NULL) {
+            perror(timestamps_path);
+            goto done;
+        }
+        if (fputs("frame,monotonic_ns\n", timestamps) == EOF ||
+            fflush(timestamps) != 0) {
+            perror("write timestamp header");
+            goto done;
+        }
     }
     if (signal(SIGINT, request_stop) == SIG_ERR ||
         signal(SIGTERM, request_stop) == SIG_ERR ||
@@ -628,9 +652,29 @@ int main(int argc, char **argv)
             perror("write Bayer stream");
             goto done;
         }
+        if (timestamps != NULL) {
+            struct timespec delivered;
+            uint64_t delivered_ns;
+
+            if (clock_gettime(CLOCK_MONOTONIC, &delivered) != 0 ||
+                delivered.tv_sec < 0 || delivered.tv_nsec < 0) {
+                perror("clock_gettime(CLOCK_MONOTONIC)");
+                goto done;
+            }
+            delivered_ns = (uint64_t)delivered.tv_sec * 1000000000ULL +
+                           (uint64_t)delivered.tv_nsec;
+            if (fprintf(timestamps, "%llu,%llu\n",
+                        (unsigned long long)(frames + 1u),
+                        (unsigned long long)delivered_ns) < 0 ||
+                fflush(timestamps) != 0) {
+                perror("write timestamp");
+                goto done;
+            }
+        }
         ++frames;
     }
-    if (fflush(raw_first) != 0 || fflush(bayer) != 0) {
+    if (fflush(raw_first) != 0 || fflush(bayer) != 0 ||
+        (timestamps != NULL && fflush(timestamps) != 0)) {
         perror("flush output");
         goto done;
     }
@@ -661,6 +705,9 @@ done:
         status = EXIT_FAILURE;
     }
     if (raw_first != NULL && fclose(raw_first) != 0) {
+        status = EXIT_FAILURE;
+    }
+    if (timestamps != NULL && fclose(timestamps) != 0) {
         status = EXIT_FAILURE;
     }
     return status;

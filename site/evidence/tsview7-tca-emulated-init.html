@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TSView7 TCA initialization emulation — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="tsview7-tca-initialization-emulation">TSView7 TCA initialization
+emulation</h1>
+<p>Offline reconstruction performed 2026-09-27. No host USB API is
+imported by the emulator and no camera device can be opened by it.</p>
+<h2 id="method-and-boundary">Method and boundary</h2>
+<p><code>tools/emulate_tca_init.py</code> maps the preserved 32-bit x86
+TSView7 <code>TS1000.dll</code> (SHA-256
+<code>ee9c8ec6a680404c375a6bf0c44ded0486c6e7557cdee379a5f332eb9a8d12ac</code>)
+into Unicorn. It constructs the DLL’s camera object and emulates the
+fixed-mode initialization routine. Windows process calls and the driver
+boundary are stubbed. Calls to <code>DeviceIoControl(0x222059)</code>
+are recorded as their raw ten-byte input records.</p>
+<p>The private evidence DLL is emulated, not run natively. The emulated
+device open is forced successful, and register-read responses are
+synthetic values chosen only to keep the recovered control flow moving.
+Consequently this is byte-accurate evidence of what this DLL constructs
+for the driver under those responses; it is not evidence that the
+physical camera accepts the sequence.</p>
+<p>The project-local environment uses <code>pefile==2024.8.26</code> and
+<code>unicorn==2.1.4</code>, pinned in
+<code>tools/requirements-emulation.txt</code>.</p>
+<h2 id="corrected-record-layout">Corrected record layout</h2>
+<p>The raw first mode-4 write record is:</p>
+<pre class="text"><code>01 02 00 10 0a 00 a0 17 a0 16</code></pre>
+<p>The matching TCA driver maps byte 4 to <code>bRequest</code>, bytes
+6–7 to <code>wValue</code>, and bytes 8–9 to <code>wIndex</code>.
+Request <code>0x0a</code> XOR-obfuscates its fields with
+<code>0x17a0</code>:</p>
+<pre class="text"><code>wValue ^ 0x17a0 = data value
+wIndex ^ 0x17a0 = sensor register</code></pre>
+<p>The example therefore writes value <code>0x0000</code> to register
+<code>0x0100</code>. Request <code>0x11</code> records instead have
+<code>wValue=0x0000</code> and the register in <code>wIndex</code>. This
+independently corrects the earlier Linux read probe, which had reversed
+those fields.</p>
+<h2 id="fixed-mode-result">Fixed-mode result</h2>
+<p>All five fixed modes return success in the synthetic environment and
+use the same sleep schedule: 300, 1, 10, and 200 ms.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Mode</th>
+<th style="text-align: right;">Decoded <code>0x0a</code> writes</th>
+<th>Synthetic calibration reads</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">28</td>
+<td><code>0x24c0</code>, <code>0x24c4</code>, <code>0x24c6</code></td>
+</tr>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">28</td>
+<td><code>0x24c0</code>, <code>0x24c8</code></td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">28</td>
+<td><code>0x24c0</code>, <code>0x24cc</code></td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">35</td>
+<td><code>0x24c0</code>, <code>0x24d0</code></td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">35</td>
+<td><code>0x24c0</code>, <code>0x24d4</code></td>
+</tr>
+</tbody>
+</table>
+<p>The complete mode-4 decoded write sequence is held as a golden
+fixture in <code>tests/test_emulate_tca_init.py</code>. It includes the
+expected window registers, PLL/timing setup, grouped-parameter holds,
+stream start (<code>0x0100=0x0100</code>), and final
+<code>0x3012=0x0836</code> write. The dynamic ROI mode 5 is deliberately
+omitted.</p>
+<p>Run the deterministic offline verification with:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> test-emulator</span></code></pre></div>
+<p>The test checks all mode counts, timing calls, calibration-read
+addresses, the raw first IOCTL record, the corrected read field order,
+the exact mode-4 write list, and the absence of host USB imports.</p>
+<h2 id="emulated-bulk-scheduler">Emulated bulk scheduler</h2>
+<p>The emulator also stubs <code>ReadFile</code> and
+<code>GetOverlappedResult</code> and calls the vendor
+<code>GrabFrame</code> path at <code>0x100020f0</code>. For all five
+fixed modes, the DLL:</p>
+<ul>
+<li>creates and rotates four overlapped lanes in order
+<code>0,1,2,3</code>;</li>
+<li>submits <code>chunk_bytes</code> for every read, including the
+last;</li>
+<li>accepts <code>chunk_bytes</code> for each ordinary completion;</li>
+<li>accepts the smaller <code>final_bytes</code> remainder for the last
+completion; and</li>
+<li>copies exactly <code>width * height</code> deterministic bytes into
+the caller buffer.</li>
+</ul>
+<p>The golden test verifies every submission, completion, lane,
+requested length, actual length, frame offset, and output byte across
+all modes. This independently corrected an initial portable-scheduler
+draft that had requested only the final remainder directly. The portable
+implementation now uses four explicit staging buffers so its submitted
+lengths match the DLL without risking a write beyond the output
+frame.</p>
+<h2 id="bayer-phase-and-byte-order">Bayer phase and byte order</h2>
+<p>The same isolated emulator calls the DLL’s default bilinear
+conversion routine at <code>0x10005250</code> with an 8x8 synthetic
+mosaic whose four 2x2 phases contain distinct constants. Every interior
+output pixel becomes <code>30 25 20</code>, while the routine zeros its
+one-pixel border. The only consistent interpretation is:</p>
+<pre class="text"><code>raw phase at memory origin:  G R
+                             B G    (GRBG)
+
+24-bit output byte order:    B G R  (Windows BGR24)</code></pre>
+<p>This identifies the DLL’s memory convention without claiming how the
+sensor is physically rotated in the microscope. Physical orientation and
+whether a live frame starts at the same crop phase still require a
+captured target image.</p>
+<h2 id="live-use-consequence">Live-use consequence</h2>
+<p>This extraction narrows future implementation work but does not
+authorize a full initialization replay. The next physical action remains
+the one bounded v2 open/read/close probe after a genuine camera USB
+power cycle. If that first corrected read succeeds, the emulated write
+sequence can be divided into small, evidence-backed live prefixes with
+health checks and recovery between them.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

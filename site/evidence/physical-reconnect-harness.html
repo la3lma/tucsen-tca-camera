@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Physical cable reconnect acceptance harness — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="physical-cable-reconnect-acceptance-harness">Physical cable
+reconnect acceptance harness</h1>
+<p>Prepared: 2026-10-03</p>
+<p>Status: staged and inert-tested; physical disconnect/reconnect not
+yet run.</p>
+<p><code>tools/run_alpha3_reconnect_acceptance.sh</code> turns the
+remaining D100 cable test into a bounded, evidence-producing
+interaction. Without arguments it prints a dry run and performs no USB
+transfer and no wait. Static/inert tests pass.</p>
+<p>The execution path requires:</p>
+<ul>
+<li>exactly one enumerated USB <code>0547:c003</code> before
+starting;</li>
+<li>exact release commit
+<code>3c16d2ae560ae0668033b70c42ce881d78197959</code>;</li>
+<li>the exact opt-in token printed by the dry run;</li>
+<li>observation of camera count zero before accepting a re-enumeration;
+and</li>
+<li>an existing, explicitly supplied evidence parent.</li>
+</ul>
+<p>After the physical reconnect it runs only alpha-3’s documented mode-2
+startup, gain 20, 100-ms exposure, and three-frame capture. It requires
+the exact 1,229,312-byte untouched device frame, 3,686,400 Bayer bytes,
+and <code>frames=3 status=ok</code>; it then analyzes the first frame
+and hashes the evidence directory. It contains no reset,
+deauthorization, configuration change, firmware operation, or arbitrary
+control surface.</p>
+<p>The harness was copied to:</p>
+<pre class="text"><code>/home/rmz/tca-reconnect-harness/run_alpha3_reconnect_acceptance.sh</code></pre>
+<p>on <code>rpios-17</code>, with release worktree
+<code>/home/rmz/tucsen-tca-camera-alpha3-3c16d2a</code> and existing
+evidence parent <code>/home/rmz/tca-reconnect-evidence</code>. Its
+Pi-side SHA-256 is:</p>
+<pre class="text"><code>64320a0050a7a900975d69efca4447e76f2b50c1bf6163e58e75910a52fc06c8</code></pre>
+<p>The Pi dry run confirmed the exact commit and reported
+<code>transfer=none</code>; the camera remained present as
+<code>Bus 003 Device 002: ID 0547:c003</code>. The active wait has
+deliberately not been started because it requires the camera owner to be
+ready to unplug and reconnect the camera USB cable while leaving the Pi
+powered.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

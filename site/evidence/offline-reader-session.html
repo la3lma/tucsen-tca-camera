@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portable reader session, queue, and CLI — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="portable-reader-session-queue-and-cli">Portable reader session,
+queue, and CLI</h1>
+<p>Evidence date: 2026-09-29</p>
+<h2 id="scope">Scope</h2>
+<p>The first D70 implementation slice is a transport-neutral C17 reader
+session. It does not link libusb and cannot send a USB request. A
+backend callback table supplies enumeration, claim, configuration,
+start, exact raw-frame capture, control, stop, close, and clock
+operations. The replay backend and mock backend exercise the same
+surface intended for the future traced live USB backend.</p>
+<p>Sources:</p>
+<ul>
+<li><code>src/tca_reader.h</code></li>
+<li><code>src/tca_reader.c</code></li>
+<li><code>tools/tca_reader_cli.c</code></li>
+<li><code>tests/test_tca_reader.c</code></li>
+<li><code>tests/test_tca_reader_cli.py</code></li>
+</ul>
+<h2 id="lifecycle-and-fault-contract">Lifecycle and fault contract</h2>
+<p>The implementation enforces:</p>
+<pre class="text"><code>disconnected -&gt; enumerated -&gt; claimed -&gt; initialized -&gt; acquiring
+                                                    -&gt; stopping -&gt; initialized
+any active state -&gt; fault -&gt; close -&gt; disconnected</code></pre>
+<p>Each backend failure records the prior state, operation name,
+expected and actual byte length, and backend status. An exact-length
+failure enters <code>fault</code>; <code>close</code> then releases the
+backend and allows a complete reopen/configure/start cycle. There are no
+implicit retries.</p>
+<h2 id="frame-and-queue-contract">Frame and queue contract</h2>
+<p>For every accepted raw frame the core:</p>
+<ol type="1">
+<li>requires the fixed mode’s exact <code>width * height</code> Bayer8
+byte count;</li>
+<li>decodes using an explicit Bayer pattern and RGB/BGR output
+order;</li>
+<li>assigns a monotonic sequence and backend-clock timestamps;</li>
+<li>snapshots mode, frame speed, exposure, and analog gain; and</li>
+<li>places the decoded frame in a bounded queue.</li>
+</ol>
+<p><code>keep-latest</code> drops the oldest queued frame when full and
+increments the drop counter. <code>lossless</code> preserves queued
+frames, rejects the newly acquired frame with a backpressure result, and
+increments both backpressure and drop counters. The caller must
+explicitly choose the policy.</p>
+<p>The control surface accepts exposure milliseconds, normalized analog
+gain, and the four recovered frame-speed values. It reuses the existing
+control planners for range checking and rejects a faster frame-speed
+selection if the current exposure would exceed the new mode/speed limit.
+The backend remains responsible for executing the already modeled
+request plans.</p>
+<h2 id="cli">CLI</h2>
+<p>The <code>work/camera-reader</code> prototype exposes two safe
+commands:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">work/camera-reader</span> inspect <span class="at">--mode</span> 4</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">work/camera-reader</span> replay <span class="at">--mode</span> 4 <span class="at">--pattern</span> grbg <span class="at">--order</span> rgb24 <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  INPUT.raw OUTPUT.rgb</span></code></pre></div>
+<p><code>inspect</code> reports geometry, frame/chunk sizes, scheduled
+reads, row time, maximum exposure, and gain range. <code>replay</code>
+sends exact Bayer frames through the reader lifecycle, decoder, queue,
+pop, diagnostics, stop, and close paths. It contains no live
+backend.</p>
+<p><code>replay</code> also accepts <code>--repeat COUNT</code>; zero
+means repeat until interrupted. Only seekable, non-empty, exact-frame
+files may repeat, and repeating stdin is refused. This supplies a
+bounded-memory continuous source to the temporary V4L2 bridge without
+weakening short-frame validation.</p>
+<p>Using the authoritative live-captured mode-4 frame, the reader
+emitted 921,600 RGB24 bytes with SHA-256:</p>
+<pre class="text"><code>7bd81cd2db9c3cf620dfeec3de087bf9b8f884544d7183b4465b63676e97d5c8</code></pre>
+<p>The output is byte-identical to <code>tca_raw_convert</code> for the
+same input, pattern, and order. Diagnostics report one captured, queued,
+and delivered frame with no drop or backpressure event.</p>
+<h2 id="verification">Verification</h2>
+<p>Native macOS:</p>
+<ul>
+<li>strict C17 build with <code>-Wall -Wextra -Werror -pedantic</code>
+passes;</li>
+<li>lifecycle, metadata, controls, latest-queue, lossless-backpressure,
+short-frame fault, close/reopen, and backend-failure tests pass;</li>
+<li>CLI inspect, two-frame replay, short trailing-frame failure,
+diagnostics, and argument refusal tests pass;</li>
+<li>AddressSanitizer and UndefinedBehaviorSanitizer execution
+passes.</li>
+</ul>
+<p>Ubuntu ARM64 VM:</p>
+<ul>
+<li>the same strict C17 reader and CLI build natively as AArch64 ELF
+binaries;</li>
+<li>reader session and CLI black-box tests pass; and</li>
+<li>the captured-frame RGB24 hash matches macOS exactly.</li>
+</ul>
+<p>The full project core, raw replay, and TSView emulation suites also
+pass after this addition.</p>
+<h2 id="remaining-boundary">Remaining boundary</h2>
+<p>This is meaningful D70 code but not D70 completion. The callback
+surface still needs a live backend after D40/D50 establish the
+cold-start sequence, and live streaming still needs repeated
+physical-frame timestamps, controls, reconnect, and endurance proof. The
+new core deliberately does not guess those operations.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

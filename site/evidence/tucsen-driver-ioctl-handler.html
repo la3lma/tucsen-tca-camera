@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tucsen KMDF control-handler analysis — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="tucsen-kmdf-control-handler-analysis">Tucsen KMDF
+control-handler analysis</h1>
+<p>Static inspection performed 2026-09-27. Neither driver was loaded, no
+Windows executable was run, and no request was sent to the camera.</p>
+<h2 id="analyzed-binaries">Analyzed binaries</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Architecture</th>
+<th>SHA-256</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>work/vendor-extracted/tca/app/tucsen.sys</code></td>
+<td>2011, 32-bit x86</td>
+<td><code>bcdc650eed43d339e4a40318d34883194791df1a2f580a2a18f3eab7c4fc979c</code></td>
+</tr>
+<tr>
+<td><code>work/vendor-extracted/tca/app/tucsen64.sys</code></td>
+<td>2011, x86-64</td>
+<td><code>01c8fdc3b34c0d13cf67c550968d7ae0236e633cb66154a67c04bd10e9326987</code></td>
+</tr>
+<tr>
+<td><code>work/vendor-extracted/beta/app/tucsen.sys</code></td>
+<td>2013, 32-bit x86</td>
+<td><code>f93ab23ffe9591a6b5f3d1f1f65c938061cf5c6a4d253205e966310a09a4ffee</code></td>
+</tr>
+<tr>
+<td><code>work/vendor-extracted/beta/app/tucsen64.sys</code></td>
+<td>2013, x86-64</td>
+<td><code>588d622176d212a8fb3cba821f4f6770f6bf2de3ab1576f6b79f9f616c99bb3a</code></td>
+</tr>
+</tbody>
+</table>
+<p>The 2011 pair are KMDF drivers built in September 2010 from a project
+whose embedded PDB path ends in <code>ncusb.pdb</code>. The INF binds
+both <code>0547:c003</code> and <code>0828:c003</code> and names the
+device <code>Tucsen TCA-10.0-N Camera</code>.</p>
+<p>The 2013 INF labels <code>0547:c003</code> as
+<code>IS1000 USB Camera</code>; this package is the generation matched
+to the inspected 2012 <code>TS1000.dll</code>. Its two driver builds
+implement a materially different setup-packet mapping, discovered after
+the first Linux trials with the 2011 mapping stalled.</p>
+<h2 id="ioctl-dispatch">IOCTL dispatch</h2>
+<p>The <code>EvtIoDeviceControl</code>-shaped routines begin at
+preferred-image addresses <code>0x00016998</code> in the x86 driver and
+<code>0x00019988</code> in the x86-64 driver. Both use the same
+subtraction chain to dispatch four control codes:</p>
+<pre class="text"><code>0x220000
+0x220004
+0x220008
+0x222059</code></pre>
+<p>The final branch is reached by subtracting <code>0x220000</code>,
+then <code>4</code>, then <code>4</code>, and finally
+comparing/subtracting <code>0x2051</code>. This independently confirms
+that the user-mode DLL’s sole <code>DeviceIoControl</code> wrapper
+reaches the <code>0x222059</code> branch.</p>
+<h2 id="setup-packet-construction">2011 setup-packet construction</h2>
+<p>The <code>0x222059</code> branch is at <code>0x00016a1a</code> (x86)
+and <code>0x00019a27</code> (x86-64). The two compiler outputs agree on
+the following behavior:</p>
+<ol type="1">
+<li>Obtain the ten-byte input record and the caller’s direct-I/O
+response buffer.</li>
+<li>Zero-initialize an eight-byte
+<code>WDF_USB_CONTROL_SETUP_PACKET</code>.</li>
+<li>Set the setup packet’s first byte to <code>0xc0</code>.</li>
+<li>Copy input-record byte offset 4 to <code>bRequest</code>.</li>
+<li>Copy the little-endian 16-bit value at offset 6 to
+<code>wValue</code>.</li>
+<li>Copy the little-endian 16-bit value at offset 8 to
+<code>wIndex</code>.</li>
+<li>Submit a synchronous USB control transfer and complete the WDF
+request with the resulting status and transferred-byte count.</li>
+</ol>
+<p>The decisive x86 instructions are:</p>
+<pre class="text"><code>movzx ecx, word ptr [esi + 0x8]  ; wIndex
+movzx edx, word ptr [esi + 0x6]  ; wValue
+mov   bl,  byte ptr [esi + 0x4]  ; bRequest
+...
+and   al, 0x1c
+or    al, 0xc0
+...
+mov   byte ptr [setup + 1], bl
+mov   word ptr [setup + 2], dx
+mov   word ptr [setup + 4], cx</code></pre>
+<p>The x86-64 routine performs the same loads from offsets 8, 6, and 4
+and the same <code>and al,0x1c; or al,0xc0</code> construction. The
+resulting byte has direction device-to-host, vendor type, and device
+recipient. It is therefore exactly the libusb request type
+<code>LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE</code>,
+or <code>0xc0</code>.</p>
+<p>The first four bytes of the record are not consulted by this older
+handler. The driver does not derive direction, type, or recipient from
+them; it hard-codes all three properties. The earlier <code>0xc0</code>
+interpretation is now a confirmed static result for the <strong>2011
+driver only</strong>, not an inference.</p>
+<h2 id="setup-packet-construction-1">2013 setup-packet construction</h2>
+<p>The later x86 and x86-64 handlers agree with each other but not with
+the 2011 pair. For IOCTL <code>0x222059</code>, they:</p>
+<ol type="1">
+<li>read record byte 0 as a direction flag;</li>
+<li>shift its low bit into setup-packet bit 7;</li>
+<li>set the vendor-type bits with <code>OR 0x40</code>;</li>
+<li>copy record byte 4 to <code>bRequest</code>;</li>
+<li>copy record words at offsets 6 and 8 to <code>wValue</code> and
+<code>wIndex</code>.</li>
+</ol>
+<p>The decisive x86 sequence at
+<code>0x1709a</code>–<code>0x170dc</code> includes:</p>
+<pre class="text"><code>mov   al, byte ptr [esi + 0x4]  ; request
+movzx ecx, byte ptr [esi]       ; direction flag
+movzx edx, word ptr [esi + 0x8] ; index
+movzx ebx, word ptr [esi + 0x6] ; value
+...
+and   al, 0x1c
+shl   cl, 0x7
+or    al, cl
+or    al, 0x40</code></pre>
+<p>The x86-64 sequence at <code>0x1a2f9</code>–<code>0x1a352</code>
+performs the same operation. <code>TS1000.dll</code> initializes its
+wrapper record as direction <code>0</code>, type <code>2</code>,
+recipient <code>0</code>, then places the request at byte 4. With the
+matched 2013 driver, that record therefore produces
+<code>bmRequestType = 0x40</code>: host-to-device, vendor, device. The
+DLL zero-initializes its ten-byte transfer buffers, so commands whose
+record length is ten send ten zero bytes; they do not read a ten-byte
+response.</p>
+<h2 id="equivalent-libusb-shape-for-the-matched-2013-pair">Equivalent
+libusb shape for the matched 2013 pair</h2>
+<p>For an eight-byte DLL record laid out as
+<code>request, pad, value, index, length</code>, the corresponding
+operation is now known to have this shape:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>libusb_control_transfer<span class="op">(</span>handle<span class="op">,</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                        <span class="bn">0x40</span><span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                        record<span class="op">.</span>request<span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                        record<span class="op">.</span>value<span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>                        record<span class="op">.</span>index<span class="op">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>                        zero_filled_command<span class="op">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>                        record<span class="op">.</span>length<span class="op">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>                        timeout_ms<span class="op">);</span></span></code></pre></div>
+<p>This is a protocol mapping, not authorization to transmit every
+embedded request. Request <code>0xb3</code> remains especially
+unsuitable for an initial trial because the DLL invokes it immediately
+before bulk capture and requests no data stage.</p>
+<h2 id="live-falsification-of-the-older-mapping">Live falsification of
+the older mapping</h2>
+<p>On 2026-09-27, bounded Linux trials using the 2011 <code>0xc0</code>
+interpretation sent <code>b4/c4</code>, <code>b4/c0</code>,
+<code>bb/0</code>, and <code>ba/0</code>. Every operation returned
+<code>LIBUSB_ERROR_PIPE</code> before a data stage. Each trial was
+followed by successful descriptor reads and interface claim/release, and
+the device remained at the same bus address. These failures are
+consistent with using the wrong direction for the 2013 DLL/driver
+generation and prompted the cross-generation audit.</p>
+<p>A subsequent bounded trial used that corrected <code>0x40</code>
+mapping and still returned <code>LIBUSB_ERROR_PIPE</code>, with a
+healthy post-check. Recovery of the official TSView7 package then showed
+that the purchase-era TCA lineage uses a different request family
+entirely. Further live work follows
+<code>tsview7-tca-protocol-map.md</code>; the
+<code>b3</code>–<code>be</code> family is retained as later- generation
+evidence, not as the next experiment.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

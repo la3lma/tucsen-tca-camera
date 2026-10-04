@@ -1570,7 +1570,7 @@ and both 232-entry Windows INFs omit
 firmware payload. A 2026-10-03 official-domain refresh found firmware
 tools only for unrelated newer Tucsen families and no exact-model
 candidate. See the <a
-href="../evidence/firmware-discovery.md">firmware-discovery
+href="../evidence/firmware-discovery.html">firmware-discovery
 evidence</a>. This bounded negative result does not change the delivery
 dependency graph.</p>
 <p>Useful search aliases include <code>TCA-10.0N</code>,
@@ -1596,7 +1596,7 @@ application and supports selecting a standard V4L2/media bridge on
 Linux. It does not resolve cold initialization, prove
 UVC/DirectShow/TWAIN registration, or authorize a live request. See the
 <a
-href="../evidence/micromanager-application-precedent.md">Micro-Manager
+href="../evidence/micromanager-application-precedent.html">Micro-Manager
 application precedent</a>.</p>
 <h3 data-number="5.4.3"
 id="non-gating-reverse-engineering-lane-ghidra-call-graph-recovery"><span
@@ -1676,7 +1676,7 @@ IOCTLs, ordinary KMDF USB enumeration/configuration, and the split
 bulk-URB path. It also proves that the DLL’s ignored
 <code>0x22208a</code> call cannot hide a USB transaction in the matched
 driver. No firmware-loader call was found in prepare-hardware. See the
-<a href="../evidence/ghidra-targeted-decompilation.md">targeted Ghidra
+<a href="../evidence/ghidra-targeted-decompilation.html">targeted Ghidra
 evidence</a>.</p>
 <p>This substantially improves maintainability and cross-checks the
 current C17 implementation, but does not yet explain the physical-cold
@@ -2164,7 +2164,7 @@ one buffered pre-control record is handled explicitly, a 16-frame motion
 proof passes, and neutral-background white balance is reproducible. The
 current 10x blank field is measurably asymmetric: equal regions range
 from mean luma 134.0 at bottom-left to 193.9 at top-middle. The <a
-href="../evidence/field-illumination-correction.md">field-uniformity
+href="../evidence/field-illumination-correction.html">field-uniformity
 note</a> records a Köhler alignment and relay-isolation checklist plus a
 per-Bayer-plane dark/flat correction that can run before demosaic or
 V4L2 output. Public commit <code>1dc096b</code> implements that
@@ -2174,7 +2174,7 @@ preflight corrected six full 1280x960 GRBG frames, converted them to
 YUYV, had a separate application consume all six through the temporary
 loopback, and cleaned up; 60 corrected preview frames measured
 approximately 225 frames/s. The <a
-href="../evidence/flat-field-v4l2-preflight.md">flat-field/V4L2
+href="../evidence/flat-field-v4l2-preflight.html">flat-field/V4L2
 record</a> separates that software proof from the still-open physical
 dark/flat capture. Public commit <code>6eb68a7</code> records exposure
 and gain in new maps and makes the V4L2 bridge reject unknown or
@@ -2184,7 +2184,7 @@ frames and corrected eight of them with an intentionally invalid
 self-flat plus an illuminated 1-ms proxy dark. Its 3x3 max/min region
 ratio fell from 1.336910 to 1.001023, proving full-size pixel plumbing
 while also showing that a self-flat removes the specimen scene. The <a
-href="../evidence/macos-physical-flat-field-self-test.md">physical
+href="../evidence/macos-physical-flat-field-self-test.html">physical
 self-test</a> therefore leaves true same-settings blocked darks and
 translated/defocused blank flats explicitly open. Public commit
 <code>176ef90</code> now makes that hands-on gate reproducible. Its
@@ -2193,7 +2193,7 @@ prompts for blocked darks and separately repositioned flat batches,
 withholds a fresh blank and real specimen for validation, verifies byte
 counts, renders before/after frames, and hashes the completed bundle.
 EOF, signals, or failures leave an incomplete marker. The <a
-href="../evidence/guided-flat-field-capture-session.md">guided-session
+href="../evidence/guided-flat-field-capture-session.html">guided-session
 evidence</a> records USB-free end-to-end passes on Apple Silicon and
 exact-commit Raspberry Pi AArch64; no camera move was needed for that
 validation. An inert exact-commit harness remains staged to capture both
@@ -2266,9 +2266,9 @@ claimed interface on exit. Native ARM64 Linux and Apple Silicon builds
 pass an exact libusb import allowlist and inert CLI tests; GitHub CI
 repeats both builds. Ten separate live processes completed
 open/init/capture/close without failure. See the <a
-href="../evidence/offline-reader-session.md">portable reader
+href="../evidence/offline-reader-session.html">portable reader
 evidence</a> and <a
-href="../evidence/public-release-live-validation.md">public
+href="../evidence/public-release-live-validation.html">public
 live-validation evidence</a>.</p>
 <p>Happy-day steps:</p>
 <ol type="1">
@@ -2339,8 +2339,8 @@ device, refuses to disturb an existing loopback configuration, and
 removes only the device it created. <code>v4l2-ctl</code> reported the
 intended format and FFmpeg consumed three frames into a lossless
 recording. See the <a
-href="../evidence/linux-v4l2-replay-bridge.md">Linux V4L2 replay bridge
-evidence</a> and report milestone.</p>
+href="../evidence/linux-v4l2-replay-bridge.html">Linux V4L2 replay
+bridge evidence</a> and report milestone.</p>
 <p>Happy-day steps:</p>
 <ol type="1">
 <li>Choose the smallest standard path and document the decision.</li>
@@ -2423,9 +2423,10 @@ first cold-attach invocation failed closed on a one-byte response where
 the trace predicts a stall; all subsequent controls returned the
 predicted stall. AVFoundation/Camera Extension work remains a recorded
 deferral under the owner’s Linux-first, macOS-non-blocking objective.
-See <a href="../evidence/macos-native-cable-validation.md">native-cable
-Apple Silicon validation</a> and <a
-href="../evidence/macos-virtualhere-live-validation.md">relay
+See <a
+href="../evidence/macos-native-cable-validation.html">native-cable Apple
+Silicon validation</a> and <a
+href="../evidence/macos-virtualhere-live-validation.html">relay
 validation</a>.</p>
 </div>
 <div class="task-card" data-state="active">
@@ -2595,13 +2596,13 @@ at exact commit <code>3c16d2a</code>. Independent main and tag CI runs
 pass on Ubuntu and macOS. A clean exact-tag Pi worktree passed all
 tests, then cold-captured and analyzed one exact-size physical frame
 with controls and exit zero.</p>
-<p>The current <a href="../evidence/release-acceptance-audit.md">release
-acceptance audit</a> marks the Linux reader/API, preview endurance,
-application bridge, direct-cable Apple Silicon reader path, safety,
-reproducibility, and legal-hygiene requirements as passed. D120 remains
-open for physical cable reconnect and optical/color validation.
-AVFoundation remains an explicit Linux-first deferral rather than an
-exit blocker.</p>
+<p>The current <a
+href="../evidence/release-acceptance-audit.html">release acceptance
+audit</a> marks the Linux reader/API, preview endurance, application
+bridge, direct-cable Apple Silicon reader path, safety, reproducibility,
+and legal-hygiene requirements as passed. D120 remains open for physical
+cable reconnect and optical/color validation. AVFoundation remains an
+explicit Linux-first deferral rather than an exit blocker.</p>
 </div>
 <div class="task-card" data-state="proposed">
 <!-- task: D120; depends: D110; state: proposed -->
@@ -2689,7 +2690,7 @@ class="header-section-number">5.6</span> Evidence Ledger</h2>
 <td>E-001</td>
 <td>Physical enclosure and lack of visible model marking are
 documented</td>
-<td><a href="../evidence/photos/">Owner photographs</a></td>
+<td><a href="../evidence/photos/index.html">Owner photographs</a></td>
 <td>VERIFIED</td>
 </tr>
 <tr>
@@ -2697,15 +2698,15 @@ documented</td>
 <td>Device is <code>0547:c003</code>, high-speed USB 2.0, one
 <code>0xff</code> interface, bulk IN <code>0x82</code>, 512-byte
 packets</td>
-<td><a href="../evidence/device-identity.md">Device identity</a> and Pi
-enumeration</td>
+<td><a href="../evidence/device-identity.html">Device identity</a> and
+Pi enumeration</td>
 <td>VERIFIED</td>
 </tr>
 <tr>
 <td>E-003</td>
 <td>Linux opens and safely claims/releases interface 0 without a
 transfer-capable probe</td>
-<td><a href="../evidence/safe-libusb-probe.md">Safe libusb
+<td><a href="../evidence/safe-libusb-probe.html">Safe libusb
 probe</a></td>
 <td>VERIFIED</td>
 </tr>
@@ -2714,7 +2715,7 @@ probe</a></td>
 <td>IOCTL <code>0x222059</code> has distinct 2011 <code>0xc0</code> and
 2013 direction-aware mappings; both copy request/value/index record
 offsets</td>
-<td><a href="../evidence/tucsen-driver-ioctl-handler.md">Windows IOCTL
+<td><a href="../evidence/tucsen-driver-ioctl-handler.html">Windows IOCTL
 handler analysis</a></td>
 <td>VERIFIED</td>
 </tr>
@@ -2723,8 +2724,8 @@ handler analysis</a></td>
 <td>DLL contains requests <code>b3</code>, <code>b4</code>,
 <code>b5</code>, <code>b6</code>, <code>b7</code>, <code>b8</code>,
 <code>ba</code>, <code>bb</code>, <code>bd</code>, <code>be</code></td>
-<td><a href="../evidence/ts1000-static-protocol-map.md">Static protocol
-map</a></td>
+<td><a href="../evidence/ts1000-static-protocol-map.html">Static
+protocol map</a></td>
 <td>VERIFIED</td>
 </tr>
 <tr>
@@ -2751,7 +2752,7 @@ controls are known</td>
 <td>Official software maps TCA-10.0N <code>0547:c003</code> to
 TSView6/7; its TCA DLL exposes a fixed <code>0x11/0x3ff0</code> register
 read and open/close prefix</td>
-<td><a href="../evidence/tsview7-tca-protocol-map.md">TSView7 TCA
+<td><a href="../evidence/tsview7-tca-protocol-map.html">TSView7 TCA
 protocol map</a></td>
 <td>VERIFIED</td>
 </tr>
@@ -2760,7 +2761,7 @@ protocol map</a></td>
 <td>Nine bounded Linux trials failed without loss of enumeration; the
 final physical-cold run used the corrected TCA tuple and timed out on
 open/read/close while both health checks passed</td>
-<td><a href="../evidence/live-control-trials.md">Live control
+<td><a href="../evidence/live-control-trials.html">Live control
 trials</a></td>
 <td>VERIFIED NEGATIVE</td>
 </tr>
@@ -2769,7 +2770,7 @@ trials</a></td>
 <td>No standalone C003 firmware/updater was found in the official
 surfaces and recovered packages inspected; this remains a bounded search
 result</td>
-<td><a href="../evidence/firmware-discovery.md">Firmware
+<td><a href="../evidence/firmware-discovery.html">Firmware
 discovery</a></td>
 <td>VERIFIED NEGATIVE / NON-GATING</td>
 </tr>
@@ -2778,7 +2779,7 @@ discovery</a></td>
 <td>Historical open-source inventory names IS1000 C003, but its
 implemented driver targets 4D88 and must not be replayed against this
 camera</td>
-<td><a href="../evidence/open-source-prior-art.md">Open-source prior
+<td><a href="../evidence/open-source-prior-art.html">Open-source prior
 art</a></td>
 <td>VERIFIED BOUNDARY</td>
 </tr>
@@ -2788,8 +2789,8 @@ art</a></td>
 80 even registers <code>0x0000</code>–<code>0x009e</code> with
 <code>0x11</code>; the Linux probe stopped earlier than the vendor
 path</td>
-<td><a href="../evidence/tsview7-tca-startup-validation.md">TCA startup
-validation</a></td>
+<td><a href="../evidence/tsview7-tca-startup-validation.html">TCA
+startup validation</a></td>
 <td>VERIFIED STATIC</td>
 </tr>
 <tr>
@@ -2797,7 +2798,7 @@ validation</a></td>
 <td>All eight USBPcap roots were captured; only QEMU
 <code>0627:0001</code> HIDs appeared, proving CocoaSPICE usbredir
 bypasses the Windows filter and requires a lower observation point</td>
-<td><a href="../evidence/windows-trace-bench.md">Windows trace
+<td><a href="../evidence/windows-trace-bench.html">Windows trace
 bench</a></td>
 <td>VERIFIED NEGATIVE INSTRUMENTATION</td>
 </tr>
@@ -2806,8 +2807,8 @@ bench</a></td>
 <td>TSView7 reads one byte per pixel from the bulk pipe using four
 overlapped lanes; five fixed modes range from 640x480 to 3664x2748 and
 have deterministically recovered chunk sizes</td>
-<td><a href="../evidence/tsview7-tca-acquisition-map.md">TCA acquisition
-map</a> and offline geometry fixture</td>
+<td><a href="../evidence/tsview7-tca-acquisition-map.html">TCA
+acquisition map</a> and offline geometry fixture</td>
 <td>VERIFIED STATIC</td>
 </tr>
 <tr>
@@ -2816,7 +2817,7 @@ map</a> and offline geometry fixture</td>
 geometries and assembles exact-length frames across arbitrary fragments
 while rejecting short/overflow cases; native macOS and Pi tests
 pass</td>
-<td><a href="../evidence/offline-frame-core.md">Offline frame-core
+<td><a href="../evidence/offline-frame-core.html">Offline frame-core
 verification</a></td>
 <td>VERIFIED OFFLINE</td>
 </tr>
@@ -2826,7 +2827,7 @@ verification</a></td>
 register addresses occupy <code>wIndex</code>, recovers the obfuscated
 <code>0x0a</code> fixed-mode writes, and passes deterministic golden
 tests without a host USB API</td>
-<td><a href="../evidence/tsview7-tca-emulated-init.md">TCA
+<td><a href="../evidence/tsview7-tca-emulated-init.html">TCA
 initialization emulation</a></td>
 <td>VERIFIED EMULATED / NOT LIVE</td>
 </tr>
@@ -2837,8 +2838,8 @@ and all five fixed-mode initialization plans, then execute them through
 a fail-fast transport contract; golden and fault-injection tests cover
 all 154 writes and every mode-4 failure boundary on macOS and Pi without
 USB imports</td>
-<td><a href="../evidence/offline-protocol-plan.md">Offline protocol-plan
-verification</a></td>
+<td><a href="../evidence/offline-protocol-plan.html">Offline
+protocol-plan verification</a></td>
 <td>VERIFIED OFFLINE / NOT LIVE</td>
 </tr>
 <tr>
@@ -2847,7 +2848,7 @@ verification</a></td>
 conventions; a portable explicit-pattern decoder and exact-frame replay
 CLI pass macOS/Pi tests and feed a synthetic RGB24 stream into
 FFmpeg</td>
-<td><a href="../evidence/offline-image-pipeline.md">Offline image
+<td><a href="../evidence/offline-image-pipeline.html">Offline image
 pipeline</a></td>
 <td>VERIFIED OFFLINE / SYNTHETIC</td>
 </tr>
@@ -2857,7 +2858,7 @@ pipeline</a></td>
 from host processing, recover exposure units/limits, analog-gain
 encoding, and four frame-speed PLL plans; a portable C17 planner passes
 golden tests on macOS and Pi</td>
-<td><a href="../evidence/tsview7-tca-controls.md">TCA control
+<td><a href="../evidence/tsview7-tca-controls.html">TCA control
 reconstruction</a></td>
 <td>VERIFIED OFFLINE / NOT LIVE</td>
 </tr>
@@ -2869,9 +2870,9 @@ mode; a portable staged scheduler matches those semantics and cancels
 all outstanding reads on every injected
 submit/completion/unexpected-length failure; sanitizer and native Pi
 tests pass without USB imports</td>
-<td><a href="../evidence/offline-capture-scheduler.md">Offline capture
-scheduler</a> and <a href="../evidence/tsview7-tca-emulated-init.md">DLL
-emulation</a></td>
+<td><a href="../evidence/offline-capture-scheduler.html">Offline capture
+scheduler</a> and <a
+href="../evidence/tsview7-tca-emulated-init.html">DLL emulation</a></td>
 <td>VERIFIED EMULATED + OFFLINE / NOT LIVE</td>
 </tr>
 <tr>
@@ -2879,7 +2880,7 @@ emulation</a></td>
 <td>The one-shot D40 harness pinned the reviewed v2 probe hash and
 captured before/after identity, kernel, safe-claim, raw result, status,
 and hashes after an owner-confirmed physical cold cycle</td>
-<td><a href="../evidence/cold-probe-harness.md">Cold-session
+<td><a href="../evidence/cold-probe-harness.html">Cold-session
 harness</a></td>
 <td>EXECUTED ONCE / VERIFIED</td>
 </tr>
@@ -2889,7 +2890,7 @@ harness</a></td>
 open/read/close all timed out; before/after descriptors and interface
 claims passed, identity was byte-identical, and no kernel fault
 occurred</td>
-<td><a href="../evidence/d40-cold-result.md">D40 physical-cold
+<td><a href="../evidence/d40-cold-result.html">D40 physical-cold
 result</a></td>
 <td>VERIFIED NEGATIVE / TERMINAL LINUX BRANCH</td>
 </tr>
@@ -2900,7 +2901,7 @@ mode active, the 2011 Tucsen driver reports <code>Started</code>;
 TSView7 discovers the camera and reaches a ready control window with
 resolution, snapshot, record, white-balance, exposure, and property
 controls</td>
-<td><a href="../evidence/windows-trace-bench.md">Windows trace
+<td><a href="../evidence/windows-trace-bench.html">Windows trace
 bench</a></td>
 <td>VERIFIED LIVE WINDOWS</td>
 </tr>
@@ -2910,7 +2911,7 @@ bench</a></td>
 captured exactly 307,200 bytes as 81,920 + 81,920 + 81,920 + 61,440; ten
 <code>0x88</code> marker bytes begin every block and GRBG replay yields
 the expected taped-sensor dark image</td>
-<td><a href="../evidence/windows-reference-live-capture.md">Working
+<td><a href="../evidence/windows-reference-live-capture.html">Working
 Windows reference and direct host capture</a></td>
 <td>VERIFIED LIVE DATA PLANE</td>
 </tr>
@@ -2920,7 +2921,7 @@ Windows reference and direct host capture</a></td>
 <code>Tucsen64.sys</code> hashes match the analyzed purchase-era TCA
 pair, and the INF explicitly identifies <code>0547:c003</code> as
 TCA-10.0-N</td>
-<td><a href="../evidence/windows-reference-live-capture.md">Working
+<td><a href="../evidence/windows-reference-live-capture.html">Working
 Windows reference and direct host capture</a></td>
 <td>VERIFIED LINEAGE</td>
 </tr>
@@ -2931,7 +2932,7 @@ valid descriptors, but its repeated 18-byte device-descriptor read timed
 out after 5.004272 seconds before <code>SET_CONFIGURATION</code>; the
 immutable usbmon capture is preserved and the transport branch is
 closed</td>
-<td><a href="../evidence/virtualhere-trace-bench.md">USB/IP result and
+<td><a href="../evidence/virtualhere-trace-bench.html">USB/IP result and
 VirtualHere fallback</a></td>
 <td>VERIFIED NEGATIVE TRANSPORT</td>
 </tr>
@@ -2942,7 +2943,7 @@ register read/write wrappers, four implemented driver IOCTLs, ordinary
 KMDF configuration, and split bulk-URB path; it finds no
 prepare-hardware firmware loader and shows ignored IOCTL
 <code>0x22208a</code> cannot hide a USB transaction</td>
-<td><a href="../evidence/ghidra-targeted-decompilation.md">Targeted
+<td><a href="../evidence/ghidra-targeted-decompilation.html">Targeted
 Ghidra decompilation</a></td>
 <td>VERIFIED STATIC / NOT LIVE</td>
 </tr>
@@ -2952,7 +2953,7 @@ Ghidra decompilation</a></td>
 reads and checks the extracted expected signature with deterministic
 first-mismatch reporting; tests pass on macOS and the Ubuntu ARM64 bench
 without USB imports</td>
-<td><a href="../evidence/offline-startup-signature.md">Offline
+<td><a href="../evidence/offline-startup-signature.html">Offline
 startup-signature core</a></td>
 <td>VERIFIED OFFLINE / NOT LIVE</td>
 </tr>
@@ -2964,7 +2965,7 @@ adapter tree has generic TWAIN/OpenCV adapters but no legacy
 Tucsen-specific adapter, so the application precedent is verified while
 its transport path remains unresolved</td>
 <td><a
-href="../evidence/micromanager-application-precedent.md">Historical
+href="../evidence/micromanager-application-precedent.html">Historical
 Micro-Manager application precedent</a></td>
 <td>VERIFIED APPLICATION PRECEDENT / PATH OPEN</td>
 </tr>
@@ -2976,8 +2977,8 @@ and FFmpeg each consumed three exact-size frames across a
 remove/recreate cycle, and a packaged reader-core bridge reproduced the
 capture hash while refusing existing setups and cleaning up its
 device/module</td>
-<td><a href="../evidence/linux-v4l2-replay-bridge.md">Linux V4L2 replay
-bridge</a></td>
+<td><a href="../evidence/linux-v4l2-replay-bridge.html">Linux V4L2
+replay bridge</a></td>
 <td>VERIFIED APPLICATION BOUNDARY / REPLAY ONLY</td>
 </tr>
 <tr>
@@ -2988,7 +2989,7 @@ controls, structured diagnostics, fault/close/reopen, inspect, and
 replay; strict native tests pass on macOS and Ubuntu ARM64, sanitizer
 execution passes, and the live-captured fixture decodes byte-identically
 on both</td>
-<td><a href="../evidence/offline-reader-session.md">Portable reader
+<td><a href="../evidence/offline-reader-session.html">Portable reader
 session and CLI</a></td>
 <td>VERIFIED OFFLINE CORE / COLD LIVE COMPLETION OPEN</td>
 </tr>
@@ -3004,7 +3005,7 @@ control/reset/configuration/alternate-setting path; a separately
 token-gated Linux script is ready to feed decoded frames into a
 temporary V4L2 node while preserving raw bytes; live execution remains
 deferred until a known-good warm handoff exists</td>
-<td><a href="../evidence/warm-reader-backend.md">Warm-state libusb
+<td><a href="../evidence/warm-reader-backend.html">Warm-state libusb
 reader backend</a></td>
 <td>VERIFIED BUILD + STATIC SAFETY / WARM LIVE RUN PENDING</td>
 </tr>
@@ -3019,7 +3020,7 @@ failed plan; a separately named inert-by-default CLI can apply exactly
 one prevalidated control and exit without starting acquisition; the
 read-only streaming binary remains unchanged and physical control
 execution is pending the known-good warm handoff</td>
-<td><a href="../evidence/operable-control-backend.md">Opt-in operable
+<td><a href="../evidence/operable-control-backend.html">Opt-in operable
 libusb control backend</a></td>
 <td>VERIFIED OFFLINE CONTROL TRANSPORT + CLI / LIVE CONTROL PENDING</td>
 </tr>
@@ -3031,8 +3032,8 @@ synthetic vendor-control/bulk tests and the preserved USB/IP capture
 pass on macOS and ARM64 Linux, with the latter independently reproducing
 ten standard-control pairs, one 5.004272-second <code>-104</code>
 failure, no vendor request, and no bulk transfer</td>
-<td><a href="../evidence/usbmon-trace-extractor.md">Deterministic usbmon
-trace extractor</a></td>
+<td><a href="../evidence/usbmon-trace-extractor.html">Deterministic
+usbmon trace extractor</a></td>
 <td>VERIFIED OFFLINE TRACE ANALYSIS / VIRTUALHERE CAPTURE PENDING</td>
 </tr>
 <tr>
@@ -3043,7 +3044,7 @@ execution; neither tree names C003/TCA/IS1000, both current 232-entry
 Windows INFs omit <code>0547:c003</code>, and no standalone
 firmware/updater file was found; the Linux package’s vendor-wide udev
 rule is permission evidence only, not a compatibility claim</td>
-<td><a href="../evidence/firmware-discovery.md">Updated-firmware
+<td><a href="../evidence/firmware-discovery.html">Updated-firmware
 discovery</a></td>
 <td>VERIFIED STATIC NEGATIVE / NON-GATING</td>
 </tr>
@@ -3056,8 +3057,8 @@ values, validates status/length/acknowledgement, and preserves unknown
 vendor requests as unclassified; synthetic tests pass and the USB/IP
 negative trace remains ten standard controls with one transport
 error</td>
-<td><a href="../evidence/usbmon-trace-extractor.md">Deterministic usbmon
-extractor and TCA annotator</a></td>
+<td><a href="../evidence/usbmon-trace-extractor.html">Deterministic
+usbmon extractor and TCA annotator</a></td>
 <td>VERIFIED OFFLINE TRACE SEMANTICS / VIRTUALHERE CAPTURE PENDING</td>
 </tr>
 <tr>
@@ -3068,8 +3069,8 @@ expectation; a deterministic TSV comparator aligns captured controls and
 validates response patterns without generating USB operations; strict
 tests and the USB/IP negative-trace comparison are byte-identical on
 Apple Silicon and AArch64 Linux</td>
-<td><a href="../evidence/tca-trace-plan-comparator.md">Modeled TCA trace
-plan and comparator</a></td>
+<td><a href="../evidence/tca-trace-plan-comparator.html">Modeled TCA
+trace plan and comparator</a></td>
 <td>VERIFIED OFFLINE COMPARISON / SUCCESSFUL TRACE PENDING</td>
 </tr>
 <tr>
@@ -3080,7 +3081,7 @@ identity, <code>usbmon3</code>, pinned VirtualHere inputs, and
 Windows-side discovery through the UTM gateway relay are live; the v4
 handoff ISO removes boot-specific addressing and verifies its embedded
 sources byte-for-byte</td>
-<td><a href="../evidence/virtualhere-trace-bench.md">VirtualHere
+<td><a href="../evidence/virtualhere-trace-bench.html">VirtualHere
 fallback trace bench</a></td>
 <td>VERIFIED LIVE INFRASTRUCTURE / DEVICE ATTACH PENDING</td>
 </tr>
@@ -3103,7 +3104,7 @@ accepts their trace-confirmed stalled IN data stages, validates three
 and applies bounded exposure/gain writes without Windows or a
 camera-specific kernel driver</td>
 <td>Report current milestone and <a
-href="../evidence/public-release-live-validation.md">public
+href="../evidence/public-release-live-validation.html">public
 validation</a></td>
 <td>VERIFIED LIVE LINUX COLD START + CONTROLS</td>
 </tr>
@@ -3122,7 +3123,7 @@ the loopback created for the session</td>
 ten independent open/init/ten-frame/close processes (100/100 frames),
 and a 14,400-frame/2,410-second continuous run with flat sampled memory;
 Ubuntu and macOS CI pass</td>
-<td><a href="../evidence/public-release-live-validation.md">Public
+<td><a href="../evidence/public-release-live-validation.html">Public
 release live validation</a></td>
 <td>VERIFIED REOPEN + ENDURANCE</td>
 </tr>
@@ -3133,7 +3134,7 @@ formula <code>((pixels &gt;&gt; 9) + 1) &lt;&lt; 9</code> predicted a
 10,068,992-byte frame; the guarded physical probe received that exact
 length with all twenty markers, and mode-2 recovery captured three
 frames</td>
-<td><a href="../evidence/full-resolution-probe.md">Guarded
+<td><a href="../evidence/full-resolution-probe.html">Guarded
 full-resolution probe</a></td>
 <td>VERIFIED LIVE FULL RESOLUTION + RECOVERY</td>
 </tr>
@@ -3143,7 +3144,7 @@ full-resolution probe</a></td>
 frames in mode 0 and then mode 2 with exact raw/application byte counts;
 its mode-aware exposure conversion programmed 324 and 834 lines
 respectively at 100 ms</td>
-<td><a href="../evidence/public-release-live-validation.md">Public
+<td><a href="../evidence/public-release-live-validation.html">Public
 release live validation</a></td>
 <td>VERIFIED LIVE PUBLIC READER BOTH MODES</td>
 </tr>
@@ -3153,7 +3154,7 @@ release live validation</a></td>
 <code>SIGKILL</code> during mode-2 capture after its complete
 first-frame flush; without a USB reset or power cycle, a new tagged
 process immediately reopened and captured three frames</td>
-<td><a href="../evidence/public-release-live-validation.md">Public
+<td><a href="../evidence/public-release-live-validation.html">Public
 release live validation</a></td>
 <td>VERIFIED PROCESS-DEATH RECOVERY</td>
 </tr>
@@ -3164,7 +3165,7 @@ Linux/macOS/Windows and ship Python bindings, but their 1,768- and
 1,600-pair explicit Windows USB tables omit <code>0547:c003</code>; the
 Python module is a thin proprietary-library wrapper and the vendor-wide
 Linux udev rule is permission evidence, not device support</td>
-<td><a href="../evidence/existing-linux-driver-candidates.md">Existing
+<td><a href="../evidence/existing-linux-driver-candidates.html">Existing
 Linux driver candidates</a></td>
 <td>VERIFIED STATIC NEGATIVE / API INSPIRATION</td>
 </tr>
@@ -3175,7 +3176,7 @@ code for a different family, while its Linux Video4Linux adapter matches
 the project’s proven YUYV loopback; Pycro-Manager can add
 acquisition/stage automation only above a working MMCore adapter, and
 Fiji/MIST remain downstream tile-stitching candidates</td>
-<td><a href="../evidence/microscopy-application-stack.md">Microscopy
+<td><a href="../evidence/microscopy-application-stack.html">Microscopy
 application stack</a></td>
 <td>VERIFIED ARCHITECTURE / LIVE MM TEST PENDING</td>
 </tr>
@@ -3186,7 +3187,7 @@ boot ID and USB device instance; public main commit <code>71fdae1</code>
 rebuilt and passed its tests, then cold-opened the re-enumerated
 <code>0547:c003</code> camera and captured three exact-size mode-2
 frames with controls and exit zero</td>
-<td><a href="../evidence/public-release-live-validation.md">Public
+<td><a href="../evidence/public-release-live-validation.html">Public
 release live validation</a></td>
 <td>VERIFIED LIVE HOST-REBOOT RECOVERY</td>
 </tr>
@@ -3196,8 +3197,8 @@ release live validation</a></td>
 from final acceptance: streaming, reader/API, Linux application bridge,
 portable macOS reader, and the non-functional requirements pass, while
 physical cable reconnect and optical/color checks remain open</td>
-<td><a href="../evidence/release-acceptance-audit.md">Release acceptance
-audit</a></td>
+<td><a href="../evidence/release-acceptance-audit.html">Release
+acceptance audit</a></td>
 <td>VERIFIED AUDIT; EXIT OPEN</td>
 </tr>
 <tr>
@@ -3206,7 +3207,7 @@ audit</a></td>
 <code>0547:c003</code> camera through a one-device Pi relay, applied
 exposure and gain, captured three exact-size mode-2 frames, and exited
 zero</td>
-<td><a href="../evidence/macos-virtualhere-live-validation.md">Apple
+<td><a href="../evidence/macos-virtualhere-live-validation.html">Apple
 Silicon relay validation</a></td>
 <td>VERIFIED LIVE MACOS READER</td>
 </tr>
@@ -3216,7 +3217,7 @@ Silicon relay validation</a></td>
 marker-invalid leading warm-up frame; public alpha-2 preserved it once,
 discarded it under a two-frame limit, delivered three valid frames in
 the same process, and kept later marker loss fatal</td>
-<td><a href="../evidence/macos-virtualhere-live-validation.md">Apple
+<td><a href="../evidence/macos-virtualhere-live-validation.html">Apple
 Silicon relay validation</a></td>
 <td>VERIFIED BOUNDED HAND-BACK RECOVERY</td>
 </tr>
@@ -3227,7 +3228,7 @@ statistics/focus utility and reproducible microscope procedure;
 Ubuntu/macOS CI passed, the exact Pi commit passed every test, and a
 fresh physical covered-sensor capture produced exact mode-2 byte counts,
 <code>frames=1 status=ok</code>, and a valid JSON analysis</td>
-<td><a href="../evidence/optical-validation-tooling.md">Optical
+<td><a href="../evidence/optical-validation-tooling.html">Optical
 validation tooling</a></td>
 <td>VERIFIED TOOLING + LIVE DARK-FRAME ANALYSIS / OPTICS OPEN</td>
 </tr>
@@ -3238,7 +3239,7 @@ reader, V4L2 helper, and frame analyzer under
 <code>PREFIX</code>/<code>DESTDIR</code>; a staged test proves an
 unrelated same-directory sentinel survives, and the complete suite
 passes on Apple Silicon, the Pi, Ubuntu CI, and macOS CI</td>
-<td><a href="../evidence/package-operations.md">Package
+<td><a href="../evidence/package-operations.html">Package
 operations</a></td>
 <td>VERIFIED INSTALL/REMOVE OPERATIONS</td>
 </tr>
@@ -3250,7 +3251,7 @@ runs pass, the downloaded public source archive passes every test
 outside a Git checkout, and the exact-tag Pi build passed every test
 before a controlled physical mode-2 capture and analysis completed with
 exact byte counts and exit zero</td>
-<td><a href="../evidence/public-release-alpha3.md">Public alpha-3
+<td><a href="../evidence/public-release-alpha3.html">Public alpha-3
 release</a></td>
 <td>VERIFIED PUBLIC ARCHIVE + EXACT-TAG LIVE CAPTURE</td>
 </tr>
@@ -3261,7 +3262,7 @@ requires observation of device count zero before re-enumeration, and
 will verify a three-frame capture, exact sizes/status, first-frame
 analysis, and evidence hashes without reset, deauthorization, or
 speculative control requests</td>
-<td><a href="../evidence/physical-reconnect-harness.md">Physical
+<td><a href="../evidence/physical-reconnect-harness.html">Physical
 reconnect harness</a></td>
 <td>PREPARED + INERT-VERIFIED / PHYSICAL ACTION OPEN</td>
 </tr>
@@ -3273,8 +3274,9 @@ frames, one full-resolution frame, and a fresh-process preview reopen
 with exact sizes and analysis; the first cold-attach invocation failed
 closed on a single one-byte control response before all subsequent
 startup controls returned the reference stall</td>
-<td><a href="../evidence/macos-native-cable-validation.md">Native-cable
-Apple Silicon validation</a></td>
+<td><a
+href="../evidence/macos-native-cable-validation.html">Native-cable Apple
+Silicon validation</a></td>
 <td>VERIFIED DIRECT READER / COLD-ATTACH TRANSIENT RECORDED</td>
 </tr>
 <tr>
@@ -3283,8 +3285,8 @@ Apple Silicon validation</a></td>
 exposed the old multi-request assembly error; single-request probes
 proved one prefix per complete record and yielded coherent 1280x960 and
 3664x2748 images</td>
-<td><a href="../evidence/first-optical-capture.md">Optical frame-layout
-correction</a></td>
+<td><a href="../evidence/first-optical-capture.html">Optical
+frame-layout correction</a></td>
 <td>VERIFIED LIVE OPTICAL / READER CORRECTED</td>
 </tr>
 <tr>
@@ -3293,8 +3295,8 @@ correction</a></td>
 14.67..154.88; gain 256 yielded negligible clipping, and a 16-frame run
 produced 16 distinct hashes plus multi-resolution PNGs and an H.264
 proof clip</td>
-<td><a href="../evidence/first-optical-capture.md">Optical frame-layout
-correction</a></td>
+<td><a href="../evidence/first-optical-capture.html">Optical
+frame-layout correction</a></td>
 <td>VERIFIED LIVE CONTROLS + MOTION SEQUENCE</td>
 </tr>
 <tr>
@@ -3303,8 +3305,8 @@ correction</a></td>
 <code>[320,512)</code> produced three distinct complete 3664x2748 frames
 without the false left strip; neutral slide regions independently
 yielded approximately R/G/B <code>0.87/1.0/2.0</code> in both modes</td>
-<td><a href="../evidence/first-optical-capture.md">Optical frame-layout
-correction</a></td>
+<td><a href="../evidence/first-optical-capture.html">Optical
+frame-layout correction</a></td>
 <td>VERIFIED LIVE FULL-FRAME ASSEMBLY + IN-SITU WHITE BALANCE</td>
 </tr>
 <tr>
@@ -3313,7 +3315,7 @@ correction</a></td>
 gain-zero sweep found an unclipped 250-ms preview and complete
 full-resolution still; public alpha-6 at commit <code>0fded6e</code>
 emits ratio-preserving FFmpeg-safe white-balance gains</td>
-<td><a href="../evidence/first-optical-capture.md">Optical capture and
+<td><a href="../evidence/first-optical-capture.html">Optical capture and
 10x recovery</a></td>
 <td>VERIFIED LIVE OPTICAL RECOVERY + RELEASE</td>
 </tr>
@@ -3325,7 +3327,7 @@ preflight passed six exact frames through the generic loopback and
 cleaned it up, and a static-tested inert harness is staged to verify
 both optical modes plus six ordinary V4L2-consumed camera frames after
 the cable move</td>
-<td><a href="../evidence/pi-alpha6-linux-optical-preparation.md">Pi
+<td><a href="../evidence/pi-alpha6-linux-optical-preparation.html">Pi
 alpha-6 optical preparation</a></td>
 <td>GENERIC V4L2 VERIFIED + CAMERA HARNESS PREPARED / CAMERA MOVE
 OPEN</td>
@@ -3337,7 +3339,7 @@ luma 134.0 at bottom-left to 193.9 at top-middle, showing asymmetric
 field nonuniformity rather than simple radial falloff; an optical
 alignment/isolation checklist and calibrated per-Bayer-plane dark/flat
 correction are now specified</td>
-<td><a href="../evidence/field-illumination-correction.md">Field
+<td><a href="../evidence/field-illumination-correction.html">Field
 illumination correction</a></td>
 <td>MEASURED DIAGNOSIS + CORRECTION PLAN</td>
 </tr>
@@ -3348,7 +3350,7 @@ dark subtraction and independent R/G1/G2/B flat gains before demosaic;
 on the Pi, six synthetic corrected 1280x960 frames traversed FFmpeg and
 a temporary V4L2 loopback to a separate consumer, cleanup passed, and
 60-frame filter throughput measured about 225 fps</td>
-<td><a href="../evidence/flat-field-v4l2-preflight.md">User-space
+<td><a href="../evidence/flat-field-v4l2-preflight.html">User-space
 flat-field and V4L2 preflight</a></td>
 <td>VERIFIED SOFTWARE + GENERIC APPLICATION BOUNDARY / PHYSICAL FLAT
 OPEN</td>
@@ -3362,7 +3364,7 @@ physical frames and applied a full-size self-flat diagnostic to eight
 frames, reducing the 3x3 max/min ratio from 1.336910 to 1.001023 while
 correctly demonstrating that a self-flat erases specimen structure and
 cannot be accepted as optical calibration</td>
-<td><a href="../evidence/macos-physical-flat-field-self-test.md">Apple
+<td><a href="../evidence/macos-physical-flat-field-self-test.html">Apple
 Silicon physical flat-field pipeline self-test</a></td>
 <td>VERIFIED PHYSICAL-SIZE PLUMBING + SETTINGS GUARD / TRUE DARK + BLANK
 FLAT OPEN</td>
@@ -3376,7 +3378,7 @@ raw/Bayer byte counts, marks partial sessions, builds/applies/inspects
 the map, renders four PNGs, and hashes the bundle; a USB-free dynamic
 test using the real corrector and analyzer passes on Apple Silicon and
 an exact public clone on Raspberry Pi AArch64</td>
-<td><a href="../evidence/guided-flat-field-capture-session.md">Guided
+<td><a href="../evidence/guided-flat-field-capture-session.html">Guided
 physical flat-field capture session</a></td>
 <td>VERIFIED WORKFLOW + PORTABILITY / OPERATOR-ASSISTED OPTICAL RUN
 OPEN</td>

@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Network sweep while the camera was connected to the Raspberry Pi — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1
+id="network-sweep-while-the-camera-was-connected-to-the-raspberry-pi">Network
+sweep while the camera was connected to the Raspberry Pi</h1>
+<p>Captured from the macOS workstation on <code>en0</code> at
+2026-09-26T19:47:26Z (2026-09-26T21:47:26+0200). The Raspberry Pi was
+powered and connected to the LAN, with the microscope camera connected
+by USB.</p>
+<p>Important: unplugging only the USB camera will not normally change
+the Pi’s network address. For a useful differential sweep, disconnect
+the Pi from the network or power it off while leaving the other LAN
+devices unchanged.</p>
+<h2 id="active-ipv4mac-pairs-arp-scan---interfaceen0---localnet">Active
+IPv4/MAC pairs (<code>arp-scan --interface=en0 --localnet</code>)</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>IPv4</th>
+<th>MAC</th>
+<th>Reported vendor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10.0.0.1</td>
+<td>9c:a2:f4:6c:f1:36</td>
+<td>TP-Link Corporation Limited</td>
+</tr>
+<tr>
+<td>10.0.0.2</td>
+<td>d0:14:11:90:53:b2</td>
+<td>Airthings</td>
+</tr>
+<tr>
+<td>10.0.0.4</td>
+<td>c8:2e:18:f9:ae:f4</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td>10.0.0.6</td>
+<td>8c:86:1e:64:1b:93</td>
+<td>Apple, Inc.</td>
+</tr>
+<tr>
+<td>10.0.0.7</td>
+<td>10:20:ba:43:a6:24</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td>10.0.0.17</td>
+<td>f8:71:a6:b7:aa:f4</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td>10.0.0.21</td>
+<td>68:63:59:db:18:e4</td>
+<td>Advanced Digital Broadcast SA</td>
+</tr>
+<tr>
+<td>10.0.0.32</td>
+<td>78:45:58:e5:5b:58</td>
+<td>Ubiquiti Networks Inc.</td>
+</tr>
+<tr>
+<td>10.0.0.43</td>
+<td>94:dd:f8:28:ee:7c</td>
+<td>Brother Industries, LTD.</td>
+</tr>
+<tr>
+<td>10.0.0.45</td>
+<td>1c:69:7a:4c:50:37</td>
+<td>EliteGroup Computer Systems Co., LTD</td>
+</tr>
+<tr>
+<td>10.0.0.50</td>
+<td>c6:82:18:24:5f:2c</td>
+<td>Locally administered</td>
+</tr>
+<tr>
+<td>10.0.0.53</td>
+<td>34:2f:bd:e3:61:e3</td>
+<td>Nintendo Co., Ltd.</td>
+</tr>
+<tr>
+<td>10.0.0.59</td>
+<td>30:05:5c:4d:8c:a5</td>
+<td>Brother Industries, LTD.</td>
+</tr>
+<tr>
+<td>10.0.0.63</td>
+<td>d4:f3:2d:fb:de:61</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td>10.0.0.74</td>
+<td>a8:3f:a1:7c:95:a5</td>
+<td>Plejd AB</td>
+</tr>
+<tr>
+<td>10.0.0.80</td>
+<td>9c:75:6e:39:b8:7c</td>
+<td>Ajax Systems DMCC</td>
+</tr>
+<tr>
+<td>10.0.0.93</td>
+<td>30:56:0f:5e:d0:fc</td>
+<td>Unknown; known host <code>agogo</code></td>
+</tr>
+<tr>
+<td>10.0.0.95</td>
+<td>ca:68:03:29:97:8a</td>
+<td>Locally administered; confirmed <code>Gourd.local</code></td>
+</tr>
+<tr>
+<td>10.0.0.123</td>
+<td>90:09:d0:a0:bb:a2</td>
+<td>Synology Incorporated</td>
+</tr>
+<tr>
+<td>10.0.0.138</td>
+<td>f4:4d:5c:57:28:d0</td>
+<td>Zyxel Communications Corporation</td>
+</tr>
+</tbody>
+</table>
+<p><code>arp-scan</code> reported 20 responders. None used a Raspberry
+Pi Foundation OUI, although a Pi may use a USB adapter or a locally
+administered/randomized MAC.</p>
+<h2 id="ipv6-neighbor-discovery">IPv6 neighbor discovery</h2>
+<p>The all-nodes link-local multicast probe
+(<code>ping6 ff02::1%en0</code>) produced these remote <code>en0</code>
+neighbors with complete MAC mappings in the numeric NDP table:</p>
+<table>
+<thead>
+<tr>
+<th>IPv6 link-local</th>
+<th>MAC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fe80::a4:1719:e433:83c0%en0</td>
+<td>d4:ce:40:38:5b:59</td>
+</tr>
+<tr>
+<td>fe80::8db:c33:5872:693f%en0</td>
+<td>44:09:da:1a:ad:7f</td>
+</tr>
+<tr>
+<td>fe80::14ea:f6e1:52b6:143a%en0</td>
+<td>8c:86:1e:64:1b:93</td>
+</tr>
+<tr>
+<td>fe80::14f0:a4f9:5d3e:d0fc%en0</td>
+<td>c6:82:18:24:5f:2c</td>
+</tr>
+<tr>
+<td>fe80::1811:d87e:bf2c:1fc9%en0</td>
+<td>f6:df:1c:cb:d8:0b</td>
+</tr>
+<tr>
+<td>fe80::183c:b62a:9ace:141c%en0</td>
+<td>be:fb:77:6a:ea:db</td>
+</tr>
+<tr>
+<td>fe80::1c38:373b:2a3:4bc1%en0</td>
+<td>1e:de:e0:e9:0c:23</td>
+</tr>
+<tr>
+<td>fe80::1c7d:374b:1ecc:e1a8%en0</td>
+<td>ca:68:03:29:97:8a</td>
+</tr>
+<tr>
+<td>fe80::1cc3:f54e:6ca2:4d68%en0</td>
+<td>f8:71:a6:b7:aa:f4</td>
+</tr>
+<tr>
+<td>fe80::3035:f174:ca61:3faa%en0</td>
+<td>1c:69:7a:4c:50:37</td>
+</tr>
+<tr>
+<td>fe80::3256:fff:fe5:d0fc%en0</td>
+<td>30:56:0f:5e:d0:fc</td>
+</tr>
+<tr>
+<td>fe80::7a45:58ff:fee5:5b58%en0</td>
+<td>78:45:58:e5:5b:58</td>
+</tr>
+<tr>
+<td>fe80::96dd:f8ff:fe28:ee7c%en0</td>
+<td>94:dd:f8:28:ee:7c</td>
+</tr>
+<tr>
+<td>fe80::aa3f:a1ff:fe7c:95a5%en0</td>
+<td>a8:3f:a1:7c:95:a5</td>
+</tr>
+<tr>
+<td>fe80::f64d:5cff:fe57:28d0%en0</td>
+<td>f4:4d:5c:57:28:d0</td>
+</tr>
+</tbody>
+</table>
+<h2 id="ssh-listeners">SSH listeners</h2>
+<p>Parallel one-second TCP probes found port 22 open at:</p>
+<ul>
+<li><code>10.0.0.13</code> — current workstation</li>
+<li><code>10.0.0.32</code> — Dropbear 2020.81, Ubiquiti MAC; loaded keys
+rejected for <code>rmz</code>, <code>pi</code>, and
+<code>root</code></li>
+<li><code>10.0.0.93</code> — known Ubuntu host <code>agogo</code></li>
+<li><code>10.0.0.95</code> — authenticated with a loaded key and
+reported <code>Gourd.local</code>, Apple <code>arm64</code></li>
+</ul>
+<p>The historical SSH key for <code>rpios-16.local</code> was also
+stored under old IPv4 addresses <code>10.0.0.82</code> and
+<code>10.0.0.83</code>; neither address answered ARP or SSH in this
+connected-state sweep.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>
