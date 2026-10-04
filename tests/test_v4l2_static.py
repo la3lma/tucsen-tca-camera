@@ -19,9 +19,26 @@ def main() -> None:
     inert = subprocess.run(["sh", str(script)], capture_output=True, text=True)
     assert inert.returncode == 0
     assert "NO USB TRANSFER SENT" in inert.stderr
+    diagnostic = subprocess.run(
+        ["sh", str(script), "--diagnose-install"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    expected_reader = script.parent.parent / "build" / "tca-camera"
+    expected_flat_field = script.parent.parent / "build" / "tca-flat-field"
+    assert f"reader={expected_reader} executable=1" in diagnostic.stdout
+    assert (
+        f"flat_field_tool={expected_flat_field} executable=1"
+        in diagnostic.stdout
+    )
+    assert "NO USB TRANSFER SENT" in diagnostic.stdout
     assert "bayer_grbg8" in source
     assert "v4l2loopback" in source
     assert "build/tca-camera" in source
+    assert '"$script_dir/tca-camera"' in source
+    assert '"$script_dir/tca-flat-field"' in source
+    assert "--diagnose-install" in source
     assert "TCA_FLAT_FIELD" in source
     assert "TCA_TIMESTAMPS" in source
     assert '--timestamps "$timestamps"' in source

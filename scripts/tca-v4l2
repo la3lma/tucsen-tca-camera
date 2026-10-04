@@ -3,12 +3,50 @@
 set -eu
 
 TOKEN=--serve
+DIAGNOSE_TOKEN=--diagnose-install
 
 usage() {
     echo "usage: $0 $TOKEN RAW_FIRST [VIDEO_NUMBER] [EXPOSURE_MS] [GAIN] [MODE]" >&2
+    echo "       $0 $DIAGNOSE_TOKEN" >&2
     echo "       MODE 2 exposes 1280x960 (default); MODE 0 exposes 3664x2748" >&2
     echo "       optional TCA_TIMESTAMPS writes the reader's monotonic CSV sidecar" >&2
 }
+
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+project_dir=$(CDPATH= cd -- "$script_dir/.." && pwd)
+
+if [ -n "${TCA_CAMERA_READER:-}" ]; then
+    reader=$TCA_CAMERA_READER
+elif [ -x "$script_dir/tca-camera" ]; then
+    reader=$script_dir/tca-camera
+elif [ -x "$project_dir/build/tca-camera" ]; then
+    reader=$project_dir/build/tca-camera
+else
+    reader=$project_dir/build/tca-camera
+fi
+
+if [ -n "${TCA_FLAT_FIELD_TOOL:-}" ]; then
+    flat_field_tool=$TCA_FLAT_FIELD_TOOL
+elif [ -x "$script_dir/tca-flat-field" ]; then
+    flat_field_tool=$script_dir/tca-flat-field
+elif [ -x "$project_dir/build/tca-flat-field" ]; then
+    flat_field_tool=$project_dir/build/tca-flat-field
+else
+    flat_field_tool=$project_dir/build/tca-flat-field
+fi
+
+if [ "$#" -eq 1 ] && [ "$1" = "$DIAGNOSE_TOKEN" ]; then
+    reader_executable=0
+    flat_field_executable=0
+    [ -x "$reader" ] && reader_executable=1
+    [ -x "$flat_field_tool" ] && flat_field_executable=1
+    printf 'bridge=%s\n' "$0"
+    printf 'reader=%s executable=%s\n' "$reader" "$reader_executable"
+    printf 'flat_field_tool=%s executable=%s\n' \
+        "$flat_field_tool" "$flat_field_executable"
+    printf 'NO USB TRANSFER SENT.\n'
+    exit 0
+fi
 
 if [ "$#" -eq 0 ]; then
     usage
@@ -28,8 +66,6 @@ gain=${5:-20}
 mode=${6:-2}
 timestamps=${TCA_TIMESTAMPS:-}
 device=/dev/video${video_number}
-project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-reader=${TCA_CAMERA_READER:-$project_dir/build/tca-camera}
 loaded=0
 reader_pid=0
 writer_pid=0
@@ -127,7 +163,6 @@ if [ ! -x "$reader" ]; then
     exit 69
 fi
 flat_field=${TCA_FLAT_FIELD:-}
-flat_field_tool=${TCA_FLAT_FIELD_TOOL:-$project_dir/build/tca-flat-field}
 if [ -n "$flat_field" ]; then
     if [ ! -r "$flat_field" ]; then
         echo "flat-field calibration is not readable: $flat_field" >&2
