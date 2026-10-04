@@ -406,20 +406,22 @@ Docstack</a></td>
 </tr>
 <tr>
 <td>Revision</td>
-<td>4.4, use cases expressed in Cockburn form and UML; delivered-frame
+<td>4.5, use cases expressed in Cockburn form and UML; delivered-frame
 cadence measured in both recovered modes; Linux V4L2 producer timing and
 bounded acceptance harness prepared; camera-free consumer
 detach/reattach, slow-consumer, bounded-memory, signal, and cleanup
 behavior verified on the Pi at both 1280x960 preview and complete
 3664x2748 full resolution; exact post-merge main and downloaded alpha-8
 release archive physically regressed in both optical modes on Apple
-Silicon; uncorrected physical Linux transport acceptance independently
-runnable before optical calibration and protected by a recorded
-wall-clock consumer deadline; historical evidence placeholders and the
-decision ledger reconciled with current verified state; public alpha-8
-packages the full-resolution application path and bounded Linux gate;
-public evidence rendered as HTML and guarded by a permanent full-history
-privacy policy</td>
+Silicon; exact alpha-8 live output consumed and recorded by an
+independent FFmpeg process over a plain pipe on macOS; uncorrected
+physical Linux transport acceptance independently runnable before
+optical calibration and protected by a recorded wall-clock consumer
+deadline; historical evidence placeholders and the decision ledger
+reconciled with current verified state; public alpha-8 packages the
+full-resolution application path and bounded Linux gate; public evidence
+rendered as HTML and guarded by a permanent full-history privacy
+policy</td>
 </tr>
 <tr>
 <td>Execution state</td>
@@ -506,6 +508,13 @@ repository and README</a></td>
 <td>Raspberry Pi 5 <code>rpios-17</code> for physical USB, usbmon, and
 Linux validation; project-local Windows VM for reference initialization;
 macOS as the portability target and relay host</td>
+</tr>
+<tr>
+<td>Latest application proof</td>
+<td><a href="../evidence/alpha8-live-ffmpeg.html">Exact alpha-8 live
+FFmpeg consumption</a>: 60 distinct 1280x960 frames from the physical
+camera encoded as a 60-frame H.264 MP4 through a plain stdout pipe on
+Apple Silicon</td>
 </tr>
 </tbody>
 </table>
@@ -1862,7 +1871,7 @@ bridge</text><text class="node-state" x="510" y="1189" text-anchor="end">COMPLET
 <a class="graph-node proposed" href="#d90"><rect x="690" y="1110" width="360" height="90" rx="8"/><text class="node-id" x="710" y="1139">D90</text><text class="node-label" x="870" y="1166" text-anchor="middle">Build
 macOS application
 bridge</text><text class="node-state" x="1030" y="1189" text-anchor="end">DEFERRED
-· READER COMPLETE</text></a>
+· PIPE PROVEN</text></a>
 <a class="graph-node active" href="#d100"><rect x="430" y="1260" width="360" height="90" rx="8"/><text class="node-id" x="450" y="1289">D100</text><text class="node-label" x="610" y="1316" text-anchor="middle">Stability,
 fault, application
 acceptance</text><text class="node-state" x="770" y="1339" text-anchor="end">ACTIVE
@@ -1975,9 +1984,11 @@ and FFmpeg, then cleanly removed</td>
 <td>D90</td>
 <td>Build macOS application bridge</td>
 <td>D70</td>
-<td>Portable reader complete; AVFoundation deferred</td>
-<td>Exact alpha-3 directly captured preview and full-resolution frames
-over the native cable; system-camera surface deferred</td>
+<td>Portable reader and plain-pipe application path proven; AVFoundation
+deferred</td>
+<td>Exact alpha-8 streamed 60 live preview frames into independent
+FFmpeg and produced a 60-frame H.264 recording; system-camera surface
+deferred</td>
 </tr>
 <tr>
 <td>D100</td>
@@ -1986,10 +1997,10 @@ over the native cable; system-camera surface deferred</td>
 <td>Active, Linux-first</td>
 <td>Reopen, endurance, process-kill, host reboot, direct Apple Silicon
 capture, bounded ownership hand-back, USB-inert V4L2 lifecycle in both
-geometries, exact-post-merge and exact-release optical regressions, and
-wall-clock-bounded application acceptance passed; uncorrected physical
-Linux transport and later corrected repeat plus Pi cable reconnect
-remain</td>
+geometries, exact-post-merge and exact-release optical regressions,
+plain-pipe FFmpeg application consumption, and wall-clock-bounded
+application acceptance passed; uncorrected physical Linux transport and
+later corrected repeat plus Pi cable reconnect remain</td>
 </tr>
 <tr>
 <td>D110</td>
@@ -2945,8 +2956,9 @@ Application Bridge</h3>
 <tbody>
 <tr>
 <td>State</td>
-<td>Portable reader complete over the native cable; AVFoundation
-application surface deferred for the Linux-first alpha</td>
+<td>Portable reader and plain-pipe third-party application path complete
+over the native cable; AVFoundation/system-camera surface deferred for
+the Linux-first alpha</td>
 </tr>
 <tr>
 <td>Actors</td>
@@ -3002,6 +3014,16 @@ href="../evidence/macos-native-cable-validation.html">native-cable Apple
 Silicon validation</a> and <a
 href="../evidence/macos-virtualhere-live-validation.html">relay
 validation</a>.</p>
+<p>The downloaded exact alpha-8 archive subsequently streamed 60 live
+1280x960 frames over a plain stdout pipe into an independent FFmpeg
+process. All pipeline processes exited zero; all 60 frame hashes were
+distinct; reader cadence was 9.50761 fps; and the resulting H.264 MP4
+decodes as 60 frames. This proves an ordinary third-party application
+can consume and record the portable reader’s live output without a
+project-specific plugin. It narrows the deferral to
+AVFoundation/system-wide camera discovery. See <a
+href="../evidence/alpha8-live-ffmpeg.html">exact alpha-8 live FFmpeg
+application proof</a>.</p>
 </div>
 <div class="task-card" data-state="active">
 <!-- task: D100; depends: D80,D90; state: active -->
@@ -3136,6 +3158,14 @@ analyzed first frames, and no historic half-black or edge-strip defect.
 Public display derivatives and retained hashes are linked in E-074. This
 closes a cross-platform regression check, not the still-open physical
 Linux application gate.</p>
+<p>The exact downloaded alpha-8 archive also completed a live
+application-boundary run on Apple Silicon: 60 distinct mode-2 frames,
+exactly 73,728,000 Bayer bytes, and 9.50761-fps measured producer
+cadence passed through a plain pipe to independent FFmpeg, which
+produced a 60-frame 1280x960 H.264 recording. This closes
+direct-reader-to-ordinary-application consumption on macOS. It does not
+replace the still-open physical Linux V4L2 gate or claim a system camera
+extension; details and the playable proof clip are linked in E-079.</p>
 </div>
 <div class="task-card" data-state="active">
 <!-- task: D110; depends: D100; state: active -->
@@ -3163,9 +3193,9 @@ Fixtures, and Operations</h3>
 <td>State</td>
 <td>Active; public alpha-8 packages the reader, both Linux application
 geometries, calibrated-field tooling, measured output cadence, bounded
-live acceptance, rendered evidence, permanent publication-boundary
-enforcement, and tested install/removal while residual physical
-validation continues</td>
+live acceptance, rendered evidence including a third-party FFmpeg
+recording, permanent publication-boundary enforcement, and tested
+install/removal while residual physical validation continues</td>
 </tr>
 <tr>
 <td>Actors</td>
@@ -4280,6 +4310,19 @@ observed startup cadence transient</td>
 release</a></td>
 <td>VERIFIED EXACT-RELEASE PHYSICAL REGRESSION + STARTUP TRANSIENT
 RETAINED / LINUX CABLE RUN OPEN</td>
+</tr>
+<tr>
+<td>E-079</td>
+<td>The downloaded exact alpha-8 reader streamed 60 distinct live mode-2
+frames over a plain stdout pipe into independent FFmpeg on Apple
+Silicon. The reader delivered exactly 73,728,000 Bayer bytes at 9.50761
+fps; reader, <code>tee</code>, and FFmpeg exited zero; the resulting
+1280x960 H.264 MP4 decodes as 60 frames over 6.314354 seconds; and the
+analyzed first Bayer frame had no zero or saturated pixels</td>
+<td><a href="../evidence/alpha8-live-ffmpeg.html">Exact alpha-8 live
+FFmpeg application proof</a></td>
+<td>VERIFIED THIRD-PARTY LIVE APPLICATION CONSUMPTION ON MACOS /
+AVFOUNDATION AND PHYSICAL LINUX V4L2 REMAIN OPEN</td>
 </tr>
 </tbody>
 </table>

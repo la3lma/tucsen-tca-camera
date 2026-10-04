@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Exact alpha-8 live FFmpeg application proof — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="exact-alpha-8-live-ffmpeg-application-proof">Exact alpha-8 live
+FFmpeg application proof</h1>
+<p>Date: 2026-10-04</p>
+<h2 id="result">Result</h2>
+<p>The downloaded public <code>v0.2.0-alpha.8</code> archive’s native
+Apple Silicon reader streamed 60 live mode-2 Bayer frames from the
+Mac-attached <code>0547:c003</code> camera through a plain
+standard-output pipe into an independent FFmpeg process:</p>
+<pre class="text"><code>0547:c003 camera -&gt; exact alpha-8 reader -&gt; Bayer8 stdout -&gt; tee -&gt; FFmpeg -&gt; H.264 MP4</code></pre>
+<p>The reader requested 250 ms exposure and gain 0. FFmpeg interpreted
+the stream as 1280x960 provisional-GRBG Bayer8, applied the previously
+measured illustrative neutral-field multipliers, and encoded H.264 with
+<code>libx264</code> into an MP4 container. Reader, <code>tee</code>,
+and FFmpeg all exited successfully. No project-specific FFmpeg plugin or
+kernel camera driver was involved.</p>
+<h2 id="measured-evidence">Measured evidence</h2>
+<table>
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 57%" />
+</colgroup>
+<thead>
+<tr>
+<th>Property</th>
+<th style="text-align: right;">Measured result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reader result</td>
+<td style="text-align: right;"><code>frames=60 status=ok</code></td>
+</tr>
+<tr>
+<td>Exact Bayer bytes consumed</td>
+<td style="text-align: right;">73,728,000</td>
+</tr>
+<tr>
+<td>Distinct per-frame SHA-256 values</td>
+<td style="text-align: right;">60 of 60</td>
+</tr>
+<tr>
+<td>Reader cadence</td>
+<td style="text-align: right;">9.50761 fps over 6.205558 s</td>
+</tr>
+<tr>
+<td>Reader intervals</td>
+<td style="text-align: right;">min 90.488 ms; p50 105.163 ms; p95
+106.392 ms; max 118.594 ms</td>
+</tr>
+<tr>
+<td>Encoded stream</td>
+<td style="text-align: right;">H.264, 1280x960,
+<code>yuv420p</code></td>
+</tr>
+<tr>
+<td>Decoded MP4 frames</td>
+<td style="text-align: right;">60</td>
+</tr>
+<tr>
+<td>MP4 duration and size</td>
+<td style="text-align: right;">6.314354 s; 1,659,870 bytes</td>
+</tr>
+<tr>
+<td>First Bayer frame</td>
+<td style="text-align: right;">mean 178.549; p01 79; p99 221;
+zero/saturated 0/0</td>
+</tr>
+</tbody>
+</table>
+<p>The MP4 input time base was explicitly set to 9.50216 fps. The
+independently recorded reader timestamp sidecar, summarized above, is
+therefore the authoritative measurement of producer cadence.</p>
+<video controls preload="metadata" poster="images/alpha8-live-preview-poster.jpg" width="100%">
+<source src="videos/alpha8-live-preview.mp4" type="video/mp4">
+<p><a href="videos/alpha8-live-preview.mp4">Download the H.264 proof
+clip.</a> </video></p>
+<p><a href="videos/alpha8-live-preview.mp4">Download the H.264 proof
+clip</a> or <a href="images/alpha8-live-preview-poster.jpg">open its
+poster frame</a>.</p>
+<p>Published artifact hashes are:</p>
+<pre class="text"><code>17c981d1c2d3cccc40f0e76a2a6590147a4d523a463ee92c5d254fdc45ed1adc  alpha8-live-preview.mp4
+ab8d909bcd3fc3a66fe4e4f080c68a51a36b9be76e27ae8a8c6c76a15ebc299e  alpha8-live-preview-poster.jpg</code></pre>
+<h2 id="acceptance-effect-and-limits">Acceptance effect and limits</h2>
+<p>This proves that a normal third-party userspace application can
+consume and record the exact public release’s live camera stream on
+macOS through a plain pipe. The clip is direct evidence of the
+application boundary, not merely a camera-reader fixture or an offline
+conversion.</p>
+<p>The GRBG phase and color treatment remain provisional, so the
+displayed color is illustrative rather than a completed calibration.
+This result also does not make the camera enumerate as a system-wide
+macOS camera, and it does not replace the pending physical Linux V4L2
+application run with the camera moved to the Raspberry Pi.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>
