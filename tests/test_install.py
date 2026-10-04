@@ -11,7 +11,7 @@ import tempfile
 
 
 PROGRAMS = ("tca-camera", "tca-v4l2", "tca-frame-stats",
-            "tca-white-balance")
+            "tca-white-balance", "tca-flat-field")
 
 
 def main() -> None:

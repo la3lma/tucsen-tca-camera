@@ -103,6 +103,13 @@ microscope it independently produced approximately red 0.87, green 1.0, and
 blue 1.98–2.0 in both modes. That is an in-situ white balance, not a Bayer-phase
 proof or a calibrated illuminant measurement.
 
+The separate `tca-flat-field` user-space tool implements residual spatial
+shading correction without changing this USB protocol. It averages complete
+dark and flat Bayer streams, derives independent median-normalized R/G1/G2/B
+gain maps, stores explicit geometry and fixed-point calibration records, and
+can filter concatenated Bayer frames before demosaic or V4L2 output. Raw frames
+remain the authoritative capture.
+
 ## Controls
 
 Request `0xb7` writes the supplied 16-bit value to the register in `wIndex`.

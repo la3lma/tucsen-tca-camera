@@ -90,6 +90,27 @@ Apply the emitted `ffmpeg_filter` after demosaicing. Record the ROI and gains.
 This in-situ correction includes the lamp and optical path, but a neutral field
 cannot by itself prove Bayer phase or establish colorimetric accuracy.
 
+### Field-uniformity calibration
+
+After centering the lamp, condenser, field diaphragm, and camera relay, capture
+16–64 dark frames with illumination blocked and 16–64 blank-field frames at
+the final optical and camera settings. Use the full sensor without binning or
+ROI. Translate or defocus the blank between flat frames.
+
+```sh
+./build/tca-flat-field calibrate --mode 2 --phase grbg \
+  --dark capture/optical/darks.bayer --dark-frames 32 \
+  --flat capture/optical/flats.bayer --flat-frames 32 \
+  --output capture/optical/10x-mode2.tca-flat
+./build/tca-flat-field inspect \
+  --calibration capture/optical/10x-mode2.tca-flat \
+  > capture/optical/10x-mode2-flat-field.json
+```
+
+Apply the map before demosaicing, then apply global white balance. Record the
+calibration hash and settings. Repeat after changing objective, condenser,
+lamp voltage, relay, exposure/gain path, binning, or sensor area.
+
 ## 3. Exposure response
 
 Hold gain, illumination, focus, and specimen fixed. Capture a conservative

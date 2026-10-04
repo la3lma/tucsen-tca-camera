@@ -21,6 +21,10 @@ def main() -> None:
     assert "bayer_grbg8" in source
     assert "v4l2loopback" in source
     assert "build/tca-camera" in source
+    assert "TCA_FLAT_FIELD" in source
+    assert '"$flat_field_tool" apply --calibration "$flat_field"' in source
+    assert "raw-bayer.fifo" in source
+    assert "flat-field calibration must be 1280x960 GRBG for V4L2" in source
     assert "libusb_control_transfer" not in source
     with tempfile.TemporaryDirectory(prefix="tca-v4l2-inert-") as directory:
         raw = pathlib.Path(directory, "must-not-exist.raw")

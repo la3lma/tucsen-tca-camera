@@ -5,11 +5,12 @@ PREFIX ?= /usr/local
 DESTDIR ?=
 
 TARGET = build/tca-camera
+FLAT_FIELD_TARGET = build/tca-flat-field
 LIBUSB_CFLAGS := $(shell $(PKG_CONFIG) --cflags libusb-1.0 2>/dev/null)
 LIBUSB_LIBS := $(shell $(PKG_CONFIG) --libs libusb-1.0 2>/dev/null)
 
 .PHONY: all
-all: $(TARGET)
+all: $(TARGET) $(FLAT_FIELD_TARGET)
 
 $(TARGET): src/tca_camera.c
 	@mkdir -p build
@@ -20,12 +21,18 @@ $(TARGET): src/tca_camera.c
 	$(CC) $(CFLAGS) -std=c17 -Wall -Wextra -Werror -pedantic \
 		$(LIBUSB_CFLAGS) $< $(LIBUSB_LIBS) -o $@
 
+$(FLAT_FIELD_TARGET): src/tca_flat_field.c
+	@mkdir -p build
+	$(CC) $(CFLAGS) -std=c17 -Wall -Wextra -Werror -pedantic $< -o $@
+
 .PHONY: test
-test: $(TARGET)
+test: $(TARGET) $(FLAT_FIELD_TARGET)
 	python3 tests/test_static.py $(TARGET) src/tca_camera.c
 	python3 tests/test_v4l2_static.py scripts/tca-v4l2
 	python3 tests/test_frame_stats.py scripts/tca-frame-stats
 	python3 tests/test_white_balance.py scripts/tca-white-balance
+	python3 tests/test_flat_field.py $(FLAT_FIELD_TARGET)
+	python3 tests/test_flat_field_v4l2_static.py tools/run_flat_field_v4l2_preflight.sh
 	python3 tests/test_install.py .
 	python3 tests/test_pages_static.py .
 
@@ -36,6 +43,7 @@ install: $(TARGET)
 	install -m 0755 scripts/tca-v4l2 "$(DESTDIR)$(PREFIX)/bin/tca-v4l2"
 	install -m 0755 scripts/tca-frame-stats "$(DESTDIR)$(PREFIX)/bin/tca-frame-stats"
 	install -m 0755 scripts/tca-white-balance "$(DESTDIR)$(PREFIX)/bin/tca-white-balance"
+	install -m 0755 $(FLAT_FIELD_TARGET) "$(DESTDIR)$(PREFIX)/bin/tca-flat-field"
 
 .PHONY: uninstall
 uninstall:
@@ -43,6 +51,7 @@ uninstall:
 	rm -f "$(DESTDIR)$(PREFIX)/bin/tca-v4l2"
 	rm -f "$(DESTDIR)$(PREFIX)/bin/tca-frame-stats"
 	rm -f "$(DESTDIR)$(PREFIX)/bin/tca-white-balance"
+	rm -f "$(DESTDIR)$(PREFIX)/bin/tca-flat-field"
 
 .PHONY: clean
 clean:

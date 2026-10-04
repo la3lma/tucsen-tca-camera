@@ -81,14 +81,14 @@ optional rule in [`udev/99-tucsen-tca-camera.rules`](udev/99-tucsen-tca-camera.r
 
 ## Install and remove
 
-Install the reader, V4L2 helper, frame analyzer, and white-balance estimator
-under the selected prefix:
+Install the reader, V4L2 helper, frame analyzer, white-balance estimator, and
+flat-field calibration/filter tool under the selected prefix:
 
 ```sh
 sudo make install PREFIX=/usr/local
 ```
 
-Remove exactly those four installed programs:
+Remove exactly those five installed programs:
 
 ```sh
 sudo make uninstall PREFIX=/usr/local
@@ -223,6 +223,46 @@ gray into display white. Exposure, gain, or a separate tone curve controls
 brightness. Re-estimate after changing the lamp, condenser, optical path, or
 camera gain substantially.
 
+### Flat-field illumination correction
+
+Optical alignment should remove as much field nonuniformity as possible first.
+Residual multiplicative shading can then be calibrated without changing the
+camera protocol or adding a kernel driver. Capture full-frame, unbinned dark
+and flat streams at the same mode, objective, condenser, lamp voltage,
+exposure, and gain used for imaging. Average 16–64 frames where practical;
+translate or defocus the blank field between flat frames so specimen features
+do not become part of the map.
+
+For example, after capturing 32-frame mode-2 streams as `darks.bayer` and
+`flats.bayer`, create and inspect a calibration:
+
+```sh
+./build/tca-flat-field calibrate --mode 2 --phase grbg \
+  --dark capture/darks.bayer --dark-frames 32 \
+  --flat capture/flats.bayer --flat-frames 32 \
+  --output capture/10x-mode2.tca-flat
+
+./build/tca-flat-field inspect \
+  --calibration capture/10x-mode2.tca-flat
+```
+
+The calibration stores a fixed-point mean dark level and gain for every Bayer
+pixel. Each of R, G1, G2, and B is normalized to its own median flat signal, so
+spatial shading is removed without silently performing white balance. Apply it
+to one or more concatenated Bayer frames:
+
+```sh
+./build/tca-flat-field apply \
+  --calibration capture/10x-mode2.tca-flat \
+  --input capture/preview.bayer \
+  --output capture/preview-flat-corrected.bayer
+```
+
+Input and output may be `-`, allowing the corrector to sit between the reader
+and FFmpeg. It rejects truncated frames, refuses to overwrite files, and emits
+only corrected Bayer bytes on standard output. Preserve the raw acquisition
+and the calibration alongside any corrected derivative.
+
 ## Optional V4L2 camera
 
 Install the distribution-maintained generic loopback module:
@@ -236,6 +276,15 @@ This creates `/dev/video42` by default, converts the mode-2 Bayer stream to YUYV
 removes only the loopback device it created when stopped. The adapter refuses
 to alter an existing loopback configuration. The custom camera protocol still
 runs in userspace; `v4l2loopback` is an optional, generic compatibility layer.
+To apply a matching calibration before demosaic and YUYV conversion:
+
+```sh
+TCA_FLAT_FIELD=capture/10x-mode2.tca-flat \
+  scripts/tca-v4l2 --serve first-device-frame.raw
+```
+
+The V4L2 helper validates the calibration path before touching the camera and
+retains the first unmodified device frame as before.
 
 ## Protocol and safety
 

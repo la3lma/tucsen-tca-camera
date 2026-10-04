@@ -21,6 +21,29 @@ reopen, and endurance baselines below. Native `make test` passed first. Later
 sections identify the hardening commit or candidate source used for their own
 physical checks.
 
+## User-space flat-field and V4L2 preflight — 2026-10-04
+
+The candidate user-space flat-field implementation passed its complete native
+test suite on both Apple Silicon and the Raspberry Pi. A synthetic Raspberry
+Pi preflight used two constant dark frames at value 10, two constant flat
+frames at value 110, and six input frames at value 60. Calibration and
+streaming correction produced six uniform Bayer frames at the expected value
+50. FFmpeg converted those corrected frames to YUYV and a separate
+`v4l2-ctl` process consumed all six through a temporary `/dev/video43`
+loopback device. The resulting YUYV evidence was exactly 14,745,600 bytes.
+The harness hashed its calibration, input, corrected output, V4L2 output, and
+logs, then removed the device and module it had loaded.
+
+Filtering 60 preview frames (73,728,000 input bytes) took 0.267 seconds on the
+Pi, approximately 225 frames/s and therefore far above this camera's observed
+rate. This is a deterministic software and application-boundary validation,
+not evidence that a physical optical flat has yet been calibrated. Reproduce
+the destructive, root-only loopback portion explicitly with:
+
+```text
+sudo tools/run_flat_field_v4l2_preflight.sh --run-flat-field-v4l2-preflight
+```
+
 ## Capture and reopen checks
 
 One invocation captured 30 frames with 400-ms exposure and normalized gain 20

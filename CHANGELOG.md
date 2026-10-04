@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Add `tca-flat-field`, a dependency-free C17 calibrator and streaming
+  corrector for per-pixel dark subtraction and per-Bayer-plane flat-field
+  gain correction before demosaicing.
+- Allow `tca-v4l2` to insert a validated 1280x960 GRBG flat-field map through
+  `TCA_FLAT_FIELD` while leaving the existing uncorrected bridge as the
+  default.
+- Add a token-gated ARM64 Linux preflight that exercises calibration,
+  correction, Bayer conversion, a temporary V4L2 loopback device, application
+  consumption, evidence hashing, and cleanup without requiring the camera.
+
 ## 0.2.0-alpha.6 — 2026-10-04
 
 - Preserve white-balance channel ratios when an estimated multiplier exceeds
