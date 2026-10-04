@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>System-managed V4L2 loopback lifecycle — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="system-managed-v4l2-loopback-lifecycle">System-managed V4L2
+loopback lifecycle</h1>
+<p>Date: 2026-10-04</p>
+<p>Issue <a
+href="https://github.com/la3lma/tucsen-tca-camera/issues/38">#38</a> and
+draft <a href="https://github.com/la3lma/tucsen-tca-camera/pull/39">PR
+#39</a> address an application-integration limitation:
+<code>tca-v4l2</code> previously refused to run when
+<code>v4l2loopback</code> was already loaded, because its only mode
+owned module creation, device ownership, and teardown.</p>
+<h2 id="ownership-contract">Ownership contract</h2>
+<p>The existing <code>--serve</code> operation is unchanged: it requires
+an unused setup, creates an exact-labelled temporary loopback, changes
+that node’s ownership, and removes only the module it loaded. The new
+explicit <code>--serve-existing</code> operation instead requires:</p>
+<ul>
+<li>a writable character device at the requested
+<code>/dev/videoN</code>;</li>
+<li>the exact sysfs label <code>TCA Camera 0547:c003</code>;</li>
+<li>a loaded <code>v4l2loopback</code> module; and</li>
+<li>a node resolving to
+<code>/sys/devices/virtual/video4linux/videoN</code>.</li>
+</ul>
+<p>That validation does not open the node. The system-owned path never
+runs <code>modprobe</code>, changes node ownership, removes a device, or
+unloads the module. Bridge readiness is detected through the loopback’s
+read-only sysfs <code>state</code> and <code>format</code> files, so
+readiness inspection does not briefly become an application
+consumer.</p>
+<h2 id="preserved-failure-and-correction">Preserved failure and
+correction</h2>
+<p>The first extended full-resolution candidate consistently failed
+before its consumer created an output file. The uncorrected synthetic
+reader delivered four frames in candidate <code>9c06f30</code>; pacing
+at the mode-0 nominal ceiling in <code>3c3885f</code> reduced that to
+three but did not fix the failure. Removing the pre-writer V4L2 driver
+ioctl in <code>08973b1</code> also left the three-frame failure. Each
+failed run reported <code>unsupported stream type</code>; scoped cleanup
+left no test device or loaded module.</p>
+<p>The remaining open/close operation was the bridge and harness
+readiness probe: <code>v4l2-ctl --all</code> briefly opened and then
+closed the exclusive capture side before the real application attached.
+Candidate <code>c9a7e6e</code> replaced that probe with sysfs
+state/format checks and made an unexpected successful end of the
+unbounded reader an explicit bridge failure. This change fixed the
+repeatable mode-0 race instead of masking it with a larger buffer or
+retrying USB.</p>
+<h2 id="raspberry-pi-aarch64-integration">Raspberry Pi AArch64
+integration</h2>
+<p>Exact candidate <code>c9a7e6e5ecc78bf36b040f829ed0e7446211ba0a</code>
+passed the complete camera-free Raspberry Pi suite, including
+reproducible Debian package construction. The token-gated integration
+then ran both ownership models in each supported geometry using the
+USB-inert synthetic reader, real FFmpeg, real <code>v4l2loopback</code>,
+and ordinary <code>v4l2-ctl</code> consumers.</p>
+<table>
+<thead>
+<tr>
+<th>Result</th>
+<th style="text-align: right;">Preview mode 2</th>
+<th style="text-align: right;">Full-resolution mode 0</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Geometry</td>
+<td style="text-align: right;">1280x960</td>
+<td style="text-align: right;">3664x2748</td>
+</tr>
+<tr>
+<td>Managed normal + delayed frames</td>
+<td style="text-align: right;">4 + 8</td>
+<td style="text-align: right;">2 + 3</td>
+</tr>
+<tr>
+<td>Managed warm-baseline RSS growth</td>
+<td style="text-align: right;">0 KiB</td>
+<td style="text-align: right;">9,824 KiB</td>
+</tr>
+<tr>
+<td>Pre-created-device consumer frames</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr>
+<td>Pre-created device survived bridge TERM</td>
+<td style="text-align: right;">Pass</td>
+<td style="text-align: right;">Pass</td>
+</tr>
+<tr>
+<td>Pre-created module survived bridge TERM</td>
+<td style="text-align: right;">Pass</td>
+<td style="text-align: right;">Pass</td>
+</tr>
+<tr>
+<td>Harness-owned final cleanup</td>
+<td style="text-align: right;">Pass</td>
+<td style="text-align: right;">Pass</td>
+</tr>
+<tr>
+<td>USB transfers</td>
+<td style="text-align: right;">None</td>
+<td style="text-align: right;">None</td>
+</tr>
+</tbody>
+</table>
+<p>The bridge returned deterministic status 143 on TERM. After bridge
+shutdown, the pre-created node retained its exact label and the module
+remained loaded; only the surrounding root-owned harness then removed
+them. Final checks found neither
+<code>/dev/video46</code>/<code>47</code> nor <code>v4l2loopback</code>
+loaded.</p>
+<p>The retained preview manifest has SHA-256
+<code>ebf09d543d9a40f150f94fa1b430235271dd0153c8329c3699a11ef106f4ad2e</code>.
+The retained full-resolution manifest has SHA-256
+<code>2c466c6711f7050f103bd1f0b9df6f85da729573419da831574c74f13e0dc27f</code>.
+These are hashes of the manifest files; the manifest entries hash every
+generated integration artifact.</p>
+<h2 id="scope">Scope</h2>
+<p>This proves ownership isolation, application attachment,
+deterministic stop, and scoped cleanup for both geometries without a
+camera. It makes a system-managed V4L2 service practical, but it does
+not substitute for the still-open direct-camera Linux application run,
+physical reconnect, or optical calibration.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>
