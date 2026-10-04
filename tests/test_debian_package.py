@@ -54,6 +54,9 @@ def main() -> None:
     version = (repository / "packaging" / "debian" / "version").read_text(
         encoding="utf-8"
     ).strip()
+    upstream_version = (repository / "VERSION").read_text(
+        encoding="utf-8"
+    ).strip()
     architecture = run("dpkg", "--print-architecture").stdout.strip()
 
     with tempfile.TemporaryDirectory(prefix="tca-deb-test-") as directory:
@@ -95,6 +98,7 @@ def main() -> None:
         assert " root/root " in listing
         assert "./usr/lib/udev/rules.d/99-tucsen-tca-camera.rules" in listing
         assert "./usr/share/doc/tucsen-tca-camera/copyright" in listing
+        assert "./usr/share/doc/tucsen-tca-camera/VERSION" in listing
 
         control_directory = temporary / "control"
         run("dpkg-deb", "--control", str(first_package), str(control_directory))
@@ -111,6 +115,15 @@ def main() -> None:
             installed = binary_directory / name
             assert stat.S_ISREG(installed.stat().st_mode)
             assert installed.stat().st_mode & stat.S_IXUSR
+
+        reported_version = run(
+            str(binary_directory / "tca-camera"), "--version"
+        ).stdout.strip()
+        assert reported_version == f"tca-camera {upstream_version}"
+        installed_version = (
+            extracted / "usr" / "share" / "doc" / "tucsen-tca-camera" / "VERSION"
+        ).read_text(encoding="utf-8").strip()
+        assert installed_version == upstream_version
 
         for helper in ("tca-v4l2", "tca-ffmpeg"):
             diagnostic = run(str(binary_directory / helper), "--diagnose-install")

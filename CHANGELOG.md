@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.2.0-alpha.11 — 2026-10-04
+
+- Make `VERSION` the reader's build-time version authority, verify that the
+  CLI and Debian version correspond, and install the upstream version marker
+  with the package so captured evidence can identify its executable exactly.
+
+## 0.2.0-alpha.10 — 2026-10-04
+
 - Add a rootless, reproducible, architecture-native Debian binary-package
   builder with installed-helper diagnostics, exact 0547:c003 udev metadata,
   safe udev-rule reload hooks, documentation, collision refusal, and dynamic

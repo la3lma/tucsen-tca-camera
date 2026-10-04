@@ -24,10 +24,13 @@ ALLOWED = {
 
 
 def main() -> None:
-    if len(sys.argv) != 3:
-        raise SystemExit(f"usage: {sys.argv[0]} BINARY SOURCE")
+    if len(sys.argv) != 4:
+        raise SystemExit(f"usage: {sys.argv[0]} BINARY SOURCE VERSION")
     binary = pathlib.Path(sys.argv[1]).resolve()
     source = pathlib.Path(sys.argv[2]).read_text(encoding="utf-8")
+    expected_version = pathlib.Path(sys.argv[3]).read_text(
+        encoding="utf-8"
+    ).strip()
     symbols = subprocess.run(
         ["nm", "-u", str(binary)], check=True, capture_output=True, text=True
     ).stdout
@@ -72,7 +75,7 @@ def main() -> None:
     version = subprocess.run(
         [str(binary), "--version"], check=True, capture_output=True, text=True
     )
-    assert version.stdout.strip() == "tca-camera 0.2.0-alpha.7"
+    assert version.stdout.strip() == f"tca-camera {expected_version}"
     with tempfile.TemporaryDirectory(prefix="tca-linux-stream-") as directory:
         raw = pathlib.Path(directory, "no.raw")
         bayer = pathlib.Path(directory, "no.bayer")
