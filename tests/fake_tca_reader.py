@@ -16,8 +16,10 @@ import sys
 import time
 
 
-FRAME_BYTES = 1280 * 960
-PREFIX_BYTES = 512
+MODES = {
+    0: (3664, 2748, 320, 1236),
+    2: (1280, 960, 512, 480),
+}
 stop_requested = False
 
 
@@ -40,6 +42,7 @@ def parse_args() -> argparse.Namespace:
     capture.add_argument("--raw-first", required=True)
     capture.add_argument("--bayer", required=True)
     capture.add_argument("--timestamps")
+    capture.add_argument("--mode", type=int, choices=sorted(MODES), default=2)
     capture.add_argument("--exposure-ms", type=int, required=True)
     capture.add_argument("--gain", type=int, required=True)
     return parser.parse_args()
@@ -49,8 +52,10 @@ def main() -> int:
     args = parse_args()
     if args.frames < 0:
         raise SystemExit("--frames must be nonnegative")
-    if not 1 <= args.exposure_ms <= 480 or not 0 <= args.gain <= 320:
-        raise SystemExit("synthetic control value outside mode-2 range")
+    width, height, prefix_bytes, max_exposure_ms = MODES[args.mode]
+    frame_bytes = width * height
+    if not 1 <= args.exposure_ms <= max_exposure_ms or not 0 <= args.gain <= 320:
+        raise SystemExit("synthetic control value outside selected-mode range")
     if args.raw_first == "-" or pathlib.Path(args.raw_first).exists():
         raise SystemExit("--raw-first must name a new regular file")
     if args.timestamps and (
@@ -66,10 +71,10 @@ def main() -> int:
 
     signal.signal(signal.SIGINT, request_stop)
     signal.signal(signal.SIGTERM, request_stop)
-    first_frame = bytes([60]) * FRAME_BYTES
+    first_frame = bytes([60]) * frame_bytes
     with open(args.raw_first, "xb") as raw:
         raw.write(bytes([0x88]) * 10)
-        raw.write(bytes(PREFIX_BYTES - 10))
+        raw.write(bytes(prefix_bytes - 10))
         raw.write(first_frame)
         raw.flush()
         os.fsync(raw.fileno())
@@ -83,7 +88,7 @@ def main() -> int:
     delivered = 0
     try:
         while not stop_requested and (args.frames == 0 or delivered < args.frames):
-            frame = bytes([60 + delivered % 4]) * FRAME_BYTES
+            frame = bytes([60 + delivered % 4]) * frame_bytes
             try:
                 output.write(frame)
                 output.flush()

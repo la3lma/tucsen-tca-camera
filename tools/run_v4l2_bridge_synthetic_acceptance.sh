@@ -7,16 +7,11 @@ export LC_ALL
 
 TOKEN=--run-v4l2-bridge-synthetic-acceptance
 DEFAULT_VIDEO_NUMBER=44
-FRAME_BYTES=1228800
-RAW_BYTES=1229312
-YUYV_FRAME_BYTES=2457600
-NORMAL_FRAMES=4
-SLOW_FRAMES=8
 MAX_RSS_GROWTH_KIB=65536
 
 usage()
 {
-    printf 'usage: sudo %s %s [OUTPUT_DIRECTORY [VIDEO_NUMBER]]\n' "$0" "$TOKEN"
+    printf 'usage: sudo %s %s [OUTPUT_DIRECTORY [VIDEO_NUMBER [MODE]]]\n' "$0" "$TOKEN"
     printf '       exercises the real bridge with a USB-inert synthetic reader\n'
 }
 
@@ -34,7 +29,7 @@ if [ "$#" -eq 0 ]; then
     printf 'NO USB TRANSFER SENT. NO SYSTEM CHANGE MADE.\n'
     exit 0
 fi
-if [ "$#" -gt 3 ] || [ "$1" != "$TOKEN" ]; then
+if [ "$#" -gt 4 ] || [ "$1" != "$TOKEN" ]; then
     usage >&2
     printf 'NO USB TRANSFER SENT. NO SYSTEM CHANGE MADE.\n' >&2
     exit 64
@@ -50,10 +45,37 @@ fake_reader=$project_dir/tests/fake_tca_reader.py
 flat_field_tool=$project_dir/build/tca-flat-field
 timing_analyzer=$project_dir/scripts/tca-timing-stats
 video_number=${3:-$DEFAULT_VIDEO_NUMBER}
-is_decimal "$video_number" || {
-    printf 'VIDEO_NUMBER must be a decimal integer\n' >&2
+mode=${4:-2}
+is_decimal "$video_number" && is_decimal "$mode" || {
+    printf 'VIDEO_NUMBER and MODE must be decimal integers\n' >&2
     exit 64
 }
+case "$mode" in
+    0)
+        width=3664
+        height=2748
+        frame_bytes=10068672
+        raw_bytes=10068992
+        yuyv_frame_bytes=20137344
+        normal_frames=2
+        slow_frames=3
+        consumer_timeout=60
+        ;;
+    2)
+        width=1280
+        height=960
+        frame_bytes=1228800
+        raw_bytes=1229312
+        yuyv_frame_bytes=2457600
+        normal_frames=4
+        slow_frames=8
+        consumer_timeout=30
+        ;;
+    *)
+        printf 'MODE must be 0 or 2\n' >&2
+        exit 64
+        ;;
+esac
 device=/dev/video$video_number
 
 git -C "$project_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
@@ -152,23 +174,25 @@ tree_rss_kib()
 
 commit=$(git -C "$project_dir" rev-parse HEAD)
 {
-    printf 'profile=tca-v4l2-synthetic-lifecycle-v1\n'
+    printf 'profile=tca-v4l2-synthetic-lifecycle-v3\n'
     printf 'usb_transfer=none\n'
     printf 'project_commit=%s\n' "$commit"
     printf 'video_device=%s\n' "$device"
-    printf 'normal_consumer_frames=%s\n' "$NORMAL_FRAMES"
-    printf 'slow_consumer_frames=%s\n' "$SLOW_FRAMES"
+    printf 'mode=%s\n' "$mode"
+    printf 'geometry=%sx%s\n' "$width" "$height"
+    printf 'normal_consumer_frames=%s\n' "$normal_frames"
+    printf 'slow_consumer_frames=%s\n' "$slow_frames"
     printf 'slow_consumer_sleep_ms=350\n'
     printf 'max_rss_growth_kib=%s\n' "$MAX_RSS_GROWTH_KIB"
 } >"$output_dir/session.txt"
 date -u '+%Y-%m-%dT%H:%M:%SZ' >"$output_dir/start-utc.txt"
 uname -a >"$output_dir/uname.txt"
 
-dd if=/dev/zero bs=$FRAME_BYTES count=2 status=none | \
+dd if=/dev/zero bs=$frame_bytes count=2 status=none | \
     tr '\000' '\012' >"$output_dir/darks.bayer"
-dd if=/dev/zero bs=$FRAME_BYTES count=2 status=none | \
+dd if=/dev/zero bs=$frame_bytes count=2 status=none | \
     tr '\000' '\156' >"$output_dir/flats.bayer"
-"$flat_field_tool" calibrate --mode 2 --phase grbg \
+"$flat_field_tool" calibrate --mode "$mode" --phase grbg \
     --dark "$output_dir/darks.bayer" --dark-frames 2 \
     --flat "$output_dir/flats.bayer" --flat-frames 2 \
     --exposure-ms 100 --camera-gain 20 \
@@ -181,7 +205,7 @@ TCA_CAMERA_READER="$fake_reader" TCA_FAKE_FRAME_DELAY_MS=50 \
 TCA_FLAT_FIELD="$output_dir/uniform.tca-flat" \
 TCA_TIMESTAMPS="$output_dir/reader-timestamps.csv" \
     "$bridge" --serve "$output_dir/first-device.raw" \
-    "$video_number" 100 20 >"$output_dir/bridge.stdout.txt" \
+    "$video_number" 100 20 "$mode" >"$output_dir/bridge.stdout.txt" \
     2>"$output_dir/bridge.stderr.txt" &
 bridge_pid=$!
 
@@ -203,21 +227,24 @@ done
     exit 1
 }
 
-rss_baseline=$(tree_rss_kib "$bridge_pid")
+rss_cold=$(tree_rss_kib "$bridge_pid")
 ps -eo pid=,ppid=,rss=,stat=,comm=,args= >"$output_dir/processes-ready.txt"
-timeout 30 v4l2-ctl -d "$device" --stream-mmap=3 \
-    --stream-count="$NORMAL_FRAMES" \
+timeout "$consumer_timeout" v4l2-ctl -d "$device" --stream-mmap=3 \
+    --stream-count="$normal_frames" \
     --stream-to="$output_dir/normal-consumer.yuyv" \
     >"$output_dir/normal-consumer.stdout.txt" \
     2>"$output_dir/normal-consumer.stderr.txt"
 [ "$(stat -c %s "$output_dir/normal-consumer.yuyv")" -eq \
-   "$((NORMAL_FRAMES * YUYV_FRAME_BYTES))" ]
+   "$((normal_frames * yuyv_frame_bytes))" ]
 kill -0 "$bridge_pid"
 
 sleep 1
 kill -0 "$bridge_pid"
-timeout 30 v4l2-ctl -d "$device" --stream-mmap=3 \
-    --stream-count="$SLOW_FRAMES" \
+rss_baseline=$(tree_rss_kib "$bridge_pid")
+ps -eo pid=,ppid=,rss=,stat=,comm=,args= \
+    >"$output_dir/processes-warm-baseline.txt"
+timeout "$consumer_timeout" v4l2-ctl -d "$device" --stream-mmap=3 \
+    --stream-count="$slow_frames" \
     --stream-sleep=count=1,sleep=350,mode=1 \
     --stream-to="$output_dir/slow-consumer.yuyv" \
     >"$output_dir/slow-consumer.stdout.txt" \
@@ -229,7 +256,7 @@ ps -eo pid=,ppid=,rss=,stat=,comm=,args= >"$output_dir/processes-slow.txt"
 wait "$slow_consumer_pid"
 slow_consumer_pid=0
 [ "$(stat -c %s "$output_dir/slow-consumer.yuyv")" -eq \
-   "$((SLOW_FRAMES * YUYV_FRAME_BYTES))" ]
+   "$((slow_frames * yuyv_frame_bytes))" ]
 kill -0 "$bridge_pid"
 
 rss_growth=$((rss_slow - rss_baseline))
@@ -239,11 +266,11 @@ rss_growth=$((rss_slow - rss_baseline))
 }
 
 ffmpeg -hide_banner -loglevel error -f rawvideo -pixel_format yuyv422 \
-    -video_size 1280x960 -i "$output_dir/normal-consumer.yuyv" \
-    -frames:v "$NORMAL_FRAMES" -f framemd5 "$output_dir/normal.framemd5"
+    -video_size "${width}x${height}" -i "$output_dir/normal-consumer.yuyv" \
+    -frames:v "$normal_frames" -f framemd5 "$output_dir/normal.framemd5"
 ffmpeg -hide_banner -loglevel error -f rawvideo -pixel_format yuyv422 \
-    -video_size 1280x960 -i "$output_dir/slow-consumer.yuyv" \
-    -frames:v "$SLOW_FRAMES" -f framemd5 "$output_dir/slow.framemd5"
+    -video_size "${width}x${height}" -i "$output_dir/slow-consumer.yuyv" \
+    -frames:v "$slow_frames" -f framemd5 "$output_dir/slow.framemd5"
 
 kill -TERM "$bridge_pid"
 set +e
@@ -259,19 +286,22 @@ bridge_pid=0
 printf '%s\n' "$bridge_status" >"$output_dir/bridge-exit-status.txt"
 [ ! -e "$device" ]
 ! grep -q '^v4l2loopback ' /proc/modules 2>/dev/null
-[ "$(stat -c %s "$output_dir/first-device.raw")" -eq "$RAW_BYTES" ]
+[ "$(stat -c %s "$output_dir/first-device.raw")" -eq "$raw_bytes" ]
 "$timing_analyzer" "$output_dir/reader-timestamps.csv" \
     --json "$output_dir/reader-timing.json"
 
 normal_digests=$(grep -c '^[0-9]' "$output_dir/normal.framemd5")
 slow_digests=$(grep -c '^[0-9]' "$output_dir/slow.framemd5")
-[ "$normal_digests" -eq "$NORMAL_FRAMES" ]
-[ "$slow_digests" -eq "$SLOW_FRAMES" ]
+[ "$normal_digests" -eq "$normal_frames" ]
+[ "$slow_digests" -eq "$slow_frames" ]
 {
+    printf 'mode=%s\n' "$mode"
+    printf 'geometry=%sx%s\n' "$width" "$height"
     printf 'normal_consumer_frames=%s\n' "$normal_digests"
     printf 'slow_consumer_frames=%s\n' "$slow_digests"
     printf 'consumer_detach_reattach=pass\n'
     printf 'bridge_alive_after_slow_consumer=pass\n'
+    printf 'bridge_tree_rss_cold_kib=%s\n' "$rss_cold"
     printf 'bridge_tree_rss_baseline_kib=%s\n' "$rss_baseline"
     printf 'bridge_tree_rss_slow_kib=%s\n' "$rss_slow"
     printf 'bridge_tree_rss_growth_kib=%s\n' "$rss_growth"

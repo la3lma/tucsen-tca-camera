@@ -406,12 +406,13 @@ Docstack</a></td>
 </tr>
 <tr>
 <td>Revision</td>
-<td>3.7, use cases expressed in Cockburn form and UML; delivered-frame
+<td>3.8, use cases expressed in Cockburn form and UML; delivered-frame
 cadence measured in both recovered modes; Linux V4L2 producer timing and
 bounded acceptance harness prepared; camera-free consumer
 detach/reattach, slow-consumer, bounded-memory, signal, and cleanup
-behavior verified on the Pi; public evidence rendered as HTML and
-guarded by a permanent full-history privacy policy</td>
+behavior verified on the Pi at both 1280x960 preview and complete
+3664x2748 full resolution; public evidence rendered as HTML and guarded
+by a permanent full-history privacy policy</td>
 </tr>
 <tr>
 <td>Execution state</td>
@@ -443,17 +444,19 @@ monotonic per-frame timestamps and reports 17.3466 delivered fps for
 fps for 3664x2748/250 ms on the direct-Mac/file-output path. Public
 commit <code>a60ecac</code> lets the V4L2 bridge preserve that producer
 sidecar while a normal Linux application records its own consumer
-evidence. Candidate <code>eb8acd3</code> then verifies the real bridge
-on the Pi without USB: four normal frames, consumer detach/reattach,
-eight deliberately slow frames, only 1,184 KiB bridge-tree RSS growth,
-deterministic TERM status, and complete device/module cleanup. Exact
-Apple Silicon, Pi AArch64, Ubuntu, and macOS suites pass. Public
-evidence is rendered as navigable HTML and protected by a full-history
-ban on raw disassembly, vendor binaries, firmware, traces, and private
-work. Final known-target Bayer/color calibration, true blocked-light
-dark and blank-field flat execution, and execution of the live-camera
-Linux V4L2 gate with consumer-side timing remain open. AVFoundation
-remains deferred.</td>
+evidence. Candidate <code>a93f538</code> verifies the real bridge on the
+Pi without USB at both application geometries: mode 2 delivered four
+normal plus eight delayed frames with zero warm-baseline RSS growth;
+mode 0 delivered two normal plus three delayed complete 3664x2748 frames
+with 29,504 KiB warm-baseline growth under the unchanged 65,536-KiB
+bound. Both runs passed detach/reattach, exact byte counts and digests,
+deterministic TERM, and device/module cleanup. Exact Apple Silicon, Pi
+AArch64, Ubuntu, and macOS suites pass. Public evidence is rendered as
+navigable HTML and protected by a full-history ban on raw disassembly,
+vendor binaries, firmware, traces, and private work. Final known-target
+Bayer/color calibration, true blocked-light dark and blank-field flat
+execution, and execution of the live-camera Linux V4L2 gate with
+consumer-side timing remain open. AVFoundation remains deferred.</td>
 </tr>
 <tr>
 <td>Acceptance authority</td>
@@ -3065,12 +3068,15 @@ without camera access. A physical corrected run and its
 producer-versus-consumer comparison remain required. The
 <code>470b3d9</code> acceptance harness composes those exact steps and
 passes its static/inert checks on Apple Silicon, Raspberry Pi AArch64,
-Ubuntu, and macOS. Candidate <code>eb8acd3</code> also exercises the
-real bridge on the Pi with a USB-inert reader: a four-frame consumer
-detached, an eight-frame slow consumer reattached, process-tree RSS grew
-only 1,184 KiB, TERM returned deterministically, and the bridge removed
-its device and module. The physical corrected run and immediate
-hardware-reader reopen remain required.</p>
+Ubuntu, and macOS. Candidate <code>a93f538</code> also exercises the
+real bridge on the Pi with a USB-inert reader at both supported
+geometries. Preview delivered four normal plus eight delayed frames with
+zero warm-baseline RSS growth. Full resolution exposed 3664x2748 YUYV,
+delivered two normal plus three delayed frames across detach/reattach,
+and grew 29,504 KiB from its warmed baseline under the unchanged
+65,536-KiB bound. Both modes passed exact byte counts and frame digests,
+deterministic TERM, and scoped device/module cleanup. The physical
+corrected run and immediate hardware-reader reopen remain required.</p>
 </div>
 <div class="task-card" data-state="active">
 <!-- task: D110; depends: D100; state: active -->
@@ -3185,13 +3191,14 @@ V4L2 producer-timing preparation</a>. Commit <code>470b3d9</code>
 further packages the live corrected application gate as an
 inert-by-default, manifest-producing acceptance harness; exact Pi and CI
 suites pass while its token-gated camera path remains unexecuted.
-Candidate <code>eb8acd3</code> adds a separate camera-free lifecycle
-acceptance and makes bridge signal shutdown deterministic. The exact Pi
-run passed ordinary consumer detach/reattach, deliberately slow
-consumption, bounded bridge-tree RSS, timestamp analysis, and scoped
-cleanup. See <a
-href="../evidence/v4l2-bridge-synthetic-lifecycle.html">camera-free V4L2
-bridge lifecycle acceptance</a>.</p>
+Candidate <code>a93f538</code> extends that camera-free lifecycle
+acceptance to complete 3664x2748 mode-0 output while preserving preview
+behavior and deterministic bridge shutdown. Exact Pi runs at both
+geometries passed ordinary consumer detach/reattach, delayed
+consumption, bounded post-warm-up bridge-tree RSS, timestamp analysis,
+and scoped cleanup. See <a
+href="../evidence/linux-v4l2-full-resolution-application.html">full-resolution
+Linux V4L2 application acceptance</a>.</p>
 <p>The current <a
 href="../evidence/release-acceptance-audit.html">release acceptance
 audit</a> marks the Linux reader/API, preview endurance, application
@@ -4054,6 +4061,21 @@ pass</td>
 href="../evidence/v4l2-bridge-synthetic-lifecycle.html">Camera-free V4L2
 bridge lifecycle acceptance</a></td>
 <td>VERIFIED APPLICATION LIFECYCLE + BACKPRESSURE / PHYSICAL CAMERA RUN
+OPEN</td>
+</tr>
+<tr>
+<td>E-073</td>
+<td>Candidate commit <code>a93f538</code> preserves the mode-2 V4L2
+lifecycle and exposes complete 3664x2748 mode-0 frames as
+20,137,344-byte YUYV buffers. Exact Pi runs delivered 4+8 preview and
+2+3 full-resolution frames across consumer detach/reattach and delayed
+consumption; warm-baseline RSS growth was 0 and 29,504 KiB respectively
+under the unchanged 65,536-KiB bound, with deterministic TERM, frame
+digests, manifests, and device/module cleanup passing</td>
+<td><a
+href="../evidence/linux-v4l2-full-resolution-application.html">Full-resolution
+Linux V4L2 application path</a></td>
+<td>VERIFIED BOTH SOFTWARE APPLICATION GEOMETRIES / PHYSICAL CAMERA RUN
 OPEN</td>
 </tr>
 </tbody>

@@ -13,6 +13,12 @@
   bounded process-tree RSS, timestamp analysis, and exact loopback cleanup.
 - Make V4L2 bridge signal shutdown deterministic while retaining its scoped
   process, device, FIFO, and module cleanup.
+- Expose complete 3664x2748 mode-0 frames through the optional Linux V4L2
+  bridge, with mode-aware exposure limits, calibration validation, synthetic
+  reader coverage, and a token-gated full-resolution Pi acceptance path.
+- Verify both bridge modes on Raspberry Pi AArch64 through ordinary V4L2
+  consumers, including detach/reattach, delayed consumption, exact frame
+  digests, warm-baseline memory bounds, signal handling, and scoped cleanup.
 
 ## 0.2.0-alpha.7 — 2026-10-04
 

@@ -9,8 +9,10 @@ import sys
 import tempfile
 
 
-FRAME_BYTES = 1280 * 960
-RAW_BYTES = FRAME_BYTES + 512
+MODE2_FRAME_BYTES = 1280 * 960
+MODE2_RAW_BYTES = MODE2_FRAME_BYTES + 512
+MODE0_FRAME_BYTES = 3664 * 2748
+MODE0_RAW_BYTES = MODE0_FRAME_BYTES + 320
 
 
 def main() -> None:
@@ -42,16 +44,38 @@ def main() -> None:
             text=True,
         )
         assert "synthetic=true" in run.stderr
-        assert raw.stat().st_size == RAW_BYTES
+        assert raw.stat().st_size == MODE2_RAW_BYTES
         assert raw.read_bytes()[:10] == bytes([0x88]) * 10
-        assert bayer.stat().st_size == 2 * FRAME_BYTES
+        assert bayer.stat().st_size == 2 * MODE2_FRAME_BYTES
         payload = bayer.read_bytes()
-        assert payload[:FRAME_BYTES] == bytes([60]) * FRAME_BYTES
-        assert payload[FRAME_BYTES:] == bytes([61]) * FRAME_BYTES
+        assert payload[:MODE2_FRAME_BYTES] == bytes([60]) * MODE2_FRAME_BYTES
+        assert payload[MODE2_FRAME_BYTES:] == bytes([61]) * MODE2_FRAME_BYTES
         rows = timestamps.read_text(encoding="ascii").splitlines()
         assert rows[0] == "frame,monotonic_ns"
         assert [row.split(",", 1)[0] for row in rows[1:]] == ["1", "2"]
         assert int(rows[2].split(",", 1)[1]) > int(rows[1].split(",", 1)[1])
+
+        mode0_raw = root / "mode0-first.raw"
+        mode0_bayer = root / "mode0-one.bayer"
+        mode0 = subprocess.run(
+            [
+                str(reader),
+                "capture",
+                "--frames", "1",
+                "--raw-first", str(mode0_raw),
+                "--bayer", str(mode0_bayer),
+                "--mode", "0",
+                "--exposure-ms", "1236",
+                "--gain", "320",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        assert "synthetic=true" in mode0.stderr
+        assert mode0_raw.stat().st_size == MODE0_RAW_BYTES
+        assert mode0_raw.read_bytes()[:10] == bytes([0x88]) * 10
+        assert mode0_bayer.stat().st_size == MODE0_FRAME_BYTES
 
     print("TCA camera-free reader test double: PASS")
 
