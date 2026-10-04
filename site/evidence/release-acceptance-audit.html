@@ -87,16 +87,17 @@ no arbitrary USB request surface. Ubuntu and macOS CI pass.</td>
 <tr>
 <td>5. Application path</td>
 <td>Pass for software lifecycle at preview and full resolution; physical
-corrected run open</td>
+run open</td>
 <td>FFmpeg creates coherent stills and H.264 from the corrected macOS
 reader. Public main <code>72964bb</code> exercised the real Linux V4L2
 bridge with a USB-inert reader at 1280x960 and 3664x2748: exact
 application byte counts, consumer detach/reattach, delayed consumption,
 bounded post-warm-up RSS, deterministic TERM status, and complete
-loopback cleanup passed. Commit <code>470b3d9</code> packages the
-remaining bounded live-camera run, cleanup, reopen, and manifest. The
-earlier physical proof predates the assembly correction. AVFoundation
-remains deferred.</td>
+loopback cleanup passed. Candidate <code>5670678</code> lets the bounded
+live-camera harness record an explicitly uncorrected
+transport/application pass before optical calibration, without weakening
+the stricter map-backed path. The earlier physical proof predates the
+assembly correction. AVFoundation remains deferred.</td>
 </tr>
 <tr>
 <td>6. Evidence and recovery</td>
@@ -203,8 +204,9 @@ open. The minimum remaining acceptance path is:</p>
 blank flat, then verify a fresh blank and specimen through the
 settings-bound map;</li>
 <li>validate Bayer phase/color against a known target;</li>
-<li>retest the corrected stream through Linux V4L2 and record measured
-timing;</li>
+<li>run the uncorrected physical Linux V4L2 transport/application gate
+and record measured producer and consumer timing, then repeat with the
+accepted map before claiming corrected physical delivery;</li>
 <li>validate a manual focus curve and choose calibrated exposure/gain
 defaults;</li>
 <li>retain the recorded Linux-first deferral for AVFoundation, or reopen

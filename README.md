@@ -326,7 +326,7 @@ and the calibration alongside any corrected derivative.
 Install the distribution-maintained generic loopback module:
 
 ```sh
-sudo apt install ffmpeg v4l-utils v4l2loopback-dkms
+sudo apt install ffmpeg time v4l-utils v4l2loopback-dkms
 scripts/tca-v4l2 --serve first-device-frame.raw
 ```
 
@@ -375,14 +375,21 @@ or recording cadence.
 
 For the bounded final Linux application check, use the inert-by-default
 acceptance harness. Running it without arguments only prints its contract. A
-live run requires the exact token, a clean built worktree, a valid matching
-calibration, exactly one attached camera, an existing evidence parent, and
-pre-primed sudo credentials:
+live run requires the exact token, a clean built worktree, exactly one attached
+camera, an existing evidence parent, and pre-primed sudo credentials. The
+calibration argument may be `-` for an explicitly uncorrected transport and
+application test, or a valid matching map for the stricter corrected-stream
+test:
 
 ```sh
 tools/run_linux_v4l2_acceptance.sh
 
 sudo -v
+tools/run_linux_v4l2_acceptance.sh \
+  --run-live-linux-v4l2-acceptance \
+  "$PWD" - capture/evidence 42 250 0 60
+
+# Repeat after a valid physical calibration to verify corrected delivery.
 tools/run_linux_v4l2_acceptance.sh \
   --run-live-linux-v4l2-acceptance \
   "$PWD" capture/10x-mode2.tca-flat capture/evidence 42 250 0 60
@@ -400,7 +407,11 @@ producer/consumer count delta is retained as bounded pipeline evidence and is
 not automatically mislabeled as a dropped-frame count. The live harness
 defaults to mode 2; an optional final `0` selects mode 0 and applies its
 geometry, exposure range, byte counts, analyzer mode, and matching calibration
-contract throughout.
+contract throughout. An uncorrected run proves physical USB-to-application
+transport without claiming illumination correction; it records
+`calibration_mode=uncorrected` and hashes that fact into the evidence bundle.
+A later map-backed run remains required before claiming corrected physical
+Linux delivery.
 
 The same bridge can be exercised without the camera before a physical run.
 This root-only, token-gated acceptance substitutes a deterministic reader,

@@ -31,8 +31,12 @@ def main() -> None:
 
     required = (
         "--run-live-linux-v4l2-acceptance",
+        "CALIBRATION_OR_DASH",
+        "calibration_mode=uncorrected",
+        "calibration_mode=flat-field",
         "TCA_FLAT_FIELD=\"$calibration\" TCA_TIMESTAMPS=\"$timestamps\"",
-        "profile=tca-linux-v4l2-acceptance-v2",
+        "TCA_TIMESTAMPS=\"$timestamps\"",
+        "profile=tca-linux-v4l2-acceptance-v3",
         "reader-timestamps.csv",
         "consumer.yuyv",
         "consumer.framemd5",
@@ -67,6 +71,10 @@ def main() -> None:
     )
     for token in forbidden:
         assert token not in source, token
+
+    assert 'if [ "$calibration" = - ]; then' in source
+    assert source.count('"$flat_field_tool" inspect --calibration "$calibration"') == 1
+    assert source.count('TCA_FLAT_FIELD="$calibration"') == 1
 
     print("Linux V4L2 live acceptance harness checks: PASS")
 
