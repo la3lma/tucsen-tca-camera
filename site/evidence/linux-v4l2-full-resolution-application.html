@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Full-resolution Linux V4L2 application path — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="full-resolution-linux-v4l2-application-path">Full-resolution
+Linux V4L2 application path</h1>
+<p>Date: 2026-10-04</p>
+<h2 id="result">Result</h2>
+<p>Candidate public commit
+<code>a93f538610937ddf3e68a1f4c332af5272792882</code> extends the
+optional Linux V4L2 bridge from the established 1280x960 preview mode to
+the reader’s complete 3664x2748 full-resolution mode. Existing bridge
+invocations remain mode 2; an explicit final <code>0</code> selects mode
+0.</p>
+<p>The exact commit passed the complete native suite on Apple Silicon
+and in a detached Raspberry Pi AArch64 worktree, plus Ubuntu and macOS
+CI <a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37202391321">run
+37202391321</a>. Token-gated, USB-inert executions then exercised both
+geometries through the real flat-field corrector, FFmpeg conversion,
+<code>v4l2loopback</code> device, and ordinary <code>v4l2-ctl</code>
+consumers.</p>
+<h2 id="application-boundary-proof">Application-boundary proof</h2>
+<p>Mode 0 exposed <code>/dev/video45</code> as 3664x2748 YUYV with a
+declared image size of 20,137,344 bytes. A first consumer captured two
+frames, exactly 40,274,688 bytes. It detached; a second consumer
+attached with a 350-ms delay after every buffer and captured three
+frames, exactly 60,412,032 bytes. Frame-digest validation accepted all
+five frames.</p>
+<p>The bridge remained live after the slow consumer. Its process-tree
+RSS was 406,912 KiB cold, 515,088 KiB after the first consumer had
+warmed the complete pipeline, and 544,592 KiB during reattached slow
+consumption. The relevant warm-baseline growth was 29,504 KiB, below the
+unchanged 65,536-KiB ceiling. This distinction was added after an
+earlier exact-commit trial correctly exposed that a cold baseline
+counted one-time full-resolution FFmpeg buffer allocation as if it were
+queue growth.</p>
+<p>TERM returned the declared status 143. The bridge removed the
+temporary video node and the <code>v4l2loopback</code> module it had
+loaded. The exact mode-0 evidence manifest verifies byte-for-byte, and
+its digest is:</p>
+<pre class="text"><code>d8ed4f9a706725c68a9a0ee2a5504bbe9a21570c9c74f9d4583b3bbc4275013d</code></pre>
+<h2 id="preview-regression-proof">Preview regression proof</h2>
+<p>The same commit retained the mode-2 path. <code>/dev/video44</code>
+reported 1280x960 YUYV and a 2,457,600-byte image size. Consumers
+received four normal and eight delayed frames across detach/reattach.
+Warm-baseline RSS growth was zero, producer timing analysis accepted 94
+synthetic frames at 19.6574 frames/s, and signal/device/module cleanup
+passed. The mode-2 manifest digest is:</p>
+<pre class="text"><code>b18a7e22aa312e3e9c67dbed2f8266fd5d8d8b8c8799988fbab0c51381eb2129</code></pre>
+<p>The synthetic source cadence is only a pipeline test parameter, not a
+physical camera performance claim.</p>
+<h2 id="reproduction-and-safety">Reproduction and safety</h2>
+<p>Running the harness without arguments is inert. The explicit
+full-resolution test is:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tools/run_v4l2_bridge_synthetic_acceptance.sh <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--run-v4l2-bridge-synthetic-acceptance</span> OUTPUT_DIRECTORY 45 0</span></code></pre></div>
+<p>The mode-2 regression run uses final argument <code>2</code>. The
+harness refuses dirty source, existing output, an already-loaded
+loopback module, or an occupied device number. Its test double contains
+no USB interface implementation and the harness statically rejects
+camera-reader binaries, libusb transfers, USB resets, reauthorization,
+configuration changes, and firmware-like operations. The physical camera
+remained attached to the Mac throughout these Pi runs.</p>
+<p>Complete integration artifacts remain private under
+<code>work/pi-synthetic-v4l2-full-resolution-a93f538/</code>. Both
+nested manifests were independently checked after retrieval. Only
+derived facts and digests are published.</p>
+<h2 id="scope-and-remaining-gate">Scope and remaining gate</h2>
+<p>This proves that ordinary Linux V4L2 applications can consume the
+software pipeline at both supported reader geometries, including
+complete 10 MP frames, without a camera-specific kernel driver. It also
+proves consumer detach/reattach, bounded post-warm-up memory growth,
+deterministic shutdown, and scoped compatibility-layer cleanup.</p>
+<p>It does not prove the physical camera’s Linux V4L2 cadence, a valid
+optical dark/flat map, final Bayer phase/color, or cable reconnect.
+Those remain operator-assisted acceptance gates. The exact-token
+<code>tools/run_linux_v4l2_acceptance.sh</code> now accepts mode 0 as
+its final argument for a later physical run.</p>
+<h2 id="planning-provenance">Planning provenance</h2>
+<p>The Development Evidence service contract expected at
+<code>127.0.0.1:18080/openapi.json</code> returned HTTP 404 during this
+work. The validated Docstack, exact Git commit, Pi evidence manifests,
+and hosted CI are therefore the authoritative fallback. No Development
+Evidence service state is claimed.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

@@ -17,11 +17,11 @@
 <h1 id="release-acceptance-audit">Release acceptance audit</h1>
 <p>Date: 2026-10-04</p>
 <p>Scope: public Linux-first prerelease <code>v0.2.0-alpha.7</code> plus
-post-release producer timing, physical-acceptance preparation, and
-camera-free V4L2 lifecycle candidate <code>eb8acd3</code>, including
-optically validated record-boundary assembly, gain, motion,
-white-balance, calibrated-field tooling, and measured direct-reader
-cadence.</p>
+post-release producer timing, physical-acceptance preparation,
+camera-free V4L2 lifecycle, and the two-mode V4L2 application candidate
+<code>a93f538</code>, including optically validated record-boundary
+assembly, gain, motion, white-balance, calibrated-field tooling, and
+measured direct-reader cadence.</p>
 <p>This is a readiness audit, not owner acceptance. It distinguishes a
 useful Linux alpha from completion of every item in the Docstack
 Definition of Done.</p>
@@ -52,15 +52,15 @@ known-target color response remain open.</td>
 </tr>
 <tr>
 <td>2. Streaming</td>
-<td>Pass for userspace stream; physical Linux application retest
-partial</td>
+<td>Pass for userspace stream and both software V4L2 geometries;
+physical Linux application retest partial</td>
 <td>A corrected 16-frame run produced 16 distinct coherent frames and an
 H.264 proof clip. Earlier 14,400-frame testing establishes USB/process
 endurance but used the superseded multi-request image assembly.
-Post-release main preserves the V4L2 bridge’s producer sidecar;
-candidate <code>eb8acd3</code> passed camera-free detach/reattach and a
-deliberately slow consumer with bounded RSS, but the post-fix physical
-Linux consumer cadence/drop comparison remains open.</td>
+Candidate <code>a93f538</code> passed camera-free V4L2 detach/reattach
+and delayed consumers at both 1280x960 and 3664x2748 with bounded
+warm-pipeline RSS, but the post-fix physical Linux consumer cadence/drop
+comparison remains open.</td>
 </tr>
 <tr>
 <td>3. Operation</td>
@@ -84,16 +84,17 @@ no arbitrary USB request surface. Ubuntu and macOS CI pass.</td>
 </tr>
 <tr>
 <td>5. Application path</td>
-<td>Partial; software lifecycle verified, physical corrected run
-open</td>
+<td>Pass for software lifecycle at preview and full resolution; physical
+corrected run open</td>
 <td>FFmpeg creates coherent stills and H.264 from the corrected macOS
-reader. The Linux V4L2 adapter consumes reader stdout; candidate
-<code>eb8acd3</code> exercised the real bridge with a USB-inert reader,
-normal consumer detach, slow-consumer reattach, only 1,184 KiB RSS
-growth, deterministic TERM status, and complete loopback cleanup. Commit
-<code>470b3d9</code> packages the remaining bounded live-camera run,
-cleanup, reopen, and manifest. The earlier physical proof predates the
-assembly correction. AVFoundation remains deferred.</td>
+reader. Candidate <code>a93f538</code> exercised the real Linux V4L2
+bridge with a USB-inert reader at 1280x960 and 3664x2748: exact
+application byte counts, consumer detach/reattach, delayed consumption,
+bounded post-warm-up RSS, deterministic TERM status, and complete
+loopback cleanup passed. Commit <code>470b3d9</code> packages the
+remaining bounded live-camera run, cleanup, reopen, and manifest. The
+earlier physical proof predates the assembly correction. AVFoundation
+remains deferred.</td>
 </tr>
 <tr>
 <td>6. Evidence and recovery</td>
@@ -159,13 +160,14 @@ unrecovered timeout, parser loss, or observed memory growth.</td>
 </tr>
 <tr>
 <td>NFR-06 resource use</td>
-<td>Pass for the current synchronous reader and synthetic V4L2
-lifecycle</td>
+<td>Pass for the current synchronous reader and both synthetic V4L2
+geometries</td>
 <td>USB and frame buffers are fixed and bounded. The synchronous CLI
-applies producer back-pressure rather than an unbounded queue. During a
-deliberately slow eight-frame V4L2 consumer, the complete bridge process
-tree grew by only 1,184 KiB and remained live; physical-camera
-application timing remains a separate gate.</td>
+applies producer back-pressure rather than an unbounded queue. After
+warm-up, delayed-consumer bridge-tree RSS growth was zero at preview
+resolution and 29,504 KiB at full resolution, both below the unchanged
+65,536-KiB bound; physical-camera application timing remains a separate
+gate.</td>
 </tr>
 <tr>
 <td>NFR-07 reproducibility</td>
@@ -176,8 +178,9 @@ the exact commit passed the complete Raspberry Pi AArch64 suite; and the
 downloaded tag archive passed the suite outside a Git checkout.
 Post-release commits <code>a60ecac</code> and <code>470b3d9</code> pass
 Apple Silicon, Raspberry Pi AArch64, Ubuntu, and macOS suites. Candidate
-<code>eb8acd3</code> adds an exact-commit Pi suite and manifested
-camera-free lifecycle run plus successful Ubuntu/macOS CI.</td>
+<code>a93f538</code> adds exact-commit Pi suite and manifested
+preview/full-resolution camera-free lifecycle runs plus successful
+Ubuntu/macOS CI.</td>
 </tr>
 <tr>
 <td>NFR-08 legal hygiene</td>

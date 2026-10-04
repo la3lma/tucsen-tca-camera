@@ -78,6 +78,24 @@ record](https://la3lma.github.io/tucsen-tca-camera/evidence/v4l2-bridge-syntheti
 This validates bridge backpressure and lifecycle behavior without USB access;
 the corrected physical-camera consumer run remains open.
 
+## Full-resolution V4L2 application path — 2026-10-04
+
+Candidate commit `a93f538` retains the preview bridge and adds explicit mode-0
+output. A USB-inert Pi run exposed a 3664x2748 YUYV `/dev/video45` node with a
+20,137,344-byte image size. One ordinary consumer received two exact frames,
+detached, and a delayed consumer reattached and received three exact frames.
+Warm-pipeline process-tree RSS grew by 29,504 KiB under the unchanged
+65,536-KiB bound; TERM status, device cleanup, module cleanup, frame digests,
+and the evidence manifest all passed. The same commit repeated the complete
+mode-2 lifecycle with four plus eight frames and zero warm-baseline RSS growth.
+
+The exact commit passed the full Pi AArch64 suite and hosted Ubuntu/macOS CI.
+See the [full-resolution Linux V4L2 evidence
+record](https://la3lma.github.io/tucsen-tca-camera/evidence/linux-v4l2-full-resolution-application.html).
+This proves both application-facing geometries without USB access. Physical
+camera cadence, optical calibration, and the post-fix Linux camera run remain
+open.
+
 ## Capture and reopen checks
 
 One invocation captured 30 frames with 400-ms exposure and normalized gain 20
