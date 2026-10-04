@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.0-alpha.9 — 2026-10-04
+
 - Add `tca-ffmpeg`, a cross-platform one-command live FFplay viewer and bounded
   H.264 recording helper that retains the untouched device record and measured
   producer timestamps without duplicating any USB protocol.
