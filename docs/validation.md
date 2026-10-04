@@ -496,8 +496,15 @@ separate gates. The live Linux V4L2 harness now accepts `-` instead of a map to
 run an explicitly uncorrected USB-to-application test, while a supplied map
 retains the existing strict geometry, Bayer-phase, exposure, and gain checks.
 Both paths record `calibration_mode`, producer and consumer timing, bounded
-YUYV output, frame digests, cleanup, immediate reader reopen, and a manifest.
+YUYV output, a mode/settings-derived consumer deadline and exit status, frame
+digests, cleanup, immediate reader reopen, and a manifest.
 An uncorrected pass cannot satisfy optical flat-field acceptance.
+
+Follow-up candidate `5b297b5` adds the missing wall-clock bound around the
+ordinary FFmpeg consumer. The deadline is derived from requested exposure and
+frame count with a generous fixed and per-frame margin; the v4 evidence record
+stores both the deadline and consumer exit status. A stalled consumer is
+terminated, the bridge cleanup trap runs, and partial evidence is hashed.
 
 The exact candidate passed the complete Apple Silicon and Raspberry Pi AArch64
 suites. On the Pi, installing the standard Debian `time` package closed a
