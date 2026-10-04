@@ -51,6 +51,9 @@ assembly removes the false 192-pixel strip without cropping, and an illuminated
 blank region now provides reproducible in-situ white balance. The next gate is
 a true blocked-light dark plus blank-field flat at locked settings, a known
 color target, measured frame timing, and a live post-fix V4L2 run on Linux.
+An inert-by-default guided session now locks settings and prompts for each
+blocked-dark, repositioned-flat, fresh-blank, and real-specimen state while
+preserving exact artifacts and a manifest.
 
 **Safety boundary:** preserve the raw device record, change one documented
 variable at a time, and keep provisional Bayer/color claims explicit.
@@ -94,8 +97,8 @@ checkout on documented hardware:
 | Objective | Build a usable driver/reader, stream, control surface, and application bridge for the legacy microscope camera |
 | Canonical source | [camera-reader-docstack.md](camera-reader-docstack.md) |
 | Published website | [GitHub Pages Docstack](https://la3lma.github.io/tucsen-tca-camera/docstack/) |
-| Revision | 3.2, physical-size correction plumbing verified on real Mac-cable frames and flat-field maps bound to acquisition exposure/gain; valid blocked-dark/blank-flat capture remains open |
-| Execution state | D00–D50 are complete and D60 is substantially advanced. Optical autocorrelation showed that separate 524,288-byte requests restarted at new record origins, causing the earlier repeated regions and false seam. Mode 2 fits after a 512-byte prefix. Mode 0 is assembled from record N `[512,end)` plus the 192-byte continuation at record N+1 `[320,512)`. Three consecutive full-resolution frames have distinct hashes and no false left strip. At 100 ms, gain 0..320 is monotonic; gain 256 produced a bright frame with negligible clipping. One pre-control buffered record is consumed before frame zero. A 16-frame run yielded distinct frames, three still sizes, and a 640x480 H.264 proof clip. Neutral-background white balance independently produced approximately R/G/B `0.87/1.0/2.0` in both modes; alpha-6 preserves those ratios when normalizing into FFmpeg's multiplier range. After changing to 10x, a bounded sweep recovered unclipped preview and full-resolution stills at 250 ms/gain 0. Public commit `1dc096b` adds a portable per-pixel dark/flat corrector and optional corrected V4L2 path; commit `6eb68a7` binds maps to exposure/gain and fails before camera or loopback mutation on mismatch. A real-camera diagnostic corrected eight full-size frames, reducing a 3x3 max/min region ratio from 1.336910 to 1.001023, while deliberately proving that a self-flat erases the specimen and is not a valid calibration. Final known-target Bayer/color calibration, true blocked-light dark and blank-field flat capture, measured timing, and execution of the live-camera V4L2 gate remain open. AVFoundation remains deferred. |
+| Revision | 3.3, portable guided physical-calibration session published and verified without USB on Apple Silicon and exact-commit Raspberry Pi AArch64; operator-assisted optical execution remains open |
+| Execution state | D00–D50 are complete and D60 is substantially advanced. Optical autocorrelation showed that separate 524,288-byte requests restarted at new record origins, causing the earlier repeated regions and false seam. Mode 2 fits after a 512-byte prefix. Mode 0 is assembled from record N `[512,end)` plus the 192-byte continuation at record N+1 `[320,512)`. Three consecutive full-resolution frames have distinct hashes and no false left strip. At 100 ms, gain 0..320 is monotonic; gain 256 produced a bright frame with negligible clipping. One pre-control buffered record is consumed before frame zero. A 16-frame run yielded distinct frames, three still sizes, and a 640x480 H.264 proof clip. Neutral-background white balance independently produced approximately R/G/B `0.87/1.0/2.0` in both modes; alpha-6 preserves those ratios when normalizing into FFmpeg's multiplier range. After changing to 10x, a bounded sweep recovered unclipped preview and full-resolution stills at 250 ms/gain 0. Public commit `1dc096b` adds a portable per-pixel dark/flat corrector and optional corrected V4L2 path; commit `6eb68a7` binds maps to exposure/gain and fails before camera or loopback mutation on mismatch. A real-camera diagnostic corrected eight full-size frames, reducing a 3x3 max/min region ratio from 1.336910 to 1.001023, while deliberately proving that a self-flat erases the specimen and is not a valid calibration. Public commit `176ef90` now packages the correct physical sequence as an inert-by-default guided session, with exact-size checks, fresh blank/specimen validation, incomplete-session marking, and a complete manifest; its USB-free end-to-end test passes on macOS and exact-commit Pi Linux. Final known-target Bayer/color calibration, true blocked-light dark and blank-field flat execution, measured timing, and execution of the live-camera V4L2 gate remain open. AVFoundation remains deferred. |
 | Acceptance authority | Camera owner, or an explicitly delegated technical owner recorded in D120 |
 | Related report | [PDF report](https://la3lma.github.io/tucsen-tca-camera/report/microscope-window-sensor.pdf) |
 | Reader source | [GitHub repository and README](https://github.com/la3lma/tucsen-tca-camera#readme) |
@@ -876,6 +879,14 @@ showing that a self-flat removes the specimen scene. The
 [physical self-test](../evidence/macos-physical-flat-field-self-test.md)
 therefore leaves true same-settings blocked darks and translated/defocused
 blank flats explicitly open.
+Public commit `176ef90` now makes that hands-on gate reproducible. Its exact
+token-gated helper refuses existing destinations, locks settings, prompts for
+blocked darks and separately repositioned flat batches, withholds a fresh blank
+and real specimen for validation, verifies byte counts, renders before/after
+frames, and hashes the completed bundle. EOF, signals, or failures leave an
+incomplete marker. The [guided-session evidence](../evidence/guided-flat-field-capture-session.md)
+records USB-free end-to-end passes on Apple Silicon and exact-commit Raspberry
+Pi AArch64; no camera move was needed for that validation.
 An inert exact-commit harness remains staged to capture both modes and have
 FFmpeg consume six camera frames through `/dev/video42` after the cable move.
 :::
@@ -1166,6 +1177,7 @@ Happy-day steps:
 | E-063 | Equal 256x192 regions in the 10x blank-field preview range from mean luma 134.0 at bottom-left to 193.9 at top-middle, showing asymmetric field nonuniformity rather than simple radial falloff; an optical alignment/isolation checklist and calibrated per-Bayer-plane dark/flat correction are now specified | [Field illumination correction](../evidence/field-illumination-correction.md) | MEASURED DIAGNOSIS + CORRECTION PLAN |
 | E-064 | Public commit `1dc096b` implements per-pixel fixed-point dark subtraction and independent R/G1/G2/B flat gains before demosaic; on the Pi, six synthetic corrected 1280x960 frames traversed FFmpeg and a temporary V4L2 loopback to a separate consumer, cleanup passed, and 60-frame filter throughput measured about 225 fps | [User-space flat-field and V4L2 preflight](../evidence/flat-field-v4l2-preflight.md) | VERIFIED SOFTWARE + GENERIC APPLICATION BOUNDARY / PHYSICAL FLAT OPEN |
 | E-065 | Public commit `6eb68a7` stores exposure/gain provenance in new `TCAFF01` maps and rejects unknown or mismatched V4L2 settings before mutation; a real Mac-cable run captured 24 exact physical frames and applied a full-size self-flat diagnostic to eight frames, reducing the 3x3 max/min ratio from 1.336910 to 1.001023 while correctly demonstrating that a self-flat erases specimen structure and cannot be accepted as optical calibration | [Apple Silicon physical flat-field pipeline self-test](../evidence/macos-physical-flat-field-self-test.md) | VERIFIED PHYSICAL-SIZE PLUMBING + SETTINGS GUARD / TRUE DARK + BLANK FLAT OPEN |
+| E-066 | Public commit `176ef90` provides an exact-token, inert-by-default guided session that locks settings, separates blocked-dark/repositioned-flat/fresh-blank/specimen phases, verifies raw/Bayer byte counts, marks partial sessions, builds/applies/inspects the map, renders four PNGs, and hashes the bundle; a USB-free dynamic test using the real corrector and analyzer passes on Apple Silicon and an exact public clone on Raspberry Pi AArch64 | [Guided physical flat-field capture session](../evidence/guided-flat-field-capture-session.md) | VERIFIED WORKFLOW + PORTABILITY / OPERATOR-ASSISTED OPTICAL RUN OPEN |
 
 ## Risk Register
 
@@ -1214,11 +1226,12 @@ Happy-day steps:
   as negative evidence.
 
 > **Current recommendation:** keep the evidence-backed userspace protocol fixed.
-> On the present Mac-mounted optical bench, capture 16–64 blocked-light darks
-> and 16–64 translated or defocused blank-field flats with objective,
-> condenser, lamp voltage, relay, Bayer phase, exposure, and gain locked. Build
-> a settings-bound map, verify a fresh blank quantitatively, and retain the raw
-> and corrected specimen frames together. At the next convenient cable move,
+> On the present Mac-mounted optical bench, run the public guided flat-field
+> session and follow each prompt literally: block illumination for darks,
+> translate or defocus between flat batches, then reserve a fresh blank and
+> real specimen for validation. The helper locks exposure/gain/phase, builds a
+> settings-bound map, and retains raw/corrected frames and hashes together. At
+> the next convenient cable move,
 > run the staged live Linux V4L2 acceptance so an ordinary application consumes
 > the corrected camera stream and measured timing is recorded. Known-target
 > color/focus work remains the D60 exit gate; firmware discovery and

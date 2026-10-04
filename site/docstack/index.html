@@ -307,7 +307,9 @@ false 192-pixel strip without cropping, and an illuminated blank region
 now provides reproducible in-situ white balance. The next gate is a true
 blocked-light dark plus blank-field flat at locked settings, a known
 color target, measured frame timing, and a live post-fix V4L2 run on
-Linux.</p>
+Linux. An inert-by-default guided session now locks settings and prompts
+for each blocked-dark, repositioned-flat, fresh-blank, and real-specimen
+state while preserving exact artifacts and a manifest.</p>
 <p><strong>Safety boundary:</strong> preserve the raw device record,
 change one documented variable at a time, and keep provisional
 Bayer/color claims explicit.</p>
@@ -398,9 +400,9 @@ Docstack</a></td>
 </tr>
 <tr>
 <td>Revision</td>
-<td>3.2, physical-size correction plumbing verified on real Mac-cable
-frames and flat-field maps bound to acquisition exposure/gain; valid
-blocked-dark/blank-flat capture remains open</td>
+<td>3.3, portable guided physical-calibration session published and
+verified without USB on Apple Silicon and exact-commit Raspberry Pi
+AArch64; operator-assisted optical execution remains open</td>
 </tr>
 <tr>
 <td>Execution state</td>
@@ -425,8 +427,12 @@ exposure/gain and fails before camera or loopback mutation on mismatch.
 A real-camera diagnostic corrected eight full-size frames, reducing a
 3x3 max/min region ratio from 1.336910 to 1.001023, while deliberately
 proving that a self-flat erases the specimen and is not a valid
-calibration. Final known-target Bayer/color calibration, true
-blocked-light dark and blank-field flat capture, measured timing, and
+calibration. Public commit <code>176ef90</code> now packages the correct
+physical sequence as an inert-by-default guided session, with exact-size
+checks, fresh blank/specimen validation, incomplete-session marking, and
+a complete manifest; its USB-free end-to-end test passes on macOS and
+exact-commit Pi Linux. Final known-target Bayer/color calibration, true
+blocked-light dark and blank-field flat execution, measured timing, and
 execution of the live-camera V4L2 gate remain open. AVFoundation remains
 deferred.</td>
 </tr>
@@ -2180,10 +2186,19 @@ ratio fell from 1.336910 to 1.001023, proving full-size pixel plumbing
 while also showing that a self-flat removes the specimen scene. The <a
 href="../evidence/macos-physical-flat-field-self-test.md">physical
 self-test</a> therefore leaves true same-settings blocked darks and
-translated/defocused blank flats explicitly open. An inert exact-commit
-harness remains staged to capture both modes and have FFmpeg consume six
-camera frames through <code>/dev/video42</code> after the cable
-move.</p>
+translated/defocused blank flats explicitly open. Public commit
+<code>176ef90</code> now makes that hands-on gate reproducible. Its
+exact token-gated helper refuses existing destinations, locks settings,
+prompts for blocked darks and separately repositioned flat batches,
+withholds a fresh blank and real specimen for validation, verifies byte
+counts, renders before/after frames, and hashes the completed bundle.
+EOF, signals, or failures leave an incomplete marker. The <a
+href="../evidence/guided-flat-field-capture-session.md">guided-session
+evidence</a> records USB-free end-to-end passes on Apple Silicon and
+exact-commit Raspberry Pi AArch64; no camera move was needed for that
+validation. An inert exact-commit harness remains staged to capture both
+modes and have FFmpeg consume six camera frames through
+<code>/dev/video42</code> after the cable move.</p>
 </div>
 <div class="task-card" data-state="complete">
 <!-- task: D70; depends: D60; state: complete -->
@@ -3352,6 +3367,20 @@ Silicon physical flat-field pipeline self-test</a></td>
 <td>VERIFIED PHYSICAL-SIZE PLUMBING + SETTINGS GUARD / TRUE DARK + BLANK
 FLAT OPEN</td>
 </tr>
+<tr>
+<td>E-066</td>
+<td>Public commit <code>176ef90</code> provides an exact-token,
+inert-by-default guided session that locks settings, separates
+blocked-dark/repositioned-flat/fresh-blank/specimen phases, verifies
+raw/Bayer byte counts, marks partial sessions, builds/applies/inspects
+the map, renders four PNGs, and hashes the bundle; a USB-free dynamic
+test using the real corrector and analyzer passes on Apple Silicon and
+an exact public clone on Raspberry Pi AArch64</td>
+<td><a href="../evidence/guided-flat-field-capture-session.md">Guided
+physical flat-field capture session</a></td>
+<td>VERIFIED WORKFLOW + PORTABILITY / OPERATOR-ASSISTED OPTICAL RUN
+OPEN</td>
+</tr>
 </tbody>
 </table>
 <h2 data-number="5.7" id="risk-register"><span
@@ -3469,16 +3498,16 @@ evidence.</label></li>
 </ul>
 <blockquote>
 <p><strong>Current recommendation:</strong> keep the evidence-backed
-userspace protocol fixed. On the present Mac-mounted optical bench,
-capture 16–64 blocked-light darks and 16–64 translated or defocused
-blank-field flats with objective, condenser, lamp voltage, relay, Bayer
-phase, exposure, and gain locked. Build a settings-bound map, verify a
-fresh blank quantitatively, and retain the raw and corrected specimen
-frames together. At the next convenient cable move, run the staged live
-Linux V4L2 acceptance so an ordinary application consumes the corrected
-camera stream and measured timing is recorded. Known-target color/focus
-work remains the D60 exit gate; firmware discovery and AVFoundation
-remain non-gating fallbacks.</p>
+userspace protocol fixed. On the present Mac-mounted optical bench, run
+the public guided flat-field session and follow each prompt literally:
+block illumination for darks, translate or defocus between flat batches,
+then reserve a fresh blank and real specimen for validation. The helper
+locks exposure/gain/phase, builds a settings-bound map, and retains
+raw/corrected frames and hashes together. At the next convenient cable
+move, run the staged live Linux V4L2 acceptance so an ordinary
+application consumes the corrected camera stream and measured timing is
+recorded. Known-target color/focus work remains the D60 exit gate;
+firmware discovery and AVFoundation remain non-gating fallbacks.</p>
 </blockquote>
 </main>
 <script src="app.js"></script>
