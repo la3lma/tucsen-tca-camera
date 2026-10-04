@@ -1,0 +1,304 @@
+#!/bin/sh
+
+# Cross-platform live viewer and bounded recording helper. This script owns no
+# USB protocol: it starts tca-camera and gives its Bayer8 stdout to ordinary
+# FFmpeg-family applications.
+
+set -eu
+
+VIEW_TOKEN=--view
+RECORD_TOKEN=--record
+DIAGNOSE_TOKEN=--diagnose-install
+
+usage()
+{
+    echo "usage: $0 $VIEW_TOKEN RAW_FIRST [EXPOSURE_MS [GAIN [MODE [FPS]]]]" >&2
+    echo "       $0 $RECORD_TOKEN RAW_FIRST VIDEO TIMESTAMPS FRAMES [EXPOSURE_MS [GAIN [MODE [FPS]]]]" >&2
+    echo "       $0 $DIAGNOSE_TOKEN" >&2
+    echo "       MODE 2 is 1280x960 (default); MODE 0 is 3664x2748" >&2
+}
+
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+project_dir=$(CDPATH= cd -- "$script_dir/.." && pwd)
+
+if [ -n "${TCA_CAMERA_READER:-}" ]; then
+    reader=$TCA_CAMERA_READER
+elif [ -x "$script_dir/tca-camera" ]; then
+    reader=$script_dir/tca-camera
+else
+    reader=$project_dir/build/tca-camera
+fi
+ffmpeg=${TCA_FFMPEG:-ffmpeg}
+ffplay=${TCA_FFPLAY:-ffplay}
+
+command_available()
+{
+    case "$1" in
+        */*) [ -x "$1" ] ;;
+        *) command -v "$1" >/dev/null 2>&1 ;;
+    esac
+}
+
+if [ "$#" -eq 1 ] && [ "$1" = "$DIAGNOSE_TOKEN" ]; then
+    reader_executable=0
+    ffmpeg_executable=0
+    ffplay_executable=0
+    [ -x "$reader" ] && reader_executable=1
+    command_available "$ffmpeg" && ffmpeg_executable=1
+    command_available "$ffplay" && ffplay_executable=1
+    printf 'helper=%s\n' "$0"
+    printf 'reader=%s executable=%s\n' "$reader" "$reader_executable"
+    printf 'ffmpeg=%s executable=%s\n' "$ffmpeg" "$ffmpeg_executable"
+    printf 'ffplay=%s executable=%s\n' "$ffplay" "$ffplay_executable"
+    printf 'NO USB TRANSFER SENT.\n'
+    exit 0
+fi
+
+if [ "$#" -eq 0 ]; then
+    usage
+    echo "NO USB TRANSFER SENT." >&2
+    exit 0
+fi
+
+operation=$1
+case "$operation" in
+    "$VIEW_TOKEN")
+        if [ "$#" -lt 2 ] || [ "$#" -gt 6 ]; then
+            usage
+            echo "NO USB TRANSFER SENT." >&2
+            exit 64
+        fi
+        raw_output=$2
+        exposure_ms=${3:-250}
+        gain=${4:-0}
+        mode=${5:-2}
+        fps=${6:-}
+        frames=0
+        video_output=
+        timestamps=${TCA_TIMESTAMPS:-}
+        ;;
+    "$RECORD_TOKEN")
+        if [ "$#" -lt 5 ] || [ "$#" -gt 9 ]; then
+            usage
+            echo "NO USB TRANSFER SENT." >&2
+            exit 64
+        fi
+        raw_output=$2
+        video_output=$3
+        timestamps=$4
+        frames=$5
+        exposure_ms=${6:-250}
+        gain=${7:-0}
+        mode=${8:-2}
+        fps=${9:-}
+        ;;
+    *)
+        usage
+        echo "NO USB TRANSFER SENT." >&2
+        exit 64
+        ;;
+esac
+
+is_decimal()
+{
+    case "$1" in
+        ''|*[!0-9]*) return 1 ;;
+        *) return 0 ;;
+    esac
+}
+
+for value in "$exposure_ms" "$gain" "$mode"; do
+    is_decimal "$value" || {
+        echo "exposure, gain, and mode must be decimal integers" >&2
+        exit 64
+    }
+done
+case "$mode" in
+    0)
+        width=3664
+        height=2748
+        max_exposure_ms=1236
+        max_frames=30
+        default_fps=3
+        ;;
+    2)
+        width=1280
+        height=960
+        max_exposure_ms=480
+        max_frames=600
+        default_fps=10
+        ;;
+    *)
+        echo "MODE must be 0 or 2" >&2
+        exit 64
+        ;;
+esac
+fps=${fps:-$default_fps}
+is_decimal "$fps" || {
+    echo "FPS must be a decimal integer" >&2
+    exit 64
+}
+if [ "$exposure_ms" -lt 1 ] || [ "$exposure_ms" -gt "$max_exposure_ms" ] ||
+   [ "$gain" -gt 320 ] || [ "$fps" -lt 1 ] || [ "$fps" -gt 120 ]; then
+    echo "ranges: MODE=$mode EXPOSURE_MS=1..$max_exposure_ms GAIN=0..320 FPS=1..120" >&2
+    exit 64
+fi
+if [ "$operation" = "$RECORD_TOKEN" ]; then
+    is_decimal "$frames" || {
+        echo "FRAMES must be a decimal integer" >&2
+        exit 64
+    }
+    if [ "$frames" -lt 2 ] || [ "$frames" -gt "$max_frames" ]; then
+        echo "range: MODE=$mode FRAMES=2..$max_frames" >&2
+        exit 64
+    fi
+fi
+
+if [ "$raw_output" = - ] || [ -e "$raw_output" ]; then
+    echo "RAW_FIRST must name a new regular file: $raw_output" >&2
+    exit 73
+fi
+if [ -n "$timestamps" ]; then
+    if [ "$timestamps" = - ] || [ -e "$timestamps" ] ||
+       [ "$timestamps" = "$raw_output" ]; then
+        echo "TIMESTAMPS must name a distinct new regular file: $timestamps" >&2
+        exit 73
+    fi
+fi
+if [ "$operation" = "$RECORD_TOKEN" ]; then
+    if [ "$video_output" = - ] || [ -e "$video_output" ] ||
+       [ "$video_output" = "$raw_output" ] ||
+       [ "$video_output" = "$timestamps" ]; then
+        echo "VIDEO must name a distinct new regular file: $video_output" >&2
+        exit 73
+    fi
+fi
+if [ ! -x "$reader" ]; then
+    echo "missing executable reader: $reader" >&2
+    exit 69
+fi
+if [ "$operation" = "$VIEW_TOKEN" ]; then
+    command_available "$ffplay" || {
+        echo "missing FFplay executable: $ffplay" >&2
+        exit 69
+    }
+else
+    command_available "$ffmpeg" || {
+        echo "missing FFmpeg executable: $ffmpeg" >&2
+        exit 69
+    }
+fi
+command_available mkfifo || {
+    echo "missing command: mkfifo" >&2
+    exit 69
+}
+command_available mktemp || {
+    echo "missing command: mktemp" >&2
+    exit 69
+}
+
+stream_dir=
+reader_pid=0
+consumer_pid=0
+requested_exit=0
+
+cleanup()
+{
+    if [ "$consumer_pid" -ne 0 ]; then
+        kill -TERM "$consumer_pid" 2>/dev/null || true
+        wait "$consumer_pid" 2>/dev/null || true
+        consumer_pid=0
+    fi
+    if [ "$reader_pid" -ne 0 ]; then
+        kill -TERM "$reader_pid" 2>/dev/null || true
+        wait "$reader_pid" 2>/dev/null || true
+        reader_pid=0
+    fi
+    if [ -n "$stream_dir" ] && [ -p "$stream_dir/bayer.fifo" ]; then
+        rm -f -- "$stream_dir/bayer.fifo"
+    fi
+    if [ -n "$stream_dir" ] && [ -d "$stream_dir" ]; then
+        rmdir -- "$stream_dir" 2>/dev/null || true
+    fi
+}
+
+request_exit()
+{
+    requested_exit=$1
+    cleanup
+    exit "$requested_exit"
+}
+
+trap cleanup EXIT
+trap 'request_exit 129' HUP
+trap 'request_exit 130' INT
+trap 'request_exit 143' TERM
+
+stream_dir=$(mktemp -d "${TMPDIR:-/tmp}/tca-ffmpeg.XXXXXX")
+mkfifo "$stream_dir/bayer.fifo"
+
+if [ -n "$timestamps" ]; then
+    "$reader" capture --frames "$frames" --raw-first "$raw_output" \
+        --bayer - --timestamps "$timestamps" --mode "$mode" \
+        --exposure-ms "$exposure_ms" --gain "$gain" \
+        >"$stream_dir/bayer.fifo" &
+else
+    "$reader" capture --frames "$frames" --raw-first "$raw_output" \
+        --bayer - --mode "$mode" \
+        --exposure-ms "$exposure_ms" --gain "$gain" \
+        >"$stream_dir/bayer.fifo" &
+fi
+reader_pid=$!
+
+if [ "$operation" = "$VIEW_TOKEN" ]; then
+    "$ffplay" -hide_banner -loglevel warning \
+        -f rawvideo -pixel_format bayer_grbg8 \
+        -video_size "${width}x${height}" -framerate "$fps" \
+        -i "$stream_dir/bayer.fifo" &
+else
+    "$ffmpeg" -hide_banner -loglevel warning -n \
+        -f rawvideo -pixel_format bayer_grbg8 \
+        -video_size "${width}x${height}" -framerate "$fps" \
+        -i "$stream_dir/bayer.fifo" -frames:v "$frames" \
+        -c:v libx264 -pix_fmt yuv420p "$video_output" &
+fi
+consumer_pid=$!
+
+consumer_status=0
+if wait "$consumer_pid"; then
+    consumer_status=0
+else
+    consumer_status=$?
+fi
+consumer_pid=0
+
+if [ "$operation" = "$VIEW_TOKEN" ]; then
+    kill -TERM "$reader_pid" 2>/dev/null || true
+    wait "$reader_pid" 2>/dev/null || true
+    reader_pid=0
+    [ "$consumer_status" -eq 0 ] || exit "$consumer_status"
+    printf 'viewer=closed status=ok\n'
+    exit 0
+fi
+
+if [ "$consumer_status" -ne 0 ]; then
+    kill -TERM "$reader_pid" 2>/dev/null || true
+    wait "$reader_pid" 2>/dev/null || true
+    reader_pid=0
+    echo "FFmpeg recording failed with status $consumer_status" >&2
+    exit "$consumer_status"
+fi
+
+reader_status=0
+if wait "$reader_pid"; then
+    reader_status=0
+else
+    reader_status=$?
+fi
+reader_pid=0
+if [ "$reader_status" -ne 0 ]; then
+    echo "camera reader failed with status $reader_status" >&2
+    exit "$reader_status"
+fi
+printf 'recording=%s frames=%s mode=%s geometry=%sx%s fps=%s status=ok\n' \
+    "$video_output" "$frames" "$mode" "$width" "$height" "$fps"

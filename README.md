@@ -52,7 +52,7 @@ still.
 | Raspberry Pi / AArch64 Linux cold start | Verified live |
 | Continuous 1280×960 Bayer8 capture | Verified live |
 | Exposure and analog gain response | Optically verified live |
-| FFmpeg/stdout pipeline | Verified live |
+| FFmpeg/stdout pipeline and packaged view/record helper | Verified live |
 | Optional `/dev/video*` through `v4l2loopback` | Verified live |
 | Connected-camera Pi reboot and cold reopen | Verified live |
 | Apple Silicon build | Verified |
@@ -101,8 +101,9 @@ optional rule in [`udev/99-tucsen-tca-camera.rules`](udev/99-tucsen-tca-camera.r
 
 ## Install and remove
 
-Install the reader, V4L2 helper, frame and timing analyzers, white-balance
-estimator, and flat-field calibration/filter tool under the selected prefix:
+Install the reader, FFmpeg and V4L2 helpers, frame and timing analyzers,
+white-balance estimator, and flat-field calibration/filter tool under the
+selected prefix:
 
 ```sh
 sudo make install PREFIX=/usr/local
@@ -121,7 +122,7 @@ programs, while an installed `tca-v4l2` automatically uses the programs beside
 it in `PREFIX/bin`. `TCA_CAMERA_READER` and `TCA_FLAT_FIELD_TOOL` remain
 explicit overrides for development and testing.
 
-Remove exactly those six installed programs:
+Remove exactly those seven installed programs:
 
 ```sh
 sudo make uninstall PREFIX=/usr/local
@@ -214,6 +215,43 @@ scripts/tca-timing-stats capture/three-frames-timestamps.csv \
 
 The analyzer rejects a wrong header, missing or repeated frame numbers,
 non-monotonic timestamps, fewer than two frames, and output overwrite.
+
+### One-command live view and recording
+
+`tca-ffmpeg` packages the ordinary-application pipelines above without hiding
+the raw evidence or camera settings. It works from the source tree or after
+`make install` on both Linux and macOS. Open a live FFplay window with:
+
+```sh
+mkdir -p capture
+scripts/tca-ffmpeg --view capture/view-first-device.raw 250 0 2 10
+```
+
+The final four values are exposure milliseconds, normalized gain, mode, and
+the viewer time-base FPS. Close the FFplay window or press `Ctrl-C` to stop the
+reader. The first untouched device record remains in the named raw file.
+
+Record a bounded, broadly playable H.264 MP4 and retain measured producer
+timestamps with:
+
+```sh
+scripts/tca-ffmpeg --record \
+  capture/record-first-device.raw \
+  capture/record.mp4 \
+  capture/record-timestamps.csv \
+  60 250 0 2 10
+```
+
+Here `60` is the exact frame count. Every output path must be new. Mode 2
+allows 2–600 frames and defaults to a 10-fps media time base; mode 0 allows
+2–30 complete 3664×2748 frames and defaults to 3 fps. These FPS values describe
+playback/encoding time base, while the CSV records actual frame completion
+times. Run `tca-timing-stats` on that CSV for measured cadence.
+
+The helper contains no USB protocol and cannot issue arbitrary requests. Its
+no-argument and `--diagnose-install` paths are explicitly USB-inert. On Linux,
+use `tca-v4l2` instead when an application requires a discoverable
+`/dev/video*` camera rather than a viewer or recording file.
 
 Current controls are intentionally narrow and mode-aware:
 

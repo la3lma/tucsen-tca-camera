@@ -32,6 +32,7 @@ test: $(TARGET) $(FLAT_FIELD_TARGET)
 	python3 tests/test_static.py $(TARGET) src/tca_camera.c
 	python3 tests/test_makefile_pkg_config.py .
 	python3 tests/test_v4l2_static.py scripts/tca-v4l2
+	python3 tests/test_ffmpeg_helper.py scripts/tca-ffmpeg
 	python3 tests/test_frame_stats.py scripts/tca-frame-stats
 	python3 tests/test_timing_stats.py scripts/tca-timing-stats
 	python3 tests/test_white_balance.py scripts/tca-white-balance
@@ -53,6 +54,7 @@ install: $(TARGET)
 	install -d "$(DESTDIR)$(PREFIX)/bin"
 	install -m 0755 $(TARGET) "$(DESTDIR)$(PREFIX)/bin/tca-camera"
 	install -m 0755 scripts/tca-v4l2 "$(DESTDIR)$(PREFIX)/bin/tca-v4l2"
+	install -m 0755 scripts/tca-ffmpeg "$(DESTDIR)$(PREFIX)/bin/tca-ffmpeg"
 	install -m 0755 scripts/tca-frame-stats "$(DESTDIR)$(PREFIX)/bin/tca-frame-stats"
 	install -m 0755 scripts/tca-timing-stats "$(DESTDIR)$(PREFIX)/bin/tca-timing-stats"
 	install -m 0755 scripts/tca-white-balance "$(DESTDIR)$(PREFIX)/bin/tca-white-balance"
@@ -62,6 +64,7 @@ install: $(TARGET)
 uninstall:
 	rm -f "$(DESTDIR)$(PREFIX)/bin/tca-camera"
 	rm -f "$(DESTDIR)$(PREFIX)/bin/tca-v4l2"
+	rm -f "$(DESTDIR)$(PREFIX)/bin/tca-ffmpeg"
 	rm -f "$(DESTDIR)$(PREFIX)/bin/tca-frame-stats"
 	rm -f "$(DESTDIR)$(PREFIX)/bin/tca-timing-stats"
 	rm -f "$(DESTDIR)$(PREFIX)/bin/tca-white-balance"

@@ -10,8 +10,8 @@ import sys
 import tempfile
 
 
-PROGRAMS = ("tca-camera", "tca-v4l2", "tca-frame-stats", "tca-timing-stats",
-            "tca-white-balance", "tca-flat-field")
+PROGRAMS = ("tca-camera", "tca-v4l2", "tca-ffmpeg", "tca-frame-stats",
+            "tca-timing-stats", "tca-white-balance", "tca-flat-field")
 
 
 def main() -> None:
@@ -51,6 +51,19 @@ def main() -> None:
             in diagnostic.stdout
         )
         assert "NO USB TRANSFER SENT" in diagnostic.stdout
+
+        media_helper = binary_directory / "tca-ffmpeg"
+        media_diagnostic = subprocess.run(
+            [str(media_helper), "--diagnose-install"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        assert (
+            f"reader={binary_directory / 'tca-camera'} executable=1"
+            in media_diagnostic.stdout
+        )
+        assert "NO USB TRANSFER SENT" in media_diagnostic.stdout
 
         sentinel = binary_directory / "unrelated-program"
         sentinel.write_text("must remain\n", encoding="utf-8")
