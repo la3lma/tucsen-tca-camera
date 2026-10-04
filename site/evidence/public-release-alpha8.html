@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Public prerelease `v0.2.0-alpha.8` — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="public-prerelease-v0.2.0-alpha.8">Public prerelease
+<code>v0.2.0-alpha.8</code></h1>
+<p>Date: 2026-10-04</p>
+<h2 id="result">Result</h2>
+<p>The annotated public tag <code>v0.2.0-alpha.8</code> resolves to
+commit <code>2dd0b395e033d0a68410ac03e5b549ea534caeac</code> and is
+published as a GitHub prerelease:</p>
+<p><a
+href="https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.8"
+class="uri">https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.8</a></p>
+<p>This release packages the complete 1280x960 preview and 3664x2748
+full-resolution Linux V4L2 application paths, separate producer and
+consumer evidence, camera-free lifecycle/backpressure coverage in both
+geometries, the independently runnable uncorrected physical transport
+gate, strict map-backed corrected delivery, a recorded application
+deadline with deterministic cleanup, the post-merge Apple Silicon
+optical regression, and Docstack 4.2. The implementation remains
+Apache-2.0 licensed and entirely in user space.</p>
+<h2 id="independent-verification">Independent verification</h2>
+<ul>
+<li>Exact commit <code>2dd0b39</code> passed GitHub CI on Ubuntu and
+macOS before tagging: run <a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37206136495"
+class="uri">https://github.com/la3lma/tucsen-tca-camera/actions/runs/37206136495</a>.</li>
+<li>The tag itself passed a separate GitHub CI run on Ubuntu and macOS:
+run <a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37206242284"
+class="uri">https://github.com/la3lma/tucsen-tca-camera/actions/runs/37206242284</a>.</li>
+<li>A detached exact-commit worktree on Raspberry Pi AArch64 passed
+<code>make clean &amp;&amp; make test</code>. This run was USB-inert
+because the camera remained attached to the Mac.</li>
+<li>The GitHub tag archive was downloaded inside the private report
+project, extracted outside a Git checkout, and passed the complete Apple
+Silicon suite using the documented scoped native-ARM64 libusb
+<code>pkg-config</code> override. Its SHA-256 is
+<code>9772b437d2e5371857a257c11e0c3b4ff88de0ee9d64c754c8d4fcabb0e40d60</code>.</li>
+<li>The host’s default <code>pkg-config</code> still selected a stale
+Intel Homebrew libusb and failed to link for ARM64. Re-running with the
+release’s documented <code>LIBUSB_PKG_CONFIG_PATH</code> override
+selected the project-local native library and passed. This independently
+exercises the mixed-Homebrew recovery path.</li>
+<li>The release commit passed the full-history public publication audit.
+The tag and release contain no raw disassembly, decompiler export,
+Ghidra project, vendor binary, firmware, packet capture, VM disk, or
+private-work artifact.</li>
+</ul>
+<h2 id="physical-evidence-included">Physical evidence included</h2>
+<p>Exact post-V4L2-merge public main physically captured three distinct
+coherent 1280x960 frames at 9.51334 frames/s and two distinct complete
+3664x2748 frames at 2.75318 frames/s on Apple Silicon at requested 250
+ms/gain 0. Exact byte and timestamp counts passed, the analyzed first
+frames contained no zero or saturated pixels, and the complete raster
+had neither the historic half-black boundary nor an edge strip.</p>
+<p>Camera-free Raspberry Pi runs exercised the real V4L2 bridge at both
+application geometries with consumer detach/reattach, deliberate delayed
+consumption, bounded post-warm-up process-tree memory, exact output
+bytes and digests, deterministic termination, and complete device/module
+cleanup.</p>
+<h2 id="explicit-residual-gates">Explicit residual gates</h2>
+<p>This is a useful prerelease, not final acceptance. The remaining
+physical work is:</p>
+<ol type="1">
+<li>move the camera to the Raspberry Pi and execute the explicitly
+uncorrected preview and full-resolution V4L2 application gates;</li>
+<li>acquire true blocked-light dark and translated/defocused blank-field
+flat sets at locked settings, then repeat the physical V4L2 gate with
+the accepted map;</li>
+<li>confirm Bayer phase, orientation, and color response with a known
+target; and</li>
+<li>complete the physical cable disconnect/reconnect acceptance
+case.</li>
+</ol>
+<p>AVFoundation/system-wide macOS camera discovery remains a
+non-blocking deferral; the direct portable reader continues to work on
+macOS.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>
