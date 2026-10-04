@@ -17,7 +17,7 @@ remains a later, stricter gate.
 - a calibration path, retaining strict geometry, Bayer-phase, exposure, and
   gain validation before the camera or loopback setup is touched.
 
-The follow-up hardening candidate advances the evidence profile to
+Follow-up hardening candidate `5b297b5` advances the evidence profile to
 `tca-linux-v4l2-acceptance-v4`. Both paths record
 the selected `calibration_mode`, exact release commit, camera and host
 identity, reader timestamps, bounded consumer YUYV bytes, per-frame digests,
