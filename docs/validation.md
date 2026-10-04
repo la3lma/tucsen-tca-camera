@@ -17,12 +17,13 @@ multi-request interpretation of frame assembly.
 
 ## USB-inert exact-device enumeration — 2026-10-04
 
-The alpha-12 candidate adds `tca-camera list` as the safe first command after
-a cable move. It initializes libusb and reads the library's device list and
-cached descriptors, but contains no path that opens a device, claims an
-interface, or submits a control or bulk transfer. With the camera attached
-directly to Apple Silicon macOS, the command reported exactly one high-speed
-match:
+Public main `b726322`, merged through
+[PR #36](https://github.com/la3lma/tucsen-tca-camera/pull/36), adds
+`tca-camera list` as the safe first command after a cable move. It initializes
+libusb and reads the library's device list and cached descriptors, but its
+command branch never opens a device, claims an interface, or submits a control
+or bulk transfer. With the camera attached directly to Apple Silicon macOS,
+the command reported exactly one high-speed match:
 
 ```text
 target=0547:c003

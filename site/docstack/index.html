@@ -406,49 +406,53 @@ Docstack</a></td>
 </tr>
 <tr>
 <td>Revision</td>
-<td>5.6, annotated alpha-11 corrects and tests source, CLI,
-installed-marker, and Debian-package version provenance, publishes a
-checksum-pinned ARM64 package, passes exact-tag CI and two-host
-downloaded-source verification, and is installed cleanly on the Pi for
-the pending physical run; annotated alpha-10 publishes the reproducible
-ARM64 Debian package as a checksum-pinned release asset after exact-tag
-CI, two-host downloaded-source verification, native package lifecycle,
-and local-file APT reinstall, but a later audit records its stale
-embedded alpha-7 CLI version and supersession by alpha-11; exact merged
-main builds a reproducible architecture-native Debian package, passes
-native Raspberry Pi AArch64 package inspection, installation, removal,
-clean-path verification, reinstallation, integrity, and USB-inert
-installed-helper diagnostics, and leaves the Pi prepared for its
-direct-camera Linux run; the downloaded exact alpha-9 archive physically
-records and independently decodes a 30-frame microscope clip through the
-packaged helper, then immediately reopens the camera; annotated alpha-9
-packages the verified one-command FFplay/H.264 helper and passes
-exact-main, exact-tag, Raspberry Pi AArch64, and downloaded-archive
-verification; use cases expressed in Cockburn form and UML;
-delivered-frame cadence measured in both recovered modes; Linux V4L2
-producer timing and bounded acceptance harness prepared; camera-free
-consumer detach/reattach, slow-consumer, bounded-memory, signal, and
-cleanup behavior verified on the Pi at both 1280x960 preview and
-complete 3664x2748 full resolution; exact post-merge main and downloaded
-alpha-8 release archive physically regressed in both optical modes on
-Apple Silicon; exact alpha-8 live output consumed and recorded by an
-independent FFmpeg process over a plain pipe on macOS for 17,200
-distinct frames across 30 minutes with bounded memory and immediate
-camera reopen; installed V4L2 helper discovery corrected and verified in
-a fresh staged AArch64 install; a packaged cross-platform FFplay/H.264
-helper physically recorded an exact-frame microscope clip with measured
-producer timing and immediate reopen, then passed the complete Pi
-AArch64 suite; current ToupTek SDK and USB-updater surfaces statically
-rechecked without executing vendor code; the UTM Linux shortcut was
-rechecked, remained unable to enumerate the host camera, and was
-followed by an exact-main macOS capture proving clean ownership
-hand-back; uncorrected physical Linux transport acceptance independently
-runnable before optical calibration and protected by a recorded
-wall-clock consumer deadline; historical evidence placeholders and the
-decision ledger reconciled with current verified state; public alpha-8
-packages the full-resolution application path and bounded Linux gate;
-public evidence rendered as HTML and guarded by a permanent full-history
-privacy policy</td>
+<td>5.7, public main <code>b726322</code> adds a USB-inert exact-device
+enumeration preflight, recognizes one high-speed <code>0547:c003</code>
+unit on the Mac and zero on the camera-free Pi, passes exact-main Apple
+Silicon/Pi AArch64 suites and hosted CI, and leaves all physical
+transport and optical gates open; annotated alpha-11 corrects and tests
+source, CLI, installed-marker, and Debian-package version provenance,
+publishes a checksum-pinned ARM64 package, passes exact-tag CI and
+two-host downloaded-source verification, and is installed cleanly on the
+Pi for the pending physical run; annotated alpha-10 publishes the
+reproducible ARM64 Debian package as a checksum-pinned release asset
+after exact-tag CI, two-host downloaded-source verification, native
+package lifecycle, and local-file APT reinstall, but a later audit
+records its stale embedded alpha-7 CLI version and supersession by
+alpha-11; exact merged main builds a reproducible architecture-native
+Debian package, passes native Raspberry Pi AArch64 package inspection,
+installation, removal, clean-path verification, reinstallation,
+integrity, and USB-inert installed-helper diagnostics, and leaves the Pi
+prepared for its direct-camera Linux run; the downloaded exact alpha-9
+archive physically records and independently decodes a 30-frame
+microscope clip through the packaged helper, then immediately reopens
+the camera; annotated alpha-9 packages the verified one-command
+FFplay/H.264 helper and passes exact-main, exact-tag, Raspberry Pi
+AArch64, and downloaded-archive verification; use cases expressed in
+Cockburn form and UML; delivered-frame cadence measured in both
+recovered modes; Linux V4L2 producer timing and bounded acceptance
+harness prepared; camera-free consumer detach/reattach, slow-consumer,
+bounded-memory, signal, and cleanup behavior verified on the Pi at both
+1280x960 preview and complete 3664x2748 full resolution; exact
+post-merge main and downloaded alpha-8 release archive physically
+regressed in both optical modes on Apple Silicon; exact alpha-8 live
+output consumed and recorded by an independent FFmpeg process over a
+plain pipe on macOS for 17,200 distinct frames across 30 minutes with
+bounded memory and immediate camera reopen; installed V4L2 helper
+discovery corrected and verified in a fresh staged AArch64 install; a
+packaged cross-platform FFplay/H.264 helper physically recorded an
+exact-frame microscope clip with measured producer timing and immediate
+reopen, then passed the complete Pi AArch64 suite; current ToupTek SDK
+and USB-updater surfaces statically rechecked without executing vendor
+code; the UTM Linux shortcut was rechecked, remained unable to enumerate
+the host camera, and was followed by an exact-main macOS capture proving
+clean ownership hand-back; uncorrected physical Linux transport
+acceptance independently runnable before optical calibration and
+protected by a recorded wall-clock consumer deadline; historical
+evidence placeholders and the decision ledger reconciled with current
+verified state; public alpha-8 packages the full-resolution application
+path and bounded Linux gate; public evidence rendered as HTML and
+guarded by a permanent full-history privacy policy</td>
 </tr>
 <tr>
 <td>Execution state</td>
@@ -529,11 +533,13 @@ deferred.</td>
 <tr>
 <td>Release provenance</td>
 <td>Alpha 10’s package metadata and bytes remain verified, but its
-embedded reader reports alpha 7. Alpha 11 supersedes it for new
+embedded reader reports alpha 7. Alpha 11 supersedes it for new release
 evidence: upstream marker, CLI, and Debian version correspondence is
 enforced; exact-tag and downloaded-source suites pass on Apple Silicon
 and Pi AArch64; the checksum-pinned package is installed cleanly on the
-Pi and reports alpha 11 throughout.</td>
+Pi and reports alpha 11 throughout. Public main has advanced to
+unreleased alpha-12 source for the inert enumeration preflight; no
+alpha-12 package or tag is claimed yet.</td>
 </tr>
 <tr>
 <td>Acceptance authority</td>
@@ -2045,28 +2051,30 @@ deferred</td>
 <td>Active, Linux-first</td>
 <td>Reopen, 30-minute corrected-era endurance, process-kill, host
 reboot, direct Apple Silicon capture, bounded ownership hand-back,
-USB-inert V4L2 lifecycle in both geometries, exact-post-merge and
-exact-release optical regressions, plain-pipe FFmpeg application
-consumption, and wall-clock-bounded application acceptance passed;
-uncorrected physical Linux transport and later corrected repeat plus Pi
-cable reconnect remain</td>
+USB-inert exact-device enumeration, USB-inert V4L2 lifecycle in both
+geometries, exact-post-merge and exact-release optical regressions,
+plain-pipe FFmpeg application consumption, and wall-clock-bounded
+application acceptance passed; uncorrected physical Linux transport and
+later corrected repeat plus Pi cable reconnect remain</td>
 </tr>
 <tr>
 <td>D110</td>
 <td>Package source and operations</td>
 <td>D100</td>
 <td>Active; alpha-11 publishes a provenance-consistent, independently
-verified ARM64 Debian asset; residual physical gates remain</td>
+verified ARM64 Debian asset and alpha-12 source adds the inert
+cable-move preflight; residual physical gates remain</td>
 <td>Public GitHub repository, Apache-2.0 license, checksum-pinned ARM64
-package asset, one-command FFplay/H.264 helper, udev/V4L2 operations,
-CI, two modes, bounded initial recovery, optical and calibration
-procedures, independently runnable uncorrected Linux application gate,
-recorded consumer deadline, measured output cadence, clickable
-full-resolution evidence, scoped native-libusb discovery, permanent
-publication boundary, tested install/removal, reproducible native Debian
-packaging, exact-model udev deployment, plus native AArch64 removal,
-clean-path verification, reinstallation, installed-helper discovery,
-version correspondence, validation record, and report links</td>
+package asset, exact-device enumeration, one-command FFplay/H.264
+helper, udev/V4L2 operations, CI, two modes, bounded initial recovery,
+optical and calibration procedures, independently runnable uncorrected
+Linux application gate, recorded consumer deadline, measured output
+cadence, clickable full-resolution evidence, scoped native-libusb
+discovery, permanent publication boundary, tested install/removal,
+reproducible native Debian packaging, exact-model udev deployment, plus
+native AArch64 removal, clean-path verification, reinstallation,
+installed-helper discovery, version correspondence, validation record,
+and report links</td>
 </tr>
 <tr>
 <td>D120</td>
@@ -3210,6 +3218,14 @@ indefinitely. The exact candidate passed complete Apple Silicon and
 Raspberry Pi AArch64 suites; on the Pi, GNU <code>timeout</code>
 terminated a 30-second sleeper after 1.00 seconds with the expected
 status 124.</p>
+<p>Public main <code>b726322</code> adds <code>tca-camera list</code> as
+the first USB-inert cable-move preflight. The command enumerates cached
+descriptors for the exact identity without opening a device, claiming
+its interface, or submitting a transfer. It saw one high-speed match on
+the directly attached Mac and zero matches on the camera-free Pi. Exact
+merged main passed the complete Apple Silicon and Pi AArch64 suites plus
+hosted Ubuntu/macOS CI. This narrows the next physical Linux diagnosis
+but does not replace capture, V4L2, or reconnect evidence.</p>
 <p>Exact public post-merge main <code>72964bb</code> was also rebuilt
 and physically regressed against the directly attached optical system on
 Apple Silicon. At 250 ms/gain 0 it delivered three distinct 1280x960
@@ -3513,6 +3529,16 @@ AArch64; the downloaded release asset is byte-identical; and the Pi is
 upgraded with clean package integrity, matching alpha-11 CLI/marker
 identity, and USB-inert helper diagnostics. See the <a
 href="../evidence/public-release-alpha11.html">alpha-11 release
+evidence</a>.</p>
+<p>Public main <code>b726322</code> then advances the source and package
+metadata to the unreleased alpha-12 candidate and adds the USB-inert
+<code>tca-camera list</code> preflight. Exact merged main passes the
+complete Apple Silicon and Raspberry Pi AArch64 suites; hosted
+Ubuntu/macOS CI passes; the Mac reports one physical high-speed exact
+match while the camera-free Pi reports zero. The command is also
+executed from the extracted reproducible Debian package during Linux
+tests. See the <a
+href="../evidence/device-list-preflight.html">device-list preflight
 evidence</a>.</p>
 <p>The current <a
 href="../evidence/release-acceptance-audit.html">release acceptance
@@ -4661,6 +4687,21 @@ diagnostics</td>
 release</a></td>
 <td>VERIFIED PROVENANCE-CONSISTENT PUBLIC ARM64 PACKAGE + TAG CI +
 TWO-HOST ARCHIVE + INSTALLED PI / PHYSICAL CAMERA V4L2 RUN OPEN</td>
+</tr>
+<tr>
+<td>E-090</td>
+<td>Public main <code>b726322</code> adds a USB-inert
+<code>tca-camera list</code> branch that enumerates cached descriptors
+for exact <code>0547:c003</code> matches and reports bus, address,
+speed, and count without opening a device, claiming an interface, or
+submitting a transfer. It reports one high-speed physical match on Apple
+Silicon and zero on the camera-free Pi. Exact merged main passes
+complete Apple Silicon and Raspberry Pi AArch64 suites, including
+extracted-package execution, plus hosted Ubuntu/macOS CI</td>
+<td><a href="../evidence/device-list-preflight.html">USB-inert
+exact-device enumeration</a></td>
+<td>VERIFIED SAFE CABLE-MOVE PREFLIGHT + TWO-HOST ENUMERATION / PHYSICAL
+LINUX CAPTURE OPEN</td>
 </tr>
 </tbody>
 </table>

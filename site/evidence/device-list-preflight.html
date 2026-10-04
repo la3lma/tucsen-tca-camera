@@ -20,7 +20,9 @@ exact-device enumeration preflight</h1>
 <p>Issue <a
 href="https://github.com/la3lma/tucsen-tca-camera/issues/35">#35</a>
 tracks a safe first diagnostic for every cable move. Candidate commit
-<code>109d4d1854dd6b597a521f02964de070362991a5</code> adds
+<code>109d4d1854dd6b597a521f02964de070362991a5</code>, merged through <a
+href="https://github.com/la3lma/tucsen-tca-camera/pull/36">PR #36</a> as
+public main <code>b7263221f92dac695928f1e86f8392c4868b20c3</code>, adds
 <code>tca-camera list</code>, which enumerates only the exact supported
 USB identity <code>0547:c003</code> and reports its bus, address, and
 negotiated USB speed.</p>
@@ -37,9 +39,9 @@ driver, reset a device, change a configuration, upload firmware, or
 select between multiple cameras for capture.</p>
 <h2 id="apple-silicon-exact-device-result">Apple Silicon exact-device
 result</h2>
-<p>The candidate passed the complete Apple Silicon suite with a scoped
-native ARM64 libusb. With the camera connected directly to the
-workstation, the new command returned:</p>
+<p>The candidate and exact merged main passed the complete Apple Silicon
+suite with a scoped native ARM64 libusb. With the camera connected
+directly to the workstation, the new command returned:</p>
 <pre class="text"><code>target=0547:c003
 camera=0 bus=8 address=24 speed=high
 camera-count=1
@@ -48,12 +50,12 @@ NO DEVICE OPENED OR TRANSFER SUBMITTED.</code></pre>
 taking ownership from another application. Bus and address identify this
 attachment instance only and are not stable camera serial numbers.</p>
 <h2 id="raspberry-pi-aarch64-result">Raspberry Pi AArch64 result</h2>
-<p>A fresh shallow checkout of the exact candidate on
-<code>rpios-17</code> built and passed the complete suite, including the
-Linux-only reproducible Debian-package test. The extracted package
-reader executed both <code>--version</code> and <code>list</code>. With
-the camera still attached to the Mac, the candidate Pi binary
-returned:</p>
+<p>A fresh shallow checkout of the candidate and then exact merged main
+on <code>rpios-17</code> each built and passed the complete suite,
+including the Linux-only reproducible Debian-package test. The extracted
+package reader executed both <code>--version</code> and
+<code>list</code>. With the camera still attached to the Mac, the merged
+Pi binary returned:</p>
 <pre class="text"><code>tca-camera 0.2.0-alpha.12
 target=0547:c003
 camera-count=0
