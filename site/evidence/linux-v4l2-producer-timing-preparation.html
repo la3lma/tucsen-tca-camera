@@ -31,6 +31,17 @@ producer sidecar. The two records must be reported separately: reader
 delivery cadence is not a claim about application display cadence, and a
 count difference can include bounded pipeline frames as well as consumer
 loss.</p>
+<p>Public main commit
+<code>470b3d9099b7a43f2dd7d9966c9dea2322f46bab</code> then packages the
+entire pending physical check as
+<code>tools/run_linux_v4l2_acceptance.sh</code>. With no arguments it is
+inert. Its live path requires an exact token, a clean built worktree, a
+valid matching calibration, exactly one attached camera, an unused
+loopback slot, an existing evidence parent, and pre-primed sudo
+credentials. It composes corrected V4L2 streaming, a bounded ordinary
+FFmpeg consumer, full YUYV preservation, per-frame digests,
+producer/consumer summaries, clean teardown, immediate reader reuse, and
+a complete SHA-256 manifest.</p>
 <h2 id="safety-and-validation">Safety and validation</h2>
 <ul>
 <li>With no arguments, <code>scripts/tca-v4l2</code> remains inert and
@@ -52,6 +63,13 @@ href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37199753354">3719
 passed on Ubuntu and macOS. Pages run <a
 href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37199753340">37199753340</a>
 also passed.</li>
+<li>Exact harness commit <code>470b3d9</code> passed
+<code>make clean all test</code> and the inert harness invocation in a
+separate detached Raspberry Pi AArch64 worktree. GitHub CI run <a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37200208874">37200208874</a>
+passed on Ubuntu and macOS; Pages run <a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37200208867">37200208867</a>
+passed as well.</li>
 <li>The current-tree and full-history public/private publication audit
 passed in the full local checkout. The Pi’s shallow source repository
 correctly skipped only the history portion while passing the
@@ -59,10 +77,12 @@ current-tree policy.</li>
 </ul>
 <h2 id="pending-physical-acceptance">Pending physical acceptance</h2>
 <p>After a valid same-settings dark/flat calibration exists and the
-camera moves to Linux, run the corrected bridge with both
-<code>TCA_FLAT_FIELD</code> and <code>TCA_TIMESTAMPS</code>. A separate
-ordinary V4L2 application must consume a bounded run and preserve its
-frame count, elapsed time, and logs. Acceptance requires:</p>
+camera moves to Linux, execute
+<code>tools/run_linux_v4l2_acceptance.sh</code> with its exact token.
+The harness runs the corrected bridge with both
+<code>TCA_FLAT_FIELD</code> and <code>TCA_TIMESTAMPS</code>, while a
+separate ordinary V4L2 application consumes a bounded run and preserves
+its frame count, elapsed time, and logs. Acceptance requires:</p>
 <ol type="1">
 <li>a valid producer timestamp report from
 <code>tca-timing-stats</code>;</li>

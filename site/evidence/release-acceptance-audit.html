@@ -86,9 +86,11 @@ no arbitrary USB request surface. Ubuntu and macOS CI pass.</td>
 reader. The Linux V4L2 adapter consumes reader stdout; a synthetic
 corrected-stream preflight delivered six frames through a temporary
 loopback to a separate consumer. Commit <code>a60ecac</code> adds
-separately recorded producer timestamps for the pending live-camera
-Linux run, whose earlier proof still predates the assembly correction.
-AVFoundation remains deferred.</td>
+separately recorded producer timestamps, and commit <code>470b3d9</code>
+packages the bounded live-camera Linux run, cleanup, reopen, and
+manifest as an inert-by-default harness. The earlier physical proof
+still predates the assembly correction. AVFoundation remains
+deferred.</td>
 </tr>
 <tr>
 <td>6. Evidence and recovery</td>
@@ -167,9 +169,10 @@ v4l2loopback.</td>
 <code>72f6e63</code>. Independent main/tag Ubuntu and macOS CI passed;
 the exact commit passed the complete Raspberry Pi AArch64 suite; and the
 downloaded tag archive passed the suite outside a Git checkout.
-Post-release commit <code>a60ecac</code> independently passes the
-complete Apple Silicon, Raspberry Pi AArch64, Ubuntu, and macOS
-suites.</td>
+Post-release commits <code>a60ecac</code> and <code>470b3d9</code>
+independently pass the complete Apple Silicon, Raspberry Pi AArch64,
+Ubuntu, and macOS suites; the latter also passes its Pi dry-run without
+a USB transfer.</td>
 </tr>
 <tr>
 <td>NFR-08 legal hygiene</td>
