@@ -406,7 +406,7 @@ Docstack</a></td>
 </tr>
 <tr>
 <td>Revision</td>
-<td>4.9, use cases expressed in Cockburn form and UML; delivered-frame
+<td>5.0, use cases expressed in Cockburn form and UML; delivered-frame
 cadence measured in both recovered modes; Linux V4L2 producer timing and
 bounded acceptance harness prepared; camera-free consumer
 detach/reattach, slow-consumer, bounded-memory, signal, and cleanup
@@ -417,17 +417,20 @@ Silicon; exact alpha-8 live output consumed and recorded by an
 independent FFmpeg process over a plain pipe on macOS for 17,200
 distinct frames across 30 minutes with bounded memory and immediate
 camera reopen; installed V4L2 helper discovery corrected and verified in
-a fresh staged AArch64 install; current ToupTek SDK and USB-updater
-surfaces statically rechecked without executing vendor code; the UTM
-Linux shortcut was rechecked, remained unable to enumerate the host
-camera, and was followed by an exact-main macOS capture proving clean
-ownership hand-back; uncorrected physical Linux transport acceptance
-independently runnable before optical calibration and protected by a
-recorded wall-clock consumer deadline; historical evidence placeholders
-and the decision ledger reconciled with current verified state; public
-alpha-8 packages the full-resolution application path and bounded Linux
-gate; public evidence rendered as HTML and guarded by a permanent
-full-history privacy policy</td>
+a fresh staged AArch64 install; a packaged cross-platform FFplay/H.264
+helper physically recorded an exact-frame microscope clip with measured
+producer timing and immediate reopen, then passed the complete Pi
+AArch64 suite; current ToupTek SDK and USB-updater surfaces statically
+rechecked without executing vendor code; the UTM Linux shortcut was
+rechecked, remained unable to enumerate the host camera, and was
+followed by an exact-main macOS capture proving clean ownership
+hand-back; uncorrected physical Linux transport acceptance independently
+runnable before optical calibration and protected by a recorded
+wall-clock consumer deadline; historical evidence placeholders and the
+decision ledger reconciled with current verified state; public alpha-8
+packages the full-resolution application path and bounded Linux gate;
+public evidence rendered as HTML and guarded by a permanent full-history
+privacy policy</td>
 </tr>
 <tr>
 <td>Execution state</td>
@@ -3298,6 +3301,18 @@ programs, and resolved executable sibling copies of
 explicitly sent no USB transfer. E-081 records the retained hashes. This
 strengthens packaging reproducibility without claiming the still-open
 physical Linux camera run.</p>
+<p>Public main <code>f297834</code> also packages
+<code>tca-ffmpeg</code>, a cross-platform one-command FFplay viewer and
+bounded H.264 recorder. It supervises the existing reader rather than
+duplicating USB protocol, preserves the untouched first device record
+and measured timestamp CSV, rejects collisions and invalid settings
+before camera access, and terminates a blocked producer when its
+consumer fails. Exact candidate <code>f524560</code> physically recorded
+12 complete 1280x960 microscope frames into a decodable H.264 file at
+9.494922 delivered fps, then a fresh process immediately reopened the
+camera. Exact merged main passed the complete Raspberry Pi AArch64 suite
+and USB-inert install diagnostic while the camera remained on the Mac.
+E-084 records the public and private evidence.</p>
 <p>These changes are sealed in annotated public prerelease <a
 href="https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.3"><code>v0.2.0-alpha.3</code></a>
 at exact commit <code>3c16d2a</code>. Independent main and tag CI runs
@@ -4431,6 +4446,23 @@ cable run as the physical Linux gate</td>
 bench</a></td>
 <td>VERIFIED NEGATIVE PASSTHROUGH + MACOS HAND-BACK / DIRECT LINUX CABLE
 RUN OPEN</td>
+</tr>
+<tr>
+<td>E-084</td>
+<td>Public main <code>f297834</code> packages <code>tca-ffmpeg</code>, a
+USB-protocol-free FFplay/H.264 helper with bounded settings, raw
+provenance, producer timestamps, collision refusal, consumer-failure
+cleanup, install diagnostics, and cross-platform tests. Exact candidate
+<code>f524560</code> physically delivered 12 complete 1280x960
+microscope frames to ordinary FFmpeg at 9.494922 measured fps; FFprobe
+decoded exactly 12 H.264 frames and a fresh process immediately reopened
+the camera. Exact merged main passed Ubuntu/macOS CI and the complete
+Raspberry Pi AArch64 suite with zero attached cameras and an explicit
+<code>NO USB TRANSFER SENT</code> diagnostic</td>
+<td><a href="../evidence/ffmpeg-helper-live.html">Packaged FFmpeg
+view/record helper</a></td>
+<td>VERIFIED PHYSICAL ORDINARY-APPLICATION RECORDING + CROSS-PLATFORM
+PACKAGE / DIRECT LINUX V4L2 CABLE RUN OPEN</td>
 </tr>
 </tbody>
 </table>
