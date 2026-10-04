@@ -246,8 +246,8 @@ class="toc-section-number">5.5</span> Task Contracts</a></li>
 class="toc-section-number">5.6</span> Evidence Ledger</a></li>
 <li><a href="#risk-register" id="toc-risk-register"><span
 class="toc-section-number">5.7</span> Risk Register</a></li>
-<li><a href="#open-decisions" id="toc-open-decisions"><span
-class="toc-section-number">5.8</span> Open Decisions</a></li>
+<li><a href="#decision-ledger" id="toc-decision-ledger"><span
+class="toc-section-number">5.8</span> Decision Ledger</a></li>
 <li><a href="#planning-completion-checklist"
 id="toc-planning-completion-checklist"><span
 class="toc-section-number">5.9</span> Planning Completion
@@ -406,7 +406,7 @@ Docstack</a></td>
 </tr>
 <tr>
 <td>Revision</td>
-<td>4.1, use cases expressed in Cockburn form and UML; delivered-frame
+<td>4.2, use cases expressed in Cockburn form and UML; delivered-frame
 cadence measured in both recovered modes; Linux V4L2 producer timing and
 bounded acceptance harness prepared; camera-free consumer
 detach/reattach, slow-consumer, bounded-memory, signal, and cleanup
@@ -414,9 +414,10 @@ behavior verified on the Pi at both 1280x960 preview and complete
 3664x2748 full resolution; exact post-merge main physically regressed in
 both optical modes on Apple Silicon; uncorrected physical Linux
 transport acceptance independently runnable before optical calibration
-and protected by a recorded wall-clock consumer deadline; public
-evidence rendered as HTML and guarded by a permanent full-history
-privacy policy</td>
+and protected by a recorded wall-clock consumer deadline; historical
+evidence placeholders and the decision ledger reconciled with current
+verified state; public evidence rendered as HTML and guarded by a
+permanent full-history privacy policy</td>
 </tr>
 <tr>
 <td>Execution state</td>
@@ -3420,16 +3421,33 @@ protocol map</a></td>
 </tr>
 <tr>
 <td>E-007</td>
-<td>Initialization, response semantics, frame dimensions, encoding, and
-controls are known</td>
-<td>No accepted evidence yet</td>
-<td>OPEN</td>
+<td>The accepted IS1000-lineage initialization, bulk framing, 1280x960
+and 3664x2748 Bayer8 geometries, mode selection, exposure, gain, warm-up
+discard, and stop lifecycle are known; the rejected alternate TCA prefix
+remains a non-gating historical question</td>
+<td><a
+href="https://github.com/la3lma/tucsen-tca-camera/blob/main/docs/protocol.md">Observed
+protocol</a>, <a
+href="../evidence/public-release-live-validation.html">public live
+validation</a>, and <a
+href="../evidence/current-main-macos-optical-regression.html">current-main
+optical regression</a></td>
+<td>VERIFIED PRIMARY PATH / ALTERNATE TCA PREFIX OPEN</td>
 </tr>
 <tr>
 <td>E-008</td>
-<td>Reader streams into standard Linux/macOS applications</td>
-<td>No implementation yet</td>
-<td>OPEN</td>
+<td>The reader feeds standard Linux applications through a removable
+V4L2 loopback in both geometries; camera-free
+lifecycle/backpressure/cleanup and physical direct-reader output pass,
+while the post-fix physical Linux application run remains</td>
+<td><a href="../evidence/linux-v4l2-replay-bridge.html">Linux V4L2
+replay bridge</a>, <a
+href="../evidence/linux-v4l2-full-resolution-application.html">full-resolution
+application path</a>, and <a
+href="../evidence/linux-v4l2-uncorrected-acceptance-preparation.html">bounded
+live-gate preparation</a></td>
+<td>VERIFIED SOFTWARE APPLICATION BOUNDARY / PHYSICAL LINUX RUN
+OPEN</td>
 </tr>
 <tr>
 <td>E-009</td>
@@ -4270,28 +4288,70 @@ preservation, or accepted utility</td>
 </tr>
 </tbody>
 </table>
-<h2 data-number="5.8" id="open-decisions"><span
-class="header-section-number">5.8</span> Open Decisions</h2>
-<ol type="1">
-<li>What driver-local side effect, prerequisite transaction, or protocol
-difference explains why the corrected TCA prefix times out even from a
-proven physical cold start?</li>
-<li>Which of the recovered fixed modes are accepted by this exact unit,
-and which mode should be the preview default?</li>
-<li>What are the Bayer pattern, orientation, optical-black/crop
-requirements, and color calibration requirements for the recovered
-one-byte-per-pixel stream?</li>
-<li>What are the exact user-facing normalization and persistence
-semantics for host-side RGB gain, gamma, contrast, saturation, white
-balance, mirrors, monochrome, and 50/60 Hz processing? The hardware
-exposure, analog-gain, and four-value frame-speed plan is recovered
-offline but not yet live-tested.</li>
-<li>Is a Linux V4L2 loopback path sufficient for first application
-acceptance, or is system-wide macOS discovery required in the same
-release?</li>
-<li>Does the user-space core meet measured throughput without
-platform-specific USB scheduling or a kernel component?</li>
-</ol>
+<h2 data-number="5.8" id="decision-ledger"><span
+class="header-section-number">5.8</span> Decision Ledger</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>State</th>
+<th>Decision or remaining proof</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Why does the alternate TCA prefix time out from a proven cold
+start?</td>
+<td>Deferred, non-gating</td>
+<td>The physical unit is operational through the independently verified
+IS1000 lineage. Reopen this only if the accepted path exposes a missing
+capability or a trace proves the prerequisite.</td>
+</tr>
+<tr>
+<td>Which recovered modes does this unit accept, and what is the preview
+default?</td>
+<td>Resolved</td>
+<td>Mode 2 is the 1280x960 preview default; mode 0 is complete 3664x2748
+full resolution. Both physically produce coherent, changing frames.</td>
+</tr>
+<tr>
+<td>What Bayer phase, orientation, optical crop, and color transform
+should be final?</td>
+<td>Open, D60 gate</td>
+<td>Use a known color target and retained raw frame to confirm
+phase/orientation and derive the final transform. Do not promote
+provisional GRBG or lamp-neutral estimates to a calibrated claim.</td>
+</tr>
+<tr>
+<td>What control surface is accepted?</td>
+<td>Partially resolved</td>
+<td>Exposure and analog gain are live, bounded, and optically monotonic;
+mode selection and stop/start work. Host RGB normalization, gamma,
+contrast, saturation, mirrors, monochrome, anti-flicker, and persistence
+semantics remain optional post-alpha product work.</td>
+</tr>
+<tr>
+<td>Is Linux V4L2 sufficient for first application acceptance?</td>
+<td>Resolved</td>
+<td>Yes. The owner selected Linux first; the portable direct reader
+remains useful on macOS, while AVFoundation/system-wide macOS discovery
+is explicitly deferred and non-gating.</td>
+</tr>
+<tr>
+<td>Does the user-space core need a custom kernel driver for
+throughput?</td>
+<td>Resolved</td>
+<td>No for the accepted alpha scope. Direct physical cadence, long-run
+stability, synthetic corrected throughput, and both V4L2 geometries meet
+the declared use cases with only generic <code>v4l2loopback</code>.</td>
+</tr>
+</tbody>
+</table>
 <h2 data-number="5.9" id="planning-completion-checklist"><span
 class="header-section-number">5.9</span> Planning Completion
 Checklist</h2>
