@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import pathlib
 import subprocess
 import sys
@@ -22,6 +23,10 @@ def main() -> None:
     assert "v4l2loopback" in source
     assert "build/tca-camera" in source
     assert "TCA_FLAT_FIELD" in source
+    assert "TCA_TIMESTAMPS" in source
+    assert '--timestamps "$timestamps"' in source
+    assert "reader timestamp sidecar active" in source
+    assert "TCA_TIMESTAMPS must name a distinct new regular file" in source
     assert '"$flat_field_tool" apply --calibration "$flat_field"' in source
     assert "raw-bayer.fifo" in source
     assert "flat-field calibration must be 1280x960 GRBG for V4L2" in source
@@ -38,6 +43,15 @@ def main() -> None:
             text=True,
         )
         assert invalid.returncode == 64
+        assert not raw.exists()
+        timestamp_conflict = subprocess.run(
+            ["sh", str(script), "--serve", str(raw), "42", "100", "20"],
+            capture_output=True,
+            text=True,
+            env={**dict(os.environ), "TCA_TIMESTAMPS": str(raw)},
+        )
+        assert timestamp_conflict.returncode == 73
+        assert "distinct new regular file" in timestamp_conflict.stderr
         assert not raw.exists()
     print("TCA live V4L2 adapter static/inert checks: PASS")
 

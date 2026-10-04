@@ -7,6 +7,7 @@ TOKEN=--serve
 usage() {
     echo "usage: $0 $TOKEN RAW_FIRST [VIDEO_NUMBER] [EXPOSURE_MS] [GAIN]" >&2
     echo "       exposes the trace-confirmed 1280x960 stream as temporary V4L2" >&2
+    echo "       optional TCA_TIMESTAMPS writes the reader's monotonic CSV sidecar" >&2
 }
 
 if [ "$#" -eq 0 ]; then
@@ -24,6 +25,7 @@ raw_output=$2
 video_number=${3:-42}
 exposure_ms=${4:-400}
 gain=${5:-20}
+timestamps=${TCA_TIMESTAMPS:-}
 device=/dev/video${video_number}
 project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 reader=${TCA_CAMERA_READER:-$project_dir/build/tca-camera}
@@ -78,13 +80,20 @@ if [ "$exposure_ms" -lt 1 ] || [ "$exposure_ms" -gt 480 ] ||
     echo "control range: EXPOSURE_MS=1..480, GAIN=0..320" >&2
     exit 64
 fi
-if [ "$(uname -s)" != Linux ]; then
-    echo "the V4L2 adapter requires Linux; the reader core is portable" >&2
-    exit 69
-fi
 if [ "$raw_output" = - ] || [ -e "$raw_output" ]; then
     echo "RAW_FIRST must name a new regular file: $raw_output" >&2
     exit 73
+fi
+if [ -n "$timestamps" ]; then
+    if [ "$timestamps" = - ] || [ -e "$timestamps" ] ||
+       [ "$timestamps" = "$raw_output" ]; then
+        echo "TCA_TIMESTAMPS must name a distinct new regular file: $timestamps" >&2
+        exit 73
+    fi
+fi
+if [ "$(uname -s)" != Linux ]; then
+    echo "the V4L2 adapter requires Linux; the reader core is portable" >&2
+    exit 69
 fi
 if [ ! -x "$reader" ]; then
     echo "missing $reader; run 'make linux-stream-reader' first" >&2
@@ -158,21 +167,30 @@ sudo chown "$(id -u):$(id -g)" "$device"
 stream_dir=$(mktemp -d "${TMPDIR:-/tmp}/tca-v4l2-live.XXXXXX")
 mkfifo "$stream_dir/bayer.fifo"
 
+start_reader() {
+    reader_output=$1
+    if [ -n "$timestamps" ]; then
+        "$reader" capture --frames 0 --raw-first "$raw_output" \
+            --bayer - --timestamps "$timestamps" \
+            --exposure-ms "$exposure_ms" --gain "$gain" \
+            >"$reader_output" &
+    else
+        "$reader" capture --frames 0 --raw-first "$raw_output" \
+            --bayer - --exposure-ms "$exposure_ms" --gain "$gain" \
+            >"$reader_output" &
+    fi
+    reader_pid=$!
+}
+
 if [ -n "$flat_field" ]; then
     mkfifo "$stream_dir/raw-bayer.fifo"
-    "$reader" capture --frames 0 --raw-first "$raw_output" \
-        --bayer - --exposure-ms "$exposure_ms" --gain "$gain" \
-        >"$stream_dir/raw-bayer.fifo" &
-    reader_pid=$!
+    start_reader "$stream_dir/raw-bayer.fifo"
     "$flat_field_tool" apply --calibration "$flat_field" \
         --input "$stream_dir/raw-bayer.fifo" --output - \
         >"$stream_dir/bayer.fifo" &
     filter_pid=$!
 else
-    "$reader" capture --frames 0 --raw-first "$raw_output" \
-        --bayer - --exposure-ms "$exposure_ms" --gain "$gain" \
-        >"$stream_dir/bayer.fifo" &
-    reader_pid=$!
+    start_reader "$stream_dir/bayer.fifo"
 fi
 ffmpeg -hide_banner -loglevel warning -f rawvideo \
     -pixel_format bayer_grbg8 -video_size 1280x960 -framerate 2 \
@@ -201,6 +219,9 @@ fi
 echo "camera ready at $device; first unmodified device frame: $raw_output" >&2
 if [ -n "$flat_field" ]; then
     echo "flat-field correction active: $flat_field" >&2
+fi
+if [ -n "$timestamps" ]; then
+    echo "reader timestamp sidecar active: $timestamps" >&2
 fi
 echo "press Ctrl-C to stop and remove the temporary loopback device" >&2
 set +e

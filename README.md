@@ -329,6 +329,24 @@ TCA_FLAT_FIELD=capture/10x-mode2.tca-flat \
 
 The V4L2 helper validates geometry, phase, exposure, and camera gain before
 touching the camera, and retains the first unmodified device frame as before.
+To preserve the reader's measured producer cadence while an ordinary V4L2
+application consumes the stream, add a new timestamp sidecar path:
+
+```sh
+TCA_FLAT_FIELD=capture/10x-mode2.tca-flat \
+TCA_TIMESTAMPS=capture/v4l2-reader-timestamps.csv \
+  scripts/tca-v4l2 --serve capture/v4l2-first-device.raw 42 250 0
+
+scripts/tca-timing-stats capture/v4l2-reader-timestamps.csv \
+  --json capture/v4l2-reader-timing.json
+```
+
+`TCA_TIMESTAMPS` is optional and does not alter the image stream. The bridge
+requires a distinct, nonexistent regular-file path and passes it to the reader
+as `--timestamps`; rows are flushed as frames are accepted. Consumer frame
+counts and timestamps should be recorded separately by the application under
+test, since the reader sidecar measures producer delivery rather than display
+or recording cadence.
 
 ## Protocol and safety
 

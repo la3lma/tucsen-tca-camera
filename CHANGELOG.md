@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Allow the Linux V4L2 bridge to opt into the reader's monotonic timestamp CSV
+  through `TCA_TIMESTAMPS`, preserving producer cadence evidence alongside a
+  separately measured ordinary-application consumer run.
+
 ## 0.2.0-alpha.7 — 2026-10-04
 
 - Add optional per-frame `CLOCK_MONOTONIC` timestamp CSV output to the capture
