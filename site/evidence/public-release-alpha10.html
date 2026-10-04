@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Public prerelease v0.2.0-alpha.10 — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="public-prerelease-v0.2.0-alpha.10">Public prerelease
+v0.2.0-alpha.10</h1>
+<p>Date: 2026-10-04</p>
+<h2 id="result">Result</h2>
+<p>The annotated public tag <code>v0.2.0-alpha.10</code> resolves to
+exact commit <code>d0bbdd23fecbe4fc046e3e4e0f1fa064a81eb1e8</code> and
+is published as a GitHub prerelease:</p>
+<p><a
+href="https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.10"
+class="uri">https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.10</a></p>
+<p>Alpha 10 makes the Linux-first reader directly installable on 64-bit
+Raspberry Pi OS and Debian. The release attaches the 51,056-byte
+development package
+<code>tucsen-tca-camera_0.2.0.alpha10-1_arm64.deb</code>; GitHub
+normalizes the Debian-version tilde in the build filename to a dot,
+while the package’s internal version remains
+<code>0.2.0~alpha10-1</code>.</p>
+<p>The package installs the seven public userspace tools, exact
+<code>0547:c003</code> udev rule, and public documentation. It supplies
+no camera-specific kernel driver. Its maintainer hooks reload udev rules
+only and perform no USB open, reset, or transfer. The release remains
+Apache-2.0 licensed.</p>
+<h2 id="exact-tag-archive-and-ci-verification">Exact tag, archive, and
+CI verification</h2>
+<ul>
+<li>Exact main <code>d0bbdd2</code> passed Ubuntu/macOS CI in <a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37218067546">run
+37218067546</a>, and its Pages deployment passed in <a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37218067547">run
+37218067547</a>.</li>
+<li>The annotated tag independently passed Ubuntu/macOS CI in <a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37218214078">run
+37218214078</a>.</li>
+<li>The exact tag passed the complete Raspberry Pi AArch64 suite with no
+camera attached. The Linux package test built twice and required byte
+identity, inspected metadata and contents, exercised extracted
+installed-helper diagnostics, and verified collision refusal.</li>
+<li>The downloaded tag source archive was extracted outside a Git
+checkout and passed the complete suite on both Apple Silicon and
+Raspberry Pi AArch64. Its SHA-256 is:</li>
+</ul>
+<pre class="text"><code>1e1254bb1105a3ab3034ada3716402f76ec64ff0758aafc4fb000a83a15fb738  tucsen-tca-camera-v0.2.0-alpha.10.tar.gz</code></pre>
+<ul>
+<li>The exact-tag Raspberry Pi build reproduced the earlier package byte
+for byte. The release asset was downloaded back into the private project
+and passed the published checksum:</li>
+</ul>
+<pre class="text"><code>269eb45f5c5bc6988bc9a59b73247a48f1c389fb1035121b78b0a22a7a9efdd2  tucsen-tca-camera_0.2.0.alpha10-1_arm64.deb</code></pre>
+<ul>
+<li>The release asset reports architecture <code>arm64</code>, package
+version <code>0.2.0~alpha10-1</code>, dependencies on
+<code>libc6</code>, <code>libusb-1.0-0</code>, and <code>python3</code>,
+and recommendations for FFmpeg and the ordinary V4L2 application
+stack.</li>
+<li>The exact tag, source archive, package, and public history pass the
+permanent publication boundary: no raw frame, vendor binary,
+disassembly, firmware, packet capture, VM disk, credential, or private
+work is included.</li>
+</ul>
+<h2 id="native-package-lifecycle">Native package lifecycle</h2>
+<p>The same package passed the following camera-free lifecycle on
+<code>rpios-17</code>:</p>
+<ol type="1">
+<li>package database reported <code>install ok installed</code>, version
+<code>0.2.0~alpha10-1</code>, architecture <code>arm64</code>;</li>
+<li><code>dpkg --remove</code> cleared all seven helpers, the
+exact-model udev rule, and package documentation;</li>
+<li>reinstallation of the same hash-pinned archive restored the
+installed state and <code>dpkg -V</code> returned no modified file;</li>
+<li>both installed diagnostics resolved all sibling tools and reported
+<code>NO USB TRANSFER SENT</code>; and</li>
+<li>a local-file <code>apt-get install --reinstall</code> completed
+without downloading another package or adding a dependency, after which
+integrity and both diagnostics still passed.</li>
+</ol>
+<p>The Pi is deliberately left with the package installed and the camera
+remains on the Mac.</p>
+<h2 id="carried-physical-camera-evidence">Carried physical-camera
+evidence</h2>
+<p>Alpha 10 contains the same reader and helper already proved by alpha
+9 against the Mac-attached microscope. The downloaded alpha-9 archive
+recorded 30 complete 1280x960 frames at 9.508016 measured fps;
+independent H.264 decoding returned 30 distinct frames, and a fresh
+process immediately reopened the camera. Alpha 8 remains the 30-minute
+endurance authority: 17,200 distinct preview frames passed through
+independent FFmpeg with bounded memory and immediate reopen.</p>
+<p>This carried proof establishes package contents and the
+application-facing reader behavior, not physical USB transport from the
+newly attached ARM64 package on the Pi.</p>
+<h2 id="explicit-residual-gates">Explicit residual gates</h2>
+<p>This is a development prerelease, not final acceptance. The remaining
+physical work is unchanged:</p>
+<ol type="1">
+<li>move the camera to the Raspberry Pi and execute the prepared
+uncorrected preview and full-resolution V4L2 application gates;</li>
+<li>acquire true blocked-light dark and translated/defocused blank-field
+flat sets at locked settings, then repeat the physical Linux gate with
+the accepted map;</li>
+<li>confirm Bayer phase, orientation, color response, and focus behavior
+with a known target; and</li>
+<li>complete the physical cable disconnect/reconnect acceptance
+case.</li>
+</ol>
+<p>AVFoundation/system-wide macOS camera discovery remains a
+non-blocking deferral. The portable reader and packaged FFplay/H.264
+path work on macOS without it.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

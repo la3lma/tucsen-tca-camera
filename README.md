@@ -134,6 +134,13 @@ package.
 
 ### Debian binary package
 
+The [alpha-10 prerelease](https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.10)
+provides a checksum-pinned 64-bit Raspberry Pi OS / Debian development package
+named `tucsen-tca-camera_0.2.0.alpha10-1_arm64.deb`. Its internal Debian
+version is `0.2.0~alpha10-1`; GitHub normalizes the tilde in the downloadable
+asset filename to a dot. The direct-camera Raspberry Pi V4L2 acceptance run is
+still explicitly open, so consult the release notes before installation.
+
 On Debian, Ubuntu, Raspberry Pi OS, and derivatives, build an
 architecture-native package without root access:
 
