@@ -11,6 +11,10 @@
 
 #include <libusb.h>
 
+#ifndef TCA_VERSION
+#define TCA_VERSION "0.0.0+unknown"
+#endif
+
 #define TCA_VID 0x0547u
 #define TCA_PID 0xc003u
 #define TCA_INTERFACE 0
@@ -84,7 +88,7 @@ static const struct init_step init_steps[] = {
 };
 
 static const char execution_token[] = "capture";
-static const char version[] = "0.2.0-alpha.7";
+static const char version[] = TCA_VERSION;
 static volatile sig_atomic_t stop_requested;
 
 static size_t pixel_bytes(const struct mode_profile *mode)

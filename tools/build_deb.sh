@@ -62,6 +62,7 @@ install -D -m 0644 "$project_dir/udev/99-tucsen-tca-camera.rules" \
 documentation_dir=$staging_root/usr/share/doc/tucsen-tca-camera
 install -d "$documentation_dir"
 install -m 0644 "$project_dir/README.md" "$documentation_dir/README.md"
+install -m 0644 "$project_dir/VERSION" "$documentation_dir/VERSION"
 install -m 0644 "$project_dir/CHANGELOG.md" "$documentation_dir/CHANGELOG.md"
 install -m 0644 "$project_dir/LICENSE" "$documentation_dir/LICENSE"
 install -m 0644 "$project_dir/NOTICE" "$documentation_dir/NOTICE"
