@@ -17,8 +17,9 @@
 <h1 id="release-acceptance-audit">Release acceptance audit</h1>
 <p>Date: 2026-10-04</p>
 <p>Scope: public Linux-first prerelease <code>v0.2.0-alpha.7</code> plus
-the post-release producer-timing preparation at <code>a60ecac</code>,
-including optically validated record-boundary assembly, gain, motion,
+post-release producer timing, physical-acceptance preparation, and
+camera-free V4L2 lifecycle candidate <code>eb8acd3</code>, including
+optically validated record-boundary assembly, gain, motion,
 white-balance, calibrated-field tooling, and measured direct-reader
 cadence.</p>
 <p>This is a readiness audit, not owner acceptance. It distinguishes a
@@ -51,13 +52,15 @@ known-target color response remain open.</td>
 </tr>
 <tr>
 <td>2. Streaming</td>
-<td>Pass for userspace stream; Linux application retest partial</td>
+<td>Pass for userspace stream; physical Linux application retest
+partial</td>
 <td>A corrected 16-frame run produced 16 distinct coherent frames and an
 H.264 proof clip. Earlier 14,400-frame testing establishes USB/process
 endurance but used the superseded multi-request image assembly.
-Post-release main now lets the V4L2 bridge preserve the reader’s
-monotonic producer sidecar, but the post-fix physical Linux consumer
-cadence/drop comparison remains open.</td>
+Post-release main preserves the V4L2 bridge’s producer sidecar;
+candidate <code>eb8acd3</code> passed camera-free detach/reattach and a
+deliberately slow consumer with bounded RSS, but the post-fix physical
+Linux consumer cadence/drop comparison remains open.</td>
 </tr>
 <tr>
 <td>3. Operation</td>
@@ -81,16 +84,16 @@ no arbitrary USB request surface. Ubuntu and macOS CI pass.</td>
 </tr>
 <tr>
 <td>5. Application path</td>
-<td>Partial</td>
+<td>Partial; software lifecycle verified, physical corrected run
+open</td>
 <td>FFmpeg creates coherent stills and H.264 from the corrected macOS
-reader. The Linux V4L2 adapter consumes reader stdout; a synthetic
-corrected-stream preflight delivered six frames through a temporary
-loopback to a separate consumer. Commit <code>a60ecac</code> adds
-separately recorded producer timestamps, and commit <code>470b3d9</code>
-packages the bounded live-camera Linux run, cleanup, reopen, and
-manifest as an inert-by-default harness. The earlier physical proof
-still predates the assembly correction. AVFoundation remains
-deferred.</td>
+reader. The Linux V4L2 adapter consumes reader stdout; candidate
+<code>eb8acd3</code> exercised the real bridge with a USB-inert reader,
+normal consumer detach, slow-consumer reattach, only 1,184 KiB RSS
+growth, deterministic TERM status, and complete loopback cleanup. Commit
+<code>470b3d9</code> packages the remaining bounded live-camera run,
+cleanup, reopen, and manifest. The earlier physical proof predates the
+assembly correction. AVFoundation remains deferred.</td>
 </tr>
 <tr>
 <td>6. Evidence and recovery</td>
@@ -156,11 +159,13 @@ unrecovered timeout, parser loss, or observed memory growth.</td>
 </tr>
 <tr>
 <td>NFR-06 resource use</td>
-<td>Pass for the current synchronous reader</td>
+<td>Pass for the current synchronous reader and synthetic V4L2
+lifecycle</td>
 <td>USB and frame buffers are fixed and bounded. The synchronous CLI
-applies producer back-pressure rather than an unbounded queue; the
-optional V4L2 path delegates downstream buffering to FFmpeg and
-v4l2loopback.</td>
+applies producer back-pressure rather than an unbounded queue. During a
+deliberately slow eight-frame V4L2 consumer, the complete bridge process
+tree grew by only 1,184 KiB and remained live; physical-camera
+application timing remains a separate gate.</td>
 </tr>
 <tr>
 <td>NFR-07 reproducibility</td>
@@ -169,10 +174,10 @@ v4l2loopback.</td>
 <code>72f6e63</code>. Independent main/tag Ubuntu and macOS CI passed;
 the exact commit passed the complete Raspberry Pi AArch64 suite; and the
 downloaded tag archive passed the suite outside a Git checkout.
-Post-release commits <code>a60ecac</code> and <code>470b3d9</code>
-independently pass the complete Apple Silicon, Raspberry Pi AArch64,
-Ubuntu, and macOS suites; the latter also passes its Pi dry-run without
-a USB transfer.</td>
+Post-release commits <code>a60ecac</code> and <code>470b3d9</code> pass
+Apple Silicon, Raspberry Pi AArch64, Ubuntu, and macOS suites. Candidate
+<code>eb8acd3</code> adds an exact-commit Pi suite and manifested
+camera-free lifecycle run plus successful Ubuntu/macOS CI.</td>
 </tr>
 <tr>
 <td>NFR-08 legal hygiene</td>

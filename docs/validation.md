@@ -54,6 +54,30 @@ delivered all six corrected frames through `/dev/video43`. A deliberate
 loading `v4l2loopback`, or opening the camera. Native tests on the Mac and Pi,
 plus hosted Ubuntu/macOS CI, pass the change.
 
+## Camera-free V4L2 bridge lifecycle — 2026-10-04
+
+Candidate commit `eb8acd3` exercised the real `tca-v4l2` bridge on the Pi with
+a USB-inert deterministic reader. The run retained real flat-field filtering,
+FFmpeg Bayer-to-YUYV conversion, the generic loopback module, ordinary V4L2
+consumers, timing analysis, signal handling, and scoped cleanup.
+
+A first consumer received four exact frames, detached, and an eight-frame
+consumer reattached with a 350-ms sleep after every buffer. The bridge stayed
+alive across both lifecycles. Its complete process-tree RSS changed by only
+1,184 KiB during the slow-consumer interval. The synthetic producer delivered
+93 frames at 19.6613 frames/s; this is test-source cadence, not a camera claim.
+TERM returned status 143 and both `/dev/video44` and the module loaded by the
+bridge were absent afterward. The integration-manifest digest is
+`1f6390e603b4a21fe18a19a3884243fa97c7e9256acd33d0ac3d73a5671680f5`.
+
+The first candidate trial exposed and preserved two harness defects: zero-
+based synthetic timestamp numbering and an unstable signal-exit status. The
+corrected exact commit passed the complete Pi suite, the token-gated lifecycle
+test, and Ubuntu/macOS CI. See the [rendered evidence
+record](https://la3lma.github.io/tucsen-tca-camera/evidence/v4l2-bridge-synthetic-lifecycle.html).
+This validates bridge backpressure and lifecycle behavior without USB access;
+the corrected physical-camera consumer run remains open.
+
 ## Capture and reopen checks
 
 One invocation captured 30 frames with 400-ms exposure and normalized gain 20
