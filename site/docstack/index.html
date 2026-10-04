@@ -406,43 +406,49 @@ Docstack</a></td>
 </tr>
 <tr>
 <td>Revision</td>
-<td>5.5, annotated alpha-10 publishes the reproducible ARM64 Debian
-package as a checksum-pinned release asset after exact-tag CI, two-host
-downloaded-source verification, native package lifecycle, and local-file
-APT reinstall; exact merged main builds a reproducible
-architecture-native Debian package, passes native Raspberry Pi AArch64
-package inspection, installation, removal, clean-path verification,
-reinstallation, integrity, and USB-inert installed-helper diagnostics,
-and leaves the Pi prepared for its direct-camera Linux run; the
-downloaded exact alpha-9 archive physically records and independently
-decodes a 30-frame microscope clip through the packaged helper, then
-immediately reopens the camera; annotated alpha-9 packages the verified
-one-command FFplay/H.264 helper and passes exact-main, exact-tag,
-Raspberry Pi AArch64, and downloaded-archive verification; use cases
-expressed in Cockburn form and UML; delivered-frame cadence measured in
-both recovered modes; Linux V4L2 producer timing and bounded acceptance
-harness prepared; camera-free consumer detach/reattach, slow-consumer,
-bounded-memory, signal, and cleanup behavior verified on the Pi at both
-1280x960 preview and complete 3664x2748 full resolution; exact
-post-merge main and downloaded alpha-8 release archive physically
-regressed in both optical modes on Apple Silicon; exact alpha-8 live
-output consumed and recorded by an independent FFmpeg process over a
-plain pipe on macOS for 17,200 distinct frames across 30 minutes with
-bounded memory and immediate camera reopen; installed V4L2 helper
-discovery corrected and verified in a fresh staged AArch64 install; a
-packaged cross-platform FFplay/H.264 helper physically recorded an
-exact-frame microscope clip with measured producer timing and immediate
-reopen, then passed the complete Pi AArch64 suite; current ToupTek SDK
-and USB-updater surfaces statically rechecked without executing vendor
-code; the UTM Linux shortcut was rechecked, remained unable to enumerate
-the host camera, and was followed by an exact-main macOS capture proving
-clean ownership hand-back; uncorrected physical Linux transport
-acceptance independently runnable before optical calibration and
-protected by a recorded wall-clock consumer deadline; historical
-evidence placeholders and the decision ledger reconciled with current
-verified state; public alpha-8 packages the full-resolution application
-path and bounded Linux gate; public evidence rendered as HTML and
-guarded by a permanent full-history privacy policy</td>
+<td>5.6, annotated alpha-11 corrects and tests source, CLI,
+installed-marker, and Debian-package version provenance, publishes a
+checksum-pinned ARM64 package, passes exact-tag CI and two-host
+downloaded-source verification, and is installed cleanly on the Pi for
+the pending physical run; annotated alpha-10 publishes the reproducible
+ARM64 Debian package as a checksum-pinned release asset after exact-tag
+CI, two-host downloaded-source verification, native package lifecycle,
+and local-file APT reinstall, but a later audit records its stale
+embedded alpha-7 CLI version and supersession by alpha-11; exact merged
+main builds a reproducible architecture-native Debian package, passes
+native Raspberry Pi AArch64 package inspection, installation, removal,
+clean-path verification, reinstallation, integrity, and USB-inert
+installed-helper diagnostics, and leaves the Pi prepared for its
+direct-camera Linux run; the downloaded exact alpha-9 archive physically
+records and independently decodes a 30-frame microscope clip through the
+packaged helper, then immediately reopens the camera; annotated alpha-9
+packages the verified one-command FFplay/H.264 helper and passes
+exact-main, exact-tag, Raspberry Pi AArch64, and downloaded-archive
+verification; use cases expressed in Cockburn form and UML;
+delivered-frame cadence measured in both recovered modes; Linux V4L2
+producer timing and bounded acceptance harness prepared; camera-free
+consumer detach/reattach, slow-consumer, bounded-memory, signal, and
+cleanup behavior verified on the Pi at both 1280x960 preview and
+complete 3664x2748 full resolution; exact post-merge main and downloaded
+alpha-8 release archive physically regressed in both optical modes on
+Apple Silicon; exact alpha-8 live output consumed and recorded by an
+independent FFmpeg process over a plain pipe on macOS for 17,200
+distinct frames across 30 minutes with bounded memory and immediate
+camera reopen; installed V4L2 helper discovery corrected and verified in
+a fresh staged AArch64 install; a packaged cross-platform FFplay/H.264
+helper physically recorded an exact-frame microscope clip with measured
+producer timing and immediate reopen, then passed the complete Pi
+AArch64 suite; current ToupTek SDK and USB-updater surfaces statically
+rechecked without executing vendor code; the UTM Linux shortcut was
+rechecked, remained unable to enumerate the host camera, and was
+followed by an exact-main macOS capture proving clean ownership
+hand-back; uncorrected physical Linux transport acceptance independently
+runnable before optical calibration and protected by a recorded
+wall-clock consumer deadline; historical evidence placeholders and the
+decision ledger reconciled with current verified state; public alpha-8
+packages the full-resolution application path and bounded Linux gate;
+public evidence rendered as HTML and guarded by a permanent full-history
+privacy policy</td>
 </tr>
 <tr>
 <td>Execution state</td>
@@ -519,6 +525,15 @@ calibration, true blocked-light dark and blank-field flat execution,
 execution of the uncorrected live-camera Linux V4L2 gate, and its later
 map-backed corrected repeat remain open. AVFoundation remains
 deferred.</td>
+</tr>
+<tr>
+<td>Release provenance</td>
+<td>Alpha 10’s package metadata and bytes remain verified, but its
+embedded reader reports alpha 7. Alpha 11 supersedes it for new
+evidence: upstream marker, CLI, and Debian version correspondence is
+enforced; exact-tag and downloaded-source suites pass on Apple Silicon
+and Pi AArch64; the checksum-pinned package is installed cleanly on the
+Pi and reports alpha 11 throughout.</td>
 </tr>
 <tr>
 <td>Acceptance authority</td>
@@ -2040,8 +2055,8 @@ cable reconnect remain</td>
 <td>D110</td>
 <td>Package source and operations</td>
 <td>D100</td>
-<td>Active; alpha-10 publishes an independently verified ARM64 Debian
-asset; residual physical gates remain</td>
+<td>Active; alpha-11 publishes a provenance-consistent, independently
+verified ARM64 Debian asset; residual physical gates remain</td>
 <td>Public GitHub repository, Apache-2.0 license, checksum-pinned ARM64
 package asset, one-command FFplay/H.264 helper, udev/V4L2 operations,
 CI, two modes, bounded initial recovery, optical and calibration
@@ -2051,7 +2066,7 @@ full-resolution evidence, scoped native-libusb discovery, permanent
 publication boundary, tested install/removal, reproducible native Debian
 packaging, exact-model udev deployment, plus native AArch64 removal,
 clean-path verification, reinstallation, installed-helper discovery,
-validation record, and report links</td>
+version correspondence, validation record, and report links</td>
 </tr>
 <tr>
 <td>D120</td>
@@ -3251,17 +3266,19 @@ Fixtures, and Operations</h3>
 <tbody>
 <tr>
 <td>State</td>
-<td>Active; public alpha-10 publishes the exact reproducible ARM64
-Debian package as a checksum-pinned asset after exact-tag CI and
-two-host source verification; exact merged main builds, inspects,
-installs, removes without delivered-file residue, and reinstalls the
-package on the Pi; public alpha-9 packages the reader, one-command
-FFplay/H.264 helper, both Linux application geometries, calibrated-field
-tooling, measured output cadence, bounded live acceptance, rendered
-evidence including a third-party FFmpeg recording and 30-minute
-endurance proof, permanent publication-boundary enforcement, and tested
-install/removal with corrected installed-helper discovery while residual
-physical validation continues</td>
+<td>Active; public alpha-11 publishes the exact provenance-consistent
+ARM64 Debian package as a checksum-pinned asset after exact-tag CI and
+two-host source verification, and is installed cleanly on the Pi;
+alpha-10 remains immutable but is superseded because its embedded CLI
+reported alpha 7; exact merged main builds, inspects, installs, removes
+without delivered-file residue, and reinstalls the package on the Pi;
+public alpha-9 packages the reader, one-command FFplay/H.264 helper,
+both Linux application geometries, calibrated-field tooling, measured
+output cadence, bounded live acceptance, rendered evidence including a
+third-party FFmpeg recording and 30-minute endurance proof, permanent
+publication-boundary enforcement, and tested install/removal with
+corrected installed-helper discovery while residual physical validation
+continues</td>
 </tr>
 <tr>
 <td>Actors</td>
@@ -3481,6 +3498,21 @@ downloaded back and verified at SHA-256
 A local-file APT reinstall of the tag-built archive also passes without
 downloading another package or adding a dependency. See the <a
 href="../evidence/public-release-alpha10.html">alpha-10 release
+evidence</a>.</p>
+<p>A subsequent audit found that alpha-10’s Debian metadata was correct
+while its embedded reader still reported alpha 7. Public main
+<code>6e12046</code> makes <code>VERSION</code> the build authority,
+requires the CLI and Debian versions to correspond, installs that
+marker, and executes the extracted package reader in the native test.
+Annotated <a
+href="https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.11"><code>v0.2.0-alpha.11</code></a>
+publishes the corrected 51,452-byte ARM64 package at SHA-256
+<code>d42b85472010e06af0c811e99e723a1ed7fd45a5b76b76e11bd6cc5d8e084210</code>.
+Exact-tag CI and downloaded-source suites pass on Apple Silicon and Pi
+AArch64; the downloaded release asset is byte-identical; and the Pi is
+upgraded with clean package integrity, matching alpha-11 CLI/marker
+identity, and USB-inert helper diagnostics. See the <a
+href="../evidence/public-release-alpha11.html">alpha-11 release
 evidence</a>.</p>
 <p>The current <a
 href="../evidence/release-acceptance-audit.html">release acceptance
@@ -4602,11 +4634,33 @@ pass; the downloaded source archive also passes the complete Apple
 Silicon suite. The downloaded release asset matches SHA-256
 <code>269eb45f5c5bc6988bc9a59b73247a48f1c389fb1035121b78b0a22a7a9efdd2</code>,
 and local-file APT reinstall plus integrity and USB-inert diagnostics
-pass with the camera absent</td>
+pass with the camera absent. A later audit found its embedded reader
+reports alpha 7 despite correct package metadata, so alpha 11 supersedes
+it for future evidence</td>
 <td><a href="../evidence/public-release-alpha10.html">Public alpha-10
 release</a></td>
-<td>VERIFIED PUBLIC ARM64 PACKAGE RELEASE + TAG CI + TWO-HOST ARCHIVE +
-APT REINSTALL / PHYSICAL CAMERA V4L2 RUN OPEN</td>
+<td>VERIFIED IMMUTABLE PACKAGE BYTES + TAG CI + TWO-HOST ARCHIVE /
+VERSION IDENTITY SUPERSEDED; PHYSICAL CAMERA V4L2 RUN OPEN</td>
+</tr>
+<tr>
+<td>E-089</td>
+<td>Annotated prerelease <code>v0.2.0-alpha.11</code> resolves to exact
+commit <code>6e12046</code> and makes the repository
+<code>VERSION</code> file authoritative for the reader. Tests require
+upstream, CLI, installed marker, and Debian package versions to
+correspond and execute the extracted package reader. Exact-tag CI
+passes; exact main and downloaded-source Raspberry Pi AArch64 suites
+pass with no camera; the downloaded source archive also passes the
+complete Apple Silicon suite. The 51,452-byte release asset is
+byte-identical after download at SHA-256
+<code>d42b85472010e06af0c811e99e723a1ed7fd45a5b76b76e11bd6cc5d8e084210</code>.
+The Pi is upgraded to <code>0.2.0~alpha11-1</code> with clean
+<code>dpkg -V</code>, matching reader/marker identity, and USB-inert
+diagnostics</td>
+<td><a href="../evidence/public-release-alpha11.html">Public alpha-11
+release</a></td>
+<td>VERIFIED PROVENANCE-CONSISTENT PUBLIC ARM64 PACKAGE + TAG CI +
+TWO-HOST ARCHIVE + INSTALLED PI / PHYSICAL CAMERA V4L2 RUN OPEN</td>
 </tr>
 </tbody>
 </table>
