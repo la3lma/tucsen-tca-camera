@@ -85,11 +85,30 @@ zero because it remained on the Mac.
 This proves the packaged helper and failure behavior on Linux but does not
 replace the still-open direct-Pi physical V4L2 application run.
 
+## Report publication verification
+
+The 17-page investigation report now includes the packaged-helper design,
+physical recording result, Pi portability check, and residual Linux gate.
+`make publish` pushed the Journal copy as commit `9942060`, and public project
+PR [#22](https://github.com/la3lma/tucsen-tca-camera/pull/22) deployed the same
+PDF as main `0804ff5`. Both hosted copies were downloaded independently and
+are byte-identical to the visually inspected local PDF:
+
+```text
+8c3a6d1c14c103b427c0b3cf4912425f35effad238bde063f92ba4b01c3c8ee4  microscope-window-sensor.pdf
+```
+
+The final PDF was rendered page by page; the title and abstract, new packaged
+helper section, conclusion, and references were inspected at full-page scale.
+Both repositories were clean after publication, project Pages and Journal
+deployment succeeded, and the permanent public/private boundary test passed.
+
 ## Result
 
 - One-command physical camera to playable H.264 file: **PASS on macOS**
 - Exact measured producer sidecar and raw provenance: **PASS**
 - Immediate camera reopen: **PASS**
 - Ubuntu/macOS CI and Raspberry Pi AArch64 suite: **PASS**
+- Report published and byte-verified on both public sites: **PASS**
 - Discoverable Linux `/dev/video*` with the directly attached camera:
   **still requires the prepared cable move and live V4L2 gate**
