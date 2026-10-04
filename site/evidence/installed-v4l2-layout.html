@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Installed V4L2 helper discovery — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="installed-v4l2-helper-discovery">Installed V4L2 helper
+discovery</h1>
+<p>Date: 2026-10-04</p>
+<p>Public main commit
+<code>e1632505ed62acb060ac243668a0cf7879ad331e</code> closes a Linux
+packaging defect in the optional application bridge. The source-tree
+<code>scripts/tca-v4l2</code> correctly found helpers under
+<code>build/</code>, but the installed copy retained that source-tree
+assumption even though <code>make install</code> places
+<code>tca-v4l2</code>, <code>tca-camera</code>, and
+<code>tca-flat-field</code> together in <code>PREFIX/bin</code>. A
+documented installation could therefore build and install successfully
+yet fail before opening the camera.</p>
+<h2 id="correction">Correction</h2>
+<p>The bridge now resolves executables in this order:</p>
+<ol type="1">
+<li>an explicit <code>TCA_CAMERA_READER</code> or
+<code>TCA_FLAT_FIELD_TOOL</code> override;</li>
+<li>an executable sibling of the installed bridge;</li>
+<li>the source-tree <code>build/</code> location.</li>
+</ol>
+<p>The source-tree path remains the final diagnostic fallback so a
+missing helper still produces the existing explicit error. The new
+<code>tca-v4l2 --diagnose-install</code> command reports both resolved
+paths and their executable state, prints
+<code>NO USB TRANSFER SENT</code>, and exits without requiring Linux,
+loading <code>v4l2loopback</code>, opening a video device, or touching
+USB.</p>
+<p>The staged-install regression executes that installed diagnostic
+rather than merely inspecting file presence. It also retains the
+existing exact-file uninstall check and unrelated-file sentinel.</p>
+<h2 id="native-aarch64-validation">Native AArch64 validation</h2>
+<p>A fresh clone of exact public main <code>e163250</code> on Raspberry
+Pi host <code>rpios-17</code> reported AArch64 and Linux
+<code>6.18.39+rpt-rpi-2712</code>. No <code>0547:c003</code> camera was
+attached. The clone completed:</p>
+<ol type="1">
+<li>a clean native build;</li>
+<li>the complete project test suite;</li>
+<li>a staged installation of all six public programs with
+<code>PREFIX=/usr/local</code>; and</li>
+<li>the installed bridge diagnostic.</li>
+</ol>
+<p>The installed diagnostic resolved executable sibling copies of
+<code>tca-camera</code> and <code>tca-flat-field</code> under the staged
+<code>usr/local/bin</code> and ended with:</p>
+<pre class="text"><code>NO USB TRANSFER SENT.</code></pre>
+<p>The complete suite also passed locally on Apple Silicon and in hosted
+Ubuntu/macOS CI. <a
+href="https://github.com/la3lma/tucsen-tca-camera/pull/16">PR #16</a>
+was merged to public main before the Pi clone was made.</p>
+<h2 id="retained-private-evidence-hashes">Retained private evidence
+hashes</h2>
+<p>The private project bundle contains the host/commit inventory,
+complete native test log, staged-install log, diagnostic output,
+summary, and a manifest. It does not contain vendor software,
+disassembly, firmware, packet captures, or credentials.</p>
+<pre class="text"><code>82f9ff599bf874f2de7139da01bd269b4544ad8fa558f79f381764ae77c6e656  environment.txt
+4a7897490d31e2e3c673001ae5875b778063f13939f5d92254b6e3d47b1a1e27  pi-main-e163250-test.log
+2cb2eb20381d842aba471c2ef9acd6610103a34ab319f62d69a32ab20cb78768  pi-main-e163250-install.log
+9d9fb4f7b255f9d157ad39710c3b5ced7d3843dedea77854a88e06e3c38876c0  pi-main-e163250-diagnose.txt
+e9c208b1e6121ad80e77fde02db64970fcd359dccace23f1be186045fa9e2e2b  summary.md</code></pre>
+<p>This proves the packaged Linux path on native AArch64 without a
+camera. It does not replace the still-open physical
+<code>0547:c003</code>-to-V4L2 application acceptance run.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>
