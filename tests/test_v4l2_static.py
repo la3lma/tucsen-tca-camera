@@ -60,6 +60,10 @@ def main() -> None:
     assert "MODE must be 0 or 2" in source
     assert "width=3664" in source
     assert "height=2748" in source
+    assert "nominal_fps=3" in source
+    assert "nominal_fps=10" in source
+    assert "-loglevel warning -re -f rawvideo" in source
+    assert '-framerate "$nominal_fps"' in source
     assert "max_exposure_ms=1236" in source
     assert '"$flat_field_tool" apply --calibration "$flat_field"' in source
     assert "raw-bayer.fifo" in source

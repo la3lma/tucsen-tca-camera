@@ -141,11 +141,13 @@ case "$mode" in
         width=3664
         height=2748
         max_exposure_ms=1236
+        nominal_fps=3
         ;;
     2)
         width=1280
         height=960
         max_exposure_ms=480
+        nominal_fps=10
         ;;
     *)
         echo "MODE must be 0 or 2" >&2
@@ -300,8 +302,9 @@ if [ -n "$flat_field" ]; then
 else
     start_reader "$stream_dir/bayer.fifo"
 fi
-ffmpeg -hide_banner -loglevel warning -f rawvideo \
-    -pixel_format bayer_grbg8 -video_size "${width}x${height}" -framerate 2 \
+ffmpeg -hide_banner -loglevel warning -re -f rawvideo \
+    -pixel_format bayer_grbg8 -video_size "${width}x${height}" \
+    -framerate "$nominal_fps" \
     -i "$stream_dir/bayer.fifo" -vf format=yuyv422 -f v4l2 "$device" &
 writer_pid=$!
 
@@ -324,7 +327,7 @@ if [ "$attempt" -ge 50 ]; then
     exit 1
 fi
 
-echo "camera ready at $device; mode $mode ${width}x${height}; loopback ownership $loopback_ownership; first unmodified device frame: $raw_output" >&2
+echo "camera ready at $device; mode $mode ${width}x${height} nominal ${nominal_fps}fps; loopback ownership $loopback_ownership; first unmodified device frame: $raw_output" >&2
 if [ -n "$flat_field" ]; then
     echo "flat-field correction active: $flat_field" >&2
 fi

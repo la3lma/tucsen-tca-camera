@@ -154,7 +154,11 @@ tca-v4l2 --serve-existing capture/first-device.raw 42 100 20 2
 ```
 
 Stopping the bridge leaves that pre-created device available for a service
-manager or administrator to reuse or remove.
+manager or administrator to reuse or remove. The bridge rate-limits conversion
+to the supported mode's nominal ceiling (10 fps preview, 3 fps full
+resolution), preventing an unpaced producer from exhausting a small loopback
+buffer before an application attaches; a slower physical stream remains
+source-paced.
 
 Remove exactly those seven installed programs:
 

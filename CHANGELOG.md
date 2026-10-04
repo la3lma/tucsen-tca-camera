@@ -9,6 +9,8 @@
   exact-labelled `v4l2loopback` node without loading or unloading modules,
   changing node ownership, or claiming lifecycle ownership of system V4L2
   state.
+- Pace V4L2 conversion at each mode's nominal ceiling so a fast producer
+  cannot exhaust the loopback buffer while an application is attaching.
 
 ## 0.2.0-alpha.11 — 2026-10-04
 
