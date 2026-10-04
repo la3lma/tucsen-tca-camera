@@ -29,8 +29,9 @@
   const filters = [...document.querySelectorAll("[data-task-filter]")];
   const progress = document.querySelector(".task-progress");
   const complete = taskCards.filter((card) => card.dataset.state === "complete").length;
+  const active = taskCards.filter((card) => card.dataset.state === "active").length;
   const ready = taskCards.filter((card) => card.dataset.state === "ready").length;
-  if (progress) progress.textContent = `${complete}/${taskCards.length} complete · ${ready} ready`;
+  if (progress) progress.textContent = `${complete}/${taskCards.length} complete · ${active} active · ${ready} ready`;
 
   filters.forEach((button) => {
     button.addEventListener("click", () => {
@@ -40,6 +41,33 @@
         card.hidden = filter !== "all" && card.dataset.state !== filter;
       });
     });
+  });
+
+  const graph = document.querySelector(".plan-graph");
+  const graphControls = [...document.querySelectorAll("[data-graph-action]")];
+  const setGraphMode = (mode) => {
+    if (!graph) return;
+    graph.dataset.graphMode = mode;
+    graphControls.forEach((button) => {
+      if (button.dataset.graphAction !== "fullscreen") {
+        button.setAttribute("aria-pressed", String(button.dataset.graphAction === mode));
+      }
+    });
+  };
+  graphControls.forEach((button) => {
+    button.addEventListener("click", async () => {
+      const action = button.dataset.graphAction;
+      if (action === "fullscreen") {
+        if (!document.fullscreenElement) await graph?.requestFullscreen();
+        else await document.exitFullscreen();
+        return;
+      }
+      setGraphMode(action);
+    });
+  });
+  document.addEventListener("fullscreenchange", () => {
+    const button = graphControls.find((candidate) => candidate.dataset.graphAction === "fullscreen");
+    if (button) button.setAttribute("aria-pressed", String(document.fullscreenElement === graph));
   });
 
   const tocLinks = [...document.querySelectorAll("nav#TOC a[href^='#']")];
@@ -64,4 +92,3 @@
     sectionById.forEach((section) => observer.observe(section));
   }
 })();
-

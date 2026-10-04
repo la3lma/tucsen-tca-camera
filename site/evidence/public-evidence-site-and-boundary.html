@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Public evidence site and permanent publication boundary — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="public-evidence-site-and-permanent-publication-boundary">Public
+evidence site and permanent publication boundary</h1>
+<p>Date: 2026-10-04</p>
+<p>Public implementation commit: <a
+href="https://github.com/la3lma/tucsen-tca-camera/commit/064cf317bce660a3044e76755b6c3bc93e874b0b"><code>064cf31</code></a></p>
+<h2 id="purpose">Purpose</h2>
+<p>Make the public evidence ledger completely browsable on GitHub Pages
+while permanently preventing raw proprietary reverse-engineering
+material from entering the public repository. The private report
+workspace may retain such material where lawful and necessary; the
+public repository and its Pages artifact may not.</p>
+<h2 id="rendered-evidence">Rendered evidence</h2>
+<p>The public build now renders every Markdown evidence record as a
+sibling HTML page, rewrites evidence-to-evidence links from
+<code>.md</code> to <code>.html</code>, and generates both an evidence
+index and an owner-photograph index. The Docstack ledger links to the
+rendered HTML records rather than to raw Markdown. A static test parses
+every local <code>href</code> and <code>src</code> in the generated site
+and fails on a missing target.</p>
+<p>Deployment and CI for commit <code>064cf31</code> both passed. Live
+HTTP checks confirmed:</p>
+<ul>
+<li><code>/evidence/</code> returns the rendered evidence index;</li>
+<li><code>/evidence/live-control-trials.html</code> returns rendered
+HTML with evidence, Docstack, report, and source navigation;</li>
+<li><code>/evidence/photos/</code> returns the owner-photograph index;
+and</li>
+<li>the Docstack evidence ledger targets rendered <code>.html</code>
+records.</li>
+</ul>
+<p>The historical <code>.md</code> URLs remain available as source text.
+They are no longer the primary ledger targets.</p>
+<h2 id="permanent-publicprivate-boundary">Permanent public/private
+boundary</h2>
+<p><code>PUBLICATION_POLICY.md</code> is the repository’s standing
+instruction to humans and future coding agents. Public material may
+include independently written source, tests, procedures, hashes,
+measurements, owner-supplied photographs, and prose conclusions. It must
+never include raw disassembly, decompiler exports, Ghidra projects or
+databases, symbol or strings dumps, vendor executables, DLLs, drivers,
+catalogs, installers, SDK binaries, firmware, packet captures, virtual
+machine disks, secrets, symlinks to private material, or files copied
+from the private <code>work/</code> and analysis areas.</p>
+<p><code>tests/test_publication_policy.py</code> enforces denied paths
+and suffixes in the current tracked tree and the complete Git object
+history. CI now uses a full-depth checkout so the history audit is
+meaningful. <code>.gitignore</code> also blocks the private working
+directories and dangerous artifact suffixes. The policy says explicitly
+that the denylist must not be weakened merely to make a build pass and
+that an accidental public commit is a disclosure incident requiring
+publication to stop while the history and any affected credentials are
+remediated.</p>
+<h2 id="audit-result">Audit result</h2>
+<p>A fresh filename and object-history audit found no raw disassembly,
+Ghidra project/export, vendor binary or driver, firmware image, packet
+capture, or private-work filename in the public repository’s current
+tree or history. The public Ghidra evidence page is an independently
+written factual summary; it does not contain or link the raw decompiler
+output. The private report workspace continues to hold the underlying
+licensed analysis artifacts outside the public repository.</p>
+<h2 id="future-self-release-checklist">Future-self release
+checklist</h2>
+<p>Before every public push, tag, release, or Pages deployment:</p>
+<ol type="1">
+<li>Run the full public test suite from a full-history checkout.</li>
+<li>Review the exact staged paths and every release or Pages file.</li>
+<li>Confirm that only independently written facts, hashes, and
+conclusions cross the private/public boundary.</li>
+<li>Never publish or link raw proprietary binaries, disassembly,
+decompiler exports, Ghidra state, packet captures, firmware, VM images,
+or private work.</li>
+<li>Stop publication and remediate history immediately if the audit
+reports a forbidden artifact; do not relax the rule to obtain a passing
+build.</li>
+</ol>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

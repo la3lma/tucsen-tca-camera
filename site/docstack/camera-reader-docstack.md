@@ -11,6 +11,7 @@ lang: en
   <strong>Project map</strong>
   <a href="https://github.com/la3lma/tucsen-tca-camera#readme">Code &amp; README</a>
   <a href="https://la3lma.github.io/tucsen-tca-camera/report/microscope-window-sensor.pdf">PDF report</a>
+  <a href="https://la3lma.github.io/tucsen-tca-camera/evidence/">Evidence index</a>
   <a href="https://la3lma.github.io/tucsen-tca-camera/docstack/" aria-current="page">Live Docstack</a>
 </nav>
 
@@ -34,7 +35,9 @@ camera path.
   <span class="status-chip">Two Bayer8 modes captured</span>
   <span class="status-chip">Exposure + gain operational</span>
   <span class="status-chip">Neutral white balance measured</span>
+  <span class="status-chip">Delivered cadence measured</span>
   <span class="status-chip">V4L2 application path verified</span>
+  <span class="status-chip">Evidence site rendered + privacy-gated</span>
 </div>
 :::
 
@@ -48,9 +51,11 @@ physical records and produces coherent 1280x960 and 3664x2748 microscope images.
 verified monotonic gain response and a 16-frame motion sequence; PNGs at three
 resolutions and an H.264 proof clip are preserved. Full-resolution look-ahead
 assembly removes the false 192-pixel strip without cropping, and an illuminated
-blank region now provides reproducible in-situ white balance. The next gate is
-a true blocked-light dark plus blank-field flat at locked settings, a known
-color target, measured frame timing, and a live post-fix V4L2 run on Linux.
+blank region now provides reproducible in-situ white balance. Direct-Mac
+delivery cadence is now measured in both recovered modes. The next gate is a
+true blocked-light dark plus blank-field flat at locked settings, a known
+color target, and a live post-fix V4L2 run on Linux with consumer-side cadence
+and drop accounting.
 An inert-by-default guided session now locks settings and prompts for each
 blocked-dark, repositioned-flat, fresh-blank, and real-specimen state while
 preserving exact artifacts and a manifest.
@@ -97,8 +102,8 @@ checkout on documented hardware:
 | Objective | Build a usable driver/reader, stream, control surface, and application bridge for the legacy microscope camera |
 | Canonical source | [camera-reader-docstack.md](camera-reader-docstack.md) |
 | Published website | [GitHub Pages Docstack](https://la3lma.github.io/tucsen-tca-camera/docstack/) |
-| Revision | 3.3, portable guided physical-calibration session published and verified without USB on Apple Silicon and exact-commit Raspberry Pi AArch64; operator-assisted optical execution remains open |
-| Execution state | D00–D50 are complete and D60 is substantially advanced. Optical autocorrelation showed that separate 524,288-byte requests restarted at new record origins, causing the earlier repeated regions and false seam. Mode 2 fits after a 512-byte prefix. Mode 0 is assembled from record N `[512,end)` plus the 192-byte continuation at record N+1 `[320,512)`. Three consecutive full-resolution frames have distinct hashes and no false left strip. At 100 ms, gain 0..320 is monotonic; gain 256 produced a bright frame with negligible clipping. One pre-control buffered record is consumed before frame zero. A 16-frame run yielded distinct frames, three still sizes, and a 640x480 H.264 proof clip. Neutral-background white balance independently produced approximately R/G/B `0.87/1.0/2.0` in both modes; alpha-6 preserves those ratios when normalizing into FFmpeg's multiplier range. After changing to 10x, a bounded sweep recovered unclipped preview and full-resolution stills at 250 ms/gain 0. Public commit `1dc096b` adds a portable per-pixel dark/flat corrector and optional corrected V4L2 path; commit `6eb68a7` binds maps to exposure/gain and fails before camera or loopback mutation on mismatch. A real-camera diagnostic corrected eight full-size frames, reducing a 3x3 max/min region ratio from 1.336910 to 1.001023, while deliberately proving that a self-flat erases the specimen and is not a valid calibration. Public commit `176ef90` now packages the correct physical sequence as an inert-by-default guided session, with exact-size checks, fresh blank/specimen validation, incomplete-session marking, and a complete manifest; its USB-free end-to-end test passes on macOS and exact-commit Pi Linux. Final known-target Bayer/color calibration, true blocked-light dark and blank-field flat execution, measured timing, and execution of the live-camera V4L2 gate remain open. AVFoundation remains deferred. |
+| Revision | 3.4, use cases expressed in Cockburn form and UML; delivered-frame cadence measured in both recovered modes; public evidence rendered as HTML and guarded by a permanent full-history privacy policy |
+| Execution state | D00–D50 are complete and D60 is substantially advanced. Optical autocorrelation showed that separate 524,288-byte requests restarted at new record origins, causing the earlier repeated regions and false seam. Mode 2 fits after a 512-byte prefix. Mode 0 is assembled from record N `[512,end)` plus the 192-byte continuation at record N+1 `[320,512)`. Three consecutive full-resolution frames have distinct hashes and no false left strip. At 100 ms, gain 0..320 is monotonic; gain 256 produced a bright frame with negligible clipping. One pre-control buffered record is consumed before frame zero. A 16-frame run yielded distinct frames, three still sizes, and a 640x480 H.264 proof clip. Neutral-background white balance independently produced approximately R/G/B `0.87/1.0/2.0` in both modes; alpha-6 preserves those ratios when normalizing into FFmpeg's multiplier range. After changing to 10x, a bounded sweep recovered unclipped preview and full-resolution stills at 250 ms/gain 0. Public commit `1dc096b` adds a portable per-pixel dark/flat corrector and optional corrected V4L2 path; commit `6eb68a7` binds maps to exposure/gain and fails before camera or loopback mutation on mismatch. A real-camera diagnostic corrected eight full-size frames, reducing a 3x3 max/min region ratio from 1.336910 to 1.001023, while deliberately proving that a self-flat erases the specimen and is not a valid calibration. Public commit `176ef90` packages the correct physical calibration sequence. Public commit `064cf31` adds monotonic per-frame timestamps and reports 17.3466 delivered fps for 1280x960 at requested 1 ms, 9.5057 fps for 1280x960 at 250 ms, and 2.7911 fps for 3664x2748 at 250 ms on the direct-Mac/file-output path. The same commit renders all public evidence as navigable HTML and enforces a full-history ban on raw disassembly, vendor binaries, firmware, traces, and private work. Final known-target Bayer/color calibration, true blocked-light dark and blank-field flat execution, and execution of the live-camera Linux V4L2 gate with consumer-side timing remain open. AVFoundation remains deferred. |
 | Acceptance authority | Camera owner, or an explicitly delegated technical owner recorded in D120 |
 | Related report | [PDF report](https://la3lma.github.io/tucsen-tca-camera/report/microscope-window-sensor.pdf) |
 | Reader source | [GitHub repository and README](https://github.com/la3lma/tucsen-tca-camera#readme) |
@@ -118,10 +123,12 @@ This plan follows the locally exported Agency Docstack convention:
   request appears to be device-to-host.
 - Evidence is append-only and contains no credentials.
 
-The live Agency console was unavailable while this revision was authored
-because its Docker runtime did not become ready. The structure was checked
-against the local exported `docstack` exemplar and cached master Docstack. This
-provenance limitation affects convention lookup, not the camera evidence.
+The live Agency `docstack` forum was consulted for this revision. Standing
+conventions applied here include Cockburn use-case fields (message 126), one
+validated start/exit with every task on a complete path (141), clickable graph
+nodes targeting stable local task anchors (120--121), full-width/overview/detail
+diagram modes (142), complete-green/active-orange/blocked-red/neutral waiting
+states (143), and reciprocal upstream/downstream task links (144).
 
 # Concept
 
@@ -248,53 +255,162 @@ or decoder logic.
 
 ## Primary Use Cases
 
+The diagram gives the familiar system boundary; the tables beneath it use a
+compact Cockburn form. “Microscope” means the specimen, illumination, optics,
+and manual focus/magnification path. It does not imply a motorized microscope.
+
+<div class="diagram-shell uml-shell" role="img" aria-label="UML use-case diagram for microscope camera operation">
+<svg viewBox="0 0 1120 610" xmlns="http://www.w3.org/2000/svg">
+  <rect class="system-boundary" x="245" y="28" width="635" height="554" rx="8"/>
+  <text class="boundary-label" x="265" y="57">TCA camera reader system</text>
+  <circle class="actor-line" cx="92" cy="120" r="19"/><path class="actor-line" d="M92 139v68M55 164h74M92 207l-35 55M92 207l35 55"/>
+  <text class="label" x="92" y="290" text-anchor="middle">Microscope operator</text>
+  <rect class="actor-box" x="20" y="376" width="145" height="66" rx="6"/>
+  <text class="label" x="92" y="404" text-anchor="middle">Scientific</text><text class="label" x="92" y="426" text-anchor="middle">application</text>
+  <rect class="actor-box target" x="952" y="102" width="145" height="66" rx="6"/>
+  <text class="label" x="1024" y="130" text-anchor="middle">Microscope</text><text class="small" x="1024" y="151" text-anchor="middle">optical path</text>
+  <rect class="actor-box target" x="952" y="400" width="145" height="66" rx="6"/>
+  <text class="label" x="1024" y="429" text-anchor="middle">USB camera</text><text class="small" x="1024" y="450" text-anchor="middle">0547:c003</text>
+  <ellipse class="usecase" cx="425" cy="125" rx="125" ry="47"/><text class="label" x="425" y="121" text-anchor="middle">UC1 Inspect</text><text class="small" x="425" y="144" text-anchor="middle">and identify</text>
+  <ellipse class="usecase" cx="690" cy="125" rx="125" ry="47"/><text class="label" x="690" y="121" text-anchor="middle">UC2 Capture</text><text class="small" x="690" y="144" text-anchor="middle">full-resolution still</text>
+  <ellipse class="usecase" cx="425" cy="275" rx="125" ry="47"/><text class="label" x="425" y="271" text-anchor="middle">UC3 Stream</text><text class="small" x="425" y="294" text-anchor="middle">responsive preview</text>
+  <ellipse class="usecase" cx="690" cy="275" rx="125" ry="47"/><text class="label" x="690" y="271" text-anchor="middle">UC4 Operate</text><text class="small" x="690" y="294" text-anchor="middle">camera controls</text>
+  <ellipse class="usecase" cx="425" cy="425" rx="125" ry="47"/><text class="label" x="425" y="421" text-anchor="middle">UC5 Use in</text><text class="small" x="425" y="444" text-anchor="middle">ordinary application</text>
+  <ellipse class="usecase" cx="690" cy="425" rx="125" ry="47"/><text class="label" x="690" y="421" text-anchor="middle">UC6 Recover</text><text class="small" x="690" y="444" text-anchor="middle">from interruption</text>
+  <path class="association" d="M130 160L315 125M130 188L565 125M130 207L315 275M130 225L565 275M165 409L300 425"/>
+  <path class="association" d="M952 135L815 125M952 151L550 275"/>
+  <path class="association" d="M952 433L815 425M952 421L815 275M952 445L550 425M952 457L550 125"/>
+</svg>
+</div>
+
 ### UC1 — Inspect and identify
 
-- **Trigger:** camera is connected or diagnostics are requested.
-- **Success:** reader reports exact USB path, speed, descriptors, permissions,
-  endpoint topology, reader version, and supported proven capabilities.
-- **Minimum guarantee:** no vendor-specific request is sent in discovery mode.
+| Cockburn field | Specification |
+|---|---|
+| Scope / level | TCA reader system / user goal |
+| Primary actor | Microscope operator or support engineer |
+| Stakeholders | Operator wants an exact identity and safe next action; camera must receive no discovery-time vendor traffic |
+| Preconditions | Camera is connected, or an offline diagnostic bundle is supplied |
+| Trigger | Actor requests inspection or diagnostics |
+| Main success scenario | 1. Reader enumerates USB. 2. It selects only the requested `0547:c003`. 3. It reports path, speed, descriptors, permissions, endpoint topology, reader version, and proven capabilities. 4. It proposes only supported next operations. |
+| Extensions | Missing permission, ambiguous multiple devices, or absent camera produces a specific diagnostic and no mutation |
+| Success guarantee | Identity and capability report is complete; no vendor-specific request or bulk transfer occurred |
 
 ### UC2 — Capture one full-resolution still
 
-- **Trigger:** operator requests a still image.
-- **Success:** reader initializes a known mode, obtains one complete raw frame,
-  verifies boundaries and byte count, decodes it, and stores raw plus metadata.
-- **Failure:** partial or ambiguous data is retained as failed evidence and is
-  never presented as a successful image.
+| Cockburn field | Specification |
+|---|---|
+| Scope / level | Reader plus microscope optical path / user goal |
+| Primary actor | Microscope operator |
+| Stakeholders | Operator wants one faithful image; reviewer wants untouched raw evidence and declared settings |
+| Preconditions | Camera is identified; specimen, illumination, focus, mode, exposure, and gain are selected |
+| Trigger | Operator requests a full-resolution still |
+| Main success scenario | 1. Reader claims and cold-initializes the camera. 2. It applies the proven mode and controls. 3. Camera returns complete records. 4. Reader assembles and validates exactly one frame. 5. It stores raw frame, timestamp, settings, hash, and decoded image. 6. It stops and releases the device. |
+| Extensions | Short or ambiguous data is retained as failed evidence and is never labelled a successful image; unsupported settings fail before USB traffic |
+| Success guarantee | One complete 3664x2748 Bayer frame and reproducible decoded derivative are preserved |
+
+<div class="diagram-shell sequence-shell" role="img" aria-label="Sequence diagram for full-resolution still capture">
+<svg viewBox="0 0 1100 560" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="seq-arrow-still" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+  <g class="sequence-participant"><rect x="25" y="20" width="150" height="55" rx="5"/><text x="100" y="53" text-anchor="middle">Operator</text><rect x="245" y="20" width="150" height="55" rx="5"/><text x="320" y="53" text-anchor="middle">Microscope</text><rect x="475" y="20" width="150" height="55" rx="5"/><text x="550" y="53" text-anchor="middle">Reader</text><rect x="705" y="20" width="150" height="55" rx="5"/><text x="780" y="53" text-anchor="middle">USB camera</text><rect x="925" y="20" width="150" height="55" rx="5"/><text x="1000" y="53" text-anchor="middle">Artifact store</text></g>
+  <path class="lifeline" d="M100 75V535M320 75V535M550 75V535M780 75V535M1000 75V535"/>
+  <path class="message" marker-end="url(#seq-arrow-still)" d="M100 115H320"/><text class="message-label" x="210" y="105" text-anchor="middle">place specimen; light; focus</text>
+  <path class="message" marker-end="url(#seq-arrow-still)" d="M100 175H550"/><text class="message-label" x="325" y="165" text-anchor="middle">capture(mode 0, exposure, gain)</text>
+  <path class="message" marker-end="url(#seq-arrow-still)" d="M550 235H780"/><text class="message-label" x="665" y="225" text-anchor="middle">claim; initialize; apply controls</text>
+  <path class="message return" marker-end="url(#seq-arrow-still)" d="M780 295H550"/><text class="message-label" x="665" y="285" text-anchor="middle">complete bulk records</text>
+  <rect class="activation" x="540" y="315" width="20" height="75"/><text class="message-label" x="575" y="345">assemble + validate</text><text class="message-label" x="575" y="367">decode + hash</text>
+  <path class="message" marker-end="url(#seq-arrow-still)" d="M550 420H1000"/><text class="message-label" x="775" y="410" text-anchor="middle">raw + metadata + image</text>
+  <path class="message return" marker-end="url(#seq-arrow-still)" d="M550 485H100"/><text class="message-label" x="325" y="475" text-anchor="middle">success and artifact paths</text>
+</svg>
+</div>
 
 ### UC3 — Stream a preview
 
-- **Trigger:** an application or operator starts preview.
-- **Success:** reader enters a proven stream state, emits timestamped frames in
-  a declared pixel format, reports loss, and stops cleanly.
-- **Failure:** repeated short reads, marker loss, or disconnect transitions to
-  a bounded recovery state rather than an infinite retry loop.
+| Cockburn field | Specification |
+|---|---|
+| Scope / level | Reader and selected application adapter / user goal |
+| Primary actor | Microscope operator or scientific application |
+| Stakeholders | Operator wants responsive composition/focus; application wants declared format and timing; camera needs bounded transfers |
+| Preconditions | Device and preview mode are proven; one consumer and a queue/drop policy are selected |
+| Trigger | Actor starts preview |
+| Main success scenario | 1. Reader initializes mode 2. 2. It publishes validated timestamped frames in the declared format. 3. Operator adjusts the microscope while observing feedback. 4. Reader reports cadence, drops, and faults. 5. Actor stops; reader drains and releases cleanly. |
+| Extensions | Disconnect, repeated short reads, or parser loss enters bounded recovery; a slow consumer follows the declared drop/back-pressure policy |
+| Success guarantee | Every delivered frame is complete and attributable; stop does not strand the camera |
 
 ### UC4 — Operate camera controls
 
-- **Trigger:** caller reads or changes an advertised control.
-- **Success:** supported range, units, current value, and resulting state are
-  explicit; a read-back or observable frame change verifies writes where
-  possible.
-- **Failure:** unknown or unsafe operations are rejected before USB traffic.
+| Cockburn field | Specification |
+|---|---|
+| Scope / level | Reader control surface / subfunction supporting capture and preview |
+| Primary actor | Microscope operator or application |
+| Stakeholders | Operator wants predictable brightness; developer wants only evidence-backed writes; microscope specimen must not be confused with control effects |
+| Preconditions | Camera is initialized; control, units, and safe range are advertised |
+| Trigger | Actor reads or changes exposure or gain |
+| Main success scenario | 1. Reader reports current value and range. 2. Actor requests an in-range value. 3. Reader executes the proven write plan. 4. It discards the known buffered pre-control record. 5. A read-back or changed frame verifies effect. 6. Metadata carries the applied value. |
+| Extensions | Unknown, out-of-range, or unsafe operations are rejected before USB traffic; unverifiable writes are reported as provisional, not successful |
+| Success guarantee | Applied state and resulting frame association are explicit |
+
+<div class="diagram-shell sequence-shell" role="img" aria-label="Sequence diagram for preview and control interaction">
+<svg viewBox="0 0 1100 650" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="seq-arrow-preview" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+  <g class="sequence-participant"><rect x="25" y="20" width="150" height="55" rx="5"/><text x="100" y="53" text-anchor="middle">Operator</text><rect x="245" y="20" width="150" height="55" rx="5"/><text x="320" y="53" text-anchor="middle">Application</text><rect x="475" y="20" width="150" height="55" rx="5"/><text x="550" y="53" text-anchor="middle">V4L2 adapter</text><rect x="705" y="20" width="150" height="55" rx="5"/><text x="780" y="53" text-anchor="middle">Reader</text><rect x="925" y="20" width="150" height="55" rx="5"/><text x="1000" y="53" text-anchor="middle">USB camera</text></g>
+  <path class="lifeline" d="M100 75V625M320 75V625M550 75V625M780 75V625M1000 75V625"/>
+  <path class="message" marker-end="url(#seq-arrow-preview)" d="M320 120H550"/><text class="message-label" x="435" y="110" text-anchor="middle">open preview</text>
+  <path class="message" marker-end="url(#seq-arrow-preview)" d="M550 175H780"/><text class="message-label" x="665" y="165" text-anchor="middle">start(mode 2)</text>
+  <path class="message" marker-end="url(#seq-arrow-preview)" d="M780 230H1000"/><text class="message-label" x="890" y="220" text-anchor="middle">initialize + start</text>
+  <rect class="sequence-frame" x="290" y="260" width="745" height="145" rx="4"/><text class="frame-label" x="305" y="282">loop complete frames</text>
+  <path class="message return" marker-end="url(#seq-arrow-preview)" d="M1000 315H780"/><text class="message-label" x="890" y="305" text-anchor="middle">bulk record</text>
+  <path class="message return" marker-end="url(#seq-arrow-preview)" d="M780 355H550"/><text class="message-label" x="665" y="345" text-anchor="middle">timestamped YUYV</text>
+  <path class="message return" marker-end="url(#seq-arrow-preview)" d="M550 390H320"/><text class="message-label" x="435" y="380" text-anchor="middle">frame + cadence status</text>
+  <path class="message" marker-end="url(#seq-arrow-preview)" d="M100 455H780"/><text class="message-label" x="440" y="445" text-anchor="middle">set exposure/gain</text>
+  <path class="message" marker-end="url(#seq-arrow-preview)" d="M780 505H1000"/><text class="message-label" x="890" y="495" text-anchor="middle">proven bounded writes</text>
+  <path class="message return" marker-end="url(#seq-arrow-preview)" d="M780 555H100"/><text class="message-label" x="440" y="545" text-anchor="middle">applied value + verified frame</text>
+  <path class="message" marker-end="url(#seq-arrow-preview)" d="M320 605H780"/><text class="message-label" x="550" y="595" text-anchor="middle">close; drain; release</text>
+</svg>
+</div>
 
 ### UC5 — Use the camera in an ordinary application
 
-- **Trigger:** application opens the virtual/standard camera source.
-- **Success:** application receives frames and can start/stop without owning
-  raw USB; supported controls are available directly or through a companion
-  control surface.
-- **Failure:** one application's crash does not strand the camera or corrupt the
-  next session.
+| Cockburn field | Specification |
+|---|---|
+| Scope / level | OS camera adapter / user goal |
+| Primary actor | Scientific application |
+| Stakeholders | Application wants a standard source; operator wants no USB knowledge; reader must remain the only protocol owner |
+| Preconditions | Reader works directly; adapter advertises a supported format and resolution; permissions are satisfied |
+| Trigger | Application opens the virtual or standard camera source |
+| Main success scenario | 1. Adapter starts one reader session. 2. It converts complete frames without duplicating protocol logic. 3. Application negotiates and receives frames. 4. Controls remain available through the declared surface. 5. Application closes; adapter and reader clean up. |
+| Extensions | Unsupported negotiation fails explicitly; application crash is detected and resources are released for the next session |
+| Success guarantee | A named ordinary application consumes real camera frames and later sessions still work |
 
 ### UC6 — Recover from interruption
 
-- **Trigger:** unplug, USB reset, timeout, parser desynchronization, or reader
-  crash.
-- **Success:** reader stops transfers, releases resources, records the last
-  proven state, and either reconnects through the full initialization sequence
-  or exits with a specific repair action.
+| Cockburn field | Specification |
+|---|---|
+| Scope / level | Reader lifecycle / user goal |
+| Primary actor | Microscope operator; interruption is the initiating event |
+| Stakeholders | Operator wants a short, safe path back to capture; support engineer wants the last proven state and cause |
+| Preconditions | A reader operation is active or has failed; recovery policy is bounded |
+| Trigger | Unplug, USB reset, timeout, parser loss, process exit, or application crash |
+| Main success scenario | 1. Reader records the fault and last proven state. 2. It cancels/drains transfers and releases resources. 3. On reappearance it matches the exact device path or explicit selection. 4. It performs the full initialization sequence. 5. It resumes only after a newly validated frame. |
+| Extensions | If recovery budget expires, reader exits with a specific repair action; it never retries forever or guesses a reset/write sequence |
+| Success guarantee | Camera is either usable through a fresh proven session or safely released with actionable diagnostics |
+
+<div class="diagram-shell sequence-shell" role="img" aria-label="Sequence diagram for bounded recovery after interruption">
+<svg viewBox="0 0 1040 600" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="seq-arrow-recovery" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+  <g class="sequence-participant"><rect x="35" y="20" width="160" height="55" rx="5"/><text x="115" y="53" text-anchor="middle">Operator / app</text><rect x="300" y="20" width="160" height="55" rx="5"/><text x="380" y="53" text-anchor="middle">Reader</text><rect x="565" y="20" width="160" height="55" rx="5"/><text x="645" y="53" text-anchor="middle">USB subsystem</text><rect x="830" y="20" width="160" height="55" rx="5"/><text x="910" y="53" text-anchor="middle">Camera</text></g>
+  <path class="lifeline" d="M115 75V575M380 75V575M645 75V575M910 75V575"/>
+  <path class="message return" marker-end="url(#seq-arrow-recovery)" d="M910 125H645"/><text class="message-label" x="777" y="115" text-anchor="middle">disconnect / timeout</text>
+  <path class="message return" marker-end="url(#seq-arrow-recovery)" d="M645 175H380"/><text class="message-label" x="512" y="165" text-anchor="middle">bounded transfer failure</text>
+  <rect class="activation" x="370" y="195" width="20" height="90"/><text class="message-label" x="405" y="225">record state</text><text class="message-label" x="405" y="247">cancel, drain, release</text>
+  <path class="message return" marker-end="url(#seq-arrow-recovery)" d="M380 315H115"/><text class="message-label" x="247" y="305" text-anchor="middle">recovering / specific diagnosis</text>
+  <path class="message" marker-end="url(#seq-arrow-recovery)" d="M115 370H645"/><text class="message-label" x="380" y="360" text-anchor="middle">camera reconnected or retry requested</text>
+  <path class="message" marker-end="url(#seq-arrow-recovery)" d="M380 425H645"/><text class="message-label" x="512" y="415" text-anchor="middle">match exact device; claim</text>
+  <path class="message" marker-end="url(#seq-arrow-recovery)" d="M380 475H910"/><text class="message-label" x="645" y="465" text-anchor="middle">full proven initialization</text>
+  <path class="message return" marker-end="url(#seq-arrow-recovery)" d="M910 525H380"/><text class="message-label" x="645" y="515" text-anchor="middle">new complete validated frame</text>
+  <path class="message return" marker-end="url(#seq-arrow-recovery)" d="M380 565H115"/><text class="message-label" x="247" y="555" text-anchor="middle">session restored</text>
+</svg>
+</div>
 
 ## Functional Requirements
 
@@ -546,25 +662,49 @@ proof, clean recovery, and updated protocol/documentation state.
 | G5 Operable reader | Stream, controls, stop, reconnect, fixtures, and diagnostics meet R2 acceptance | OS adapters |
 | G6 Application camera | Real application consumes accepted frames; installation/removal and crash recovery pass | Packaging and release acceptance |
 
-## Dependency Graph
+## Dependency Graph {#dependency-graph}
 
-Arrows are represented by each card's dependency line. D80 and D90 run in
-parallel after the core reader, then merge at D100.
+Arrows run from prerequisite to dependent. D80 and D90 branch after the core
+reader and converge at D100; the owner-approved macOS application deferral is
+the recorded D90 output for this Linux-first release. Select any node to jump
+to its task contract. Each contract links back here and to its immediate graph
+neighbors.
 
-<div class="dag" aria-label="Task dependency graph">
-  <a href="#d00"><span class="id">D00 · COMPLETE</span>Preserve physical and USB baseline<span class="deps">START</span></a>
-  <a href="#d10"><span class="id">D10 · COMPLETE</span>Separate Windows transport generations<span class="deps">depends D00</span></a>
-  <a href="#d20"><span class="id">D20 · COMPLETE</span>Classify requests and call order<span class="deps">depends D10</span></a>
-  <a href="#d30"><span class="id">D30 · COMPLETE</span>Build dry-run protocol fixtures<span class="deps">depends D20</span></a>
-  <a href="#d40"><span class="id">D40 · COMPLETE</span>Resolve first safe live response<span class="deps">depends D30</span></a>
-  <a href="#d50"><span class="id">D50 · COMPLETE</span>Recover initialization and modes<span class="deps">depends D40</span></a>
-  <a href="#d60"><span class="id">D60 · ACTIVE (OPTICS)</span>Capture and decode frames<span class="deps">depends D50</span></a>
-  <a href="#d70"><span class="id">D70 · COMPLETE (ALPHA)</span>Build operable reader core<span class="deps">depends D60</span></a>
-  <a href="#d80"><span class="id">D80 · COMPLETE (LINUX)</span>Linux application bridge<span class="deps">depends D70</span></a>
-  <a href="#d90"><span class="id">D90 · READER COMPLETE / APP DEFERRED</span>macOS application bridge<span class="deps">depends D70</span></a>
-  <a class="merge" href="#d100"><span class="id">D100 · ACTIVE (LINUX)</span>Stability, fault, and application acceptance<span class="deps">depends D80 + D90 or recorded macOS deferral</span></a>
-  <a href="#d110"><span class="id">D110 · ACTIVE (ALPHA)</span>Package source, fixtures, and operations<span class="deps">depends D100</span></a>
-  <a href="#d120"><span class="id">D120 · EXIT</span>Accept release and residual risks<span class="deps">depends D110</span></a>
+<div class="plan-graph-wrap">
+<div class="plan-graph-toolbar" role="group" aria-label="Dependency graph controls">
+  <button type="button" data-graph-action="fit-width" aria-pressed="true">Fit width</button>
+  <button type="button" data-graph-action="fit-diagram" aria-pressed="false">Fit diagram</button>
+  <button type="button" data-graph-action="actual" aria-pressed="false">Actual size</button>
+  <button type="button" data-graph-action="fullscreen" aria-pressed="false">Full screen</button>
+  <span class="legend" aria-label="Task state legend">
+    <span class="complete"><i></i>Complete</span>
+    <span class="active"><i></i>Active</span>
+    <span class="blocked"><i></i>Blocked</span>
+    <span class="proposed"><i></i>Proposed/deferred</span>
+  </span>
+</div>
+<div class="diagram-shell plan-graph" data-graph-mode="fit-width" role="img" aria-label="Clickable dependency graph from D00 start to D120 exit">
+<svg viewBox="0 0 1220 1510" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="plan-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+  <path class="graph-edge" d="M610 130V170M610 260V300M610 390V430M610 520V560M610 650V690M610 780V820M610 910V950"/>
+  <path class="graph-edge" d="M610 1040V1080H350V1110M610 1040V1080H870V1110"/>
+  <path class="graph-edge" d="M350 1200V1230H610V1260M870 1200V1230H610V1260M610 1350V1368H350V1390"/>
+  <a class="graph-node complete" href="#d00"><rect x="430" y="40" width="360" height="90" rx="8"/><text class="node-id" x="450" y="69">D00 · START</text><text class="node-label" x="610" y="96" text-anchor="middle">Preserve physical and USB baseline</text><text class="node-state" x="770" y="119" text-anchor="end">COMPLETE</text></a>
+  <a class="graph-node complete" href="#d10"><rect x="430" y="170" width="360" height="90" rx="8"/><text class="node-id" x="450" y="199">D10</text><text class="node-label" x="610" y="226" text-anchor="middle">Separate Windows transport generations</text><text class="node-state" x="770" y="249" text-anchor="end">COMPLETE</text></a>
+  <a class="graph-node complete" href="#d20"><rect x="430" y="300" width="360" height="90" rx="8"/><text class="node-id" x="450" y="329">D20</text><text class="node-label" x="610" y="356" text-anchor="middle">Classify requests and call order</text><text class="node-state" x="770" y="379" text-anchor="end">COMPLETE</text></a>
+  <a class="graph-node complete" href="#d30"><rect x="430" y="430" width="360" height="90" rx="8"/><text class="node-id" x="450" y="459">D30</text><text class="node-label" x="610" y="486" text-anchor="middle">Build dry-run protocol fixtures</text><text class="node-state" x="770" y="509" text-anchor="end">COMPLETE</text></a>
+  <a class="graph-node complete" href="#d40"><rect x="430" y="560" width="360" height="90" rx="8"/><text class="node-id" x="450" y="589">D40</text><text class="node-label" x="610" y="616" text-anchor="middle">Resolve first safe live response</text><text class="node-state" x="770" y="639" text-anchor="end">COMPLETE</text></a>
+  <a class="graph-node complete" href="#d50"><rect x="430" y="690" width="360" height="90" rx="8"/><text class="node-id" x="450" y="719">D50</text><text class="node-label" x="610" y="746" text-anchor="middle">Recover initialization, modes, controls</text><text class="node-state" x="770" y="769" text-anchor="end">COMPLETE</text></a>
+  <a class="graph-node active" href="#d60"><rect x="430" y="820" width="360" height="90" rx="8"/><text class="node-id" x="450" y="849">D60</text><text class="node-label" x="610" y="876" text-anchor="middle">Capture, parse, and decode frames</text><text class="node-state" x="770" y="899" text-anchor="end">ACTIVE · OPTICAL CALIBRATION</text></a>
+  <a class="graph-node complete" href="#d70"><rect x="430" y="950" width="360" height="90" rx="8"/><text class="node-id" x="450" y="979">D70</text><text class="node-label" x="610" y="1006" text-anchor="middle">Build operable reader core</text><text class="node-state" x="770" y="1029" text-anchor="end">COMPLETE · ALPHA</text></a>
+  <a class="graph-node complete" href="#d80"><rect x="170" y="1110" width="360" height="90" rx="8"/><text class="node-id" x="190" y="1139">D80</text><text class="node-label" x="350" y="1166" text-anchor="middle">Build Linux application bridge</text><text class="node-state" x="510" y="1189" text-anchor="end">COMPLETE · ALPHA</text></a>
+  <a class="graph-node proposed" href="#d90"><rect x="690" y="1110" width="360" height="90" rx="8"/><text class="node-id" x="710" y="1139">D90</text><text class="node-label" x="870" y="1166" text-anchor="middle">Build macOS application bridge</text><text class="node-state" x="1030" y="1189" text-anchor="end">DEFERRED · READER COMPLETE</text></a>
+  <a class="graph-node active" href="#d100"><rect x="430" y="1260" width="360" height="90" rx="8"/><text class="node-id" x="450" y="1289">D100</text><text class="node-label" x="610" y="1316" text-anchor="middle">Stability, fault, application acceptance</text><text class="node-state" x="770" y="1339" text-anchor="end">ACTIVE · LINUX</text></a>
+  <a class="graph-node active" href="#d110"><rect x="170" y="1390" width="360" height="90" rx="8"/><text class="node-id" x="190" y="1419">D110</text><text class="node-label" x="350" y="1446" text-anchor="middle">Package source, fixtures, operations</text><text class="node-state" x="510" y="1469" text-anchor="end">ACTIVE · ALPHA</text></a>
+  <a class="graph-node proposed" href="#d120"><rect x="690" y="1390" width="360" height="90" rx="8"/><text class="node-id" x="710" y="1419">D120 · EXIT</text><text class="node-label" x="870" y="1446" text-anchor="middle">Accept release and residual risks</text><text class="node-state" x="1030" y="1469" text-anchor="end">PROPOSED</text></a>
+  <path class="graph-edge" d="M530 1435H690"/>
+</svg>
+</div>
 </div>
 
 ## Task Summary
@@ -582,7 +722,7 @@ parallel after the core reader, then merge at D100.
 | D80 | Build Linux application bridge | D70 | Complete for alpha | Live physical-camera V4L2 device consumed by `v4l2-ctl` and FFmpeg, then cleanly removed |
 | D90 | Build macOS application bridge | D70 | Portable reader complete; AVFoundation deferred | Exact alpha-3 directly captured preview and full-resolution frames over the native cable; system-camera surface deferred |
 | D100 | Prove stability and fault recovery | D80,D90 | Active, Linux-first | Reopen, endurance, process-kill, host reboot, direct Apple Silicon capture, and bounded ownership hand-back passed; physical Pi cable disconnect/reconnect remains |
-| D110 | Package source and operations | D100 | Active, alpha-3 published | Public GitHub repository, Apache-2.0 license, udev/V4L2 operations, CI, two modes, bounded initial recovery, optical procedure/analyzer, tested install/removal, validation record, report links |
+| D110 | Package source and operations | D100 | Active; alpha-6 released, post-release main verified | Public GitHub repository, Apache-2.0 license, udev/V4L2 operations, CI, two modes, bounded initial recovery, optical and calibration procedures, measured output cadence, rendered evidence, permanent publication boundary, tested install/removal, validation record, and report links |
 | D120 | Accept release | D110 | Proposed | Owner acceptance against Definition of Done |
 
 ### Non-gating Research Lane — Updated Firmware Discovery
@@ -670,15 +810,19 @@ The VirtualHere trace therefore remains the evidence gate.
 
 <div class="task-controls" role="group" aria-label="Filter task contracts">
   <button type="button" data-task-filter="all" aria-pressed="true">All tasks</button>
+  <button type="button" data-task-filter="active" aria-pressed="false">Active</button>
   <button type="button" data-task-filter="ready" aria-pressed="false">Ready</button>
   <button type="button" data-task-filter="complete" aria-pressed="false">Complete</button>
   <button type="button" data-task-filter="proposed" aria-pressed="false">Proposed</button>
+  <button type="button" data-task-filter="blocked" aria-pressed="false">Blocked</button>
   <span class="task-progress" aria-live="polite"></span>
 </div>
 
 ::: {.task-card data-state="complete"}
 <!-- task: D00; depends: none; state: complete -->
 ### D00 — Preserve Physical and USB Baseline {#d00}
+
+<p class="task-nav"><a href="#dependency-graph">↑ Dependency graph</a><span>Upstream: START</span><span>Downstream: <a href="#d10">D10</a></span></p>
 
 | Field | Contract |
 |---|---|
@@ -703,6 +847,8 @@ Happy-day steps:
 <!-- task: D10; depends: D00; state: complete -->
 ### D10 — Separate Windows Transport Generations {#d10}
 
+<p class="task-nav"><a href="#dependency-graph">↑ Dependency graph</a><span>Upstream: <a href="#d00">D00</a></span><span>Downstream: <a href="#d20">D20</a></span></p>
+
 | Field | Contract |
 |---|---|
 | State | Complete |
@@ -724,6 +870,8 @@ Happy-day steps:
 ::: {.task-card data-state="complete"}
 <!-- task: D20; depends: D10; state: complete -->
 ### D20 — Classify Requests and Call Order {#d20}
+
+<p class="task-nav"><a href="#dependency-graph">↑ Dependency graph</a><span>Upstream: <a href="#d10">D10</a></span><span>Downstream: <a href="#d30">D30</a></span></p>
 
 | Field | Contract |
 |---|---|
@@ -750,6 +898,8 @@ Happy-day steps:
 <!-- task: D30; depends: D20; state: complete -->
 ### D30 — Build the Dry-Run Protocol Fixture {#d30}
 
+<p class="task-nav"><a href="#dependency-graph">↑ Dependency graph</a><span>Upstream: <a href="#d20">D20</a></span><span>Downstream: <a href="#d40">D40</a></span></p>
+
 | Field | Contract |
 |---|---|
 | State | Complete |
@@ -771,6 +921,8 @@ Happy-day steps:
 ::: {.task-card data-state="complete"}
 <!-- task: D40; depends: D30; state: complete -->
 ### D40 — Resolve the First Safe Live Response {#d40}
+
+<p class="task-nav"><a href="#dependency-graph">↑ Dependency graph</a><span>Upstream: <a href="#d30">D30</a></span><span>Downstream: <a href="#d50">D50</a></span></p>
 
 | Field | Contract |
 |---|---|
@@ -798,6 +950,8 @@ Completion evidence:
 ::: {.task-card data-state="complete"}
 <!-- task: D50; depends: D40; state: complete -->
 ### D50 — Recover Initialization, Modes, and Controls {#d50}
+
+<p class="task-nav"><a href="#dependency-graph">↑ Dependency graph</a><span>Upstream: <a href="#d40">D40</a></span><span>Downstream: <a href="#d60">D60</a></span></p>
 
 | Field | Contract |
 |---|---|
@@ -828,6 +982,8 @@ The reader applies recovered row times to bounded exposure control.
 ::: {.task-card data-state="active"}
 <!-- task: D60; depends: D50; state: active -->
 ### D60 — Capture, Parse, and Decode Frames {#d60}
+
+<p class="task-nav"><a href="#dependency-graph">↑ Dependency graph</a><span>Upstream: <a href="#d50">D50</a></span><span>Downstream: <a href="#d70">D70</a></span></p>
 
 | Field | Contract |
 |---|---|
@@ -895,6 +1051,8 @@ FFmpeg consume six camera frames through `/dev/video42` after the cable move.
 <!-- task: D70; depends: D60; state: complete -->
 ### D70 — Build the Operable Reader Core {#d70}
 
+<p class="task-nav"><a href="#dependency-graph">↑ Dependency graph</a><span>Upstream: <a href="#d60">D60</a></span><span>Downstream: <a href="#d80">D80</a>, <a href="#d90">D90</a></span></p>
+
 | Field | Contract |
 |---|---|
 | State | Complete for the Linux-first alpha; additional modes and optical calibration remain compatible extensions |
@@ -931,6 +1089,8 @@ Happy-day steps:
 <!-- task: D80; depends: D70; state: complete -->
 ### D80 — Build the Linux Application Bridge {#d80}
 
+<p class="task-nav"><a href="#dependency-graph">↑ Dependency graph</a><span>Upstream: <a href="#d70">D70</a></span><span>Downstream: <a href="#d100">D100</a></span></p>
+
 | Field | Contract |
 |---|---|
 | State | Complete for the Linux-first alpha |
@@ -959,6 +1119,8 @@ Happy-day steps:
 ::: {.task-card data-state="proposed"}
 <!-- task: D90; depends: D70; state: proposed -->
 ### D90 — Build the macOS Application Bridge {#d90}
+
+<p class="task-nav"><a href="#dependency-graph">↑ Dependency graph</a><span>Upstream: <a href="#d70">D70</a></span><span>Downstream: <a href="#d100">D100</a></span></p>
 
 | Field | Contract |
 |---|---|
@@ -993,6 +1155,8 @@ validation](../evidence/macos-virtualhere-live-validation.html).
 ::: {.task-card data-state="active"}
 <!-- task: D100; depends: D80,D90; state: active -->
 ### D100 — Prove Stability, Fault Handling, and Application Acceptance {#d100}
+
+<p class="task-nav"><a href="#dependency-graph">↑ Dependency graph</a><span>Upstream: <a href="#d80">D80</a>, <a href="#d90">D90</a></span><span>Downstream: <a href="#d110">D110</a></span></p>
 
 | Field | Contract |
 |---|---|
@@ -1036,9 +1200,11 @@ delivery begins remains fatal.
 <!-- task: D110; depends: D100; state: active -->
 ### D110 — Package Source, Fixtures, and Operations {#d110}
 
+<p class="task-nav"><a href="#dependency-graph">↑ Dependency graph</a><span>Upstream: <a href="#d100">D100</a></span><span>Downstream: <a href="#d120">D120</a></span></p>
+
 | Field | Contract |
 |---|---|
-| State | Active; public alpha-3 packages the reader, optical tooling, and tested install/removal while residual physical validation continues |
+| State | Active; public alpha-6 packages the reader, optical tooling, and tested install/removal; post-release main adds calibrated-field tooling, measured output cadence, rendered evidence, and permanent publication-boundary enforcement while residual physical validation continues |
 | Actors | Release developer, support reviewer |
 | Goal | Make the accepted reader reproducible and supportable without redistributing vendor binaries |
 | Preconditions | D100 proof complete; licenses and dependency versions inventoried |
@@ -1088,6 +1254,8 @@ deferral rather than an exit blocker.
 ::: {.task-card data-state="proposed"}
 <!-- task: D120; depends: D110; state: proposed -->
 ### D120 — Accept the Release and Residual Risks {#d120}
+
+<p class="task-nav"><a href="#dependency-graph">↑ Dependency graph</a><span>Upstream: <a href="#d110">D110</a></span><span>Downstream: EXIT</span></p>
 
 | Field | Contract |
 |---|---|
@@ -1178,6 +1346,8 @@ Happy-day steps:
 | E-064 | Public commit `1dc096b` implements per-pixel fixed-point dark subtraction and independent R/G1/G2/B flat gains before demosaic; on the Pi, six synthetic corrected 1280x960 frames traversed FFmpeg and a temporary V4L2 loopback to a separate consumer, cleanup passed, and 60-frame filter throughput measured about 225 fps | [User-space flat-field and V4L2 preflight](../evidence/flat-field-v4l2-preflight.html) | VERIFIED SOFTWARE + GENERIC APPLICATION BOUNDARY / PHYSICAL FLAT OPEN |
 | E-065 | Public commit `6eb68a7` stores exposure/gain provenance in new `TCAFF01` maps and rejects unknown or mismatched V4L2 settings before mutation; a real Mac-cable run captured 24 exact physical frames and applied a full-size self-flat diagnostic to eight frames, reducing the 3x3 max/min ratio from 1.336910 to 1.001023 while correctly demonstrating that a self-flat erases specimen structure and cannot be accepted as optical calibration | [Apple Silicon physical flat-field pipeline self-test](../evidence/macos-physical-flat-field-self-test.html) | VERIFIED PHYSICAL-SIZE PLUMBING + SETTINGS GUARD / TRUE DARK + BLANK FLAT OPEN |
 | E-066 | Public commit `176ef90` provides an exact-token, inert-by-default guided session that locks settings, separates blocked-dark/repositioned-flat/fresh-blank/specimen phases, verifies raw/Bayer byte counts, marks partial sessions, builds/applies/inspects the map, renders four PNGs, and hashes the bundle; a USB-free dynamic test using the real corrector and analyzer passes on Apple Silicon and an exact public clone on Raspberry Pi AArch64 | [Guided physical flat-field capture session](../evidence/guided-flat-field-capture-session.html) | VERIFIED WORKFLOW + PORTABILITY / OPERATOR-ASSISTED OPTICAL RUN OPEN |
+| E-067 | Public commit `064cf31` records one monotonic timestamp after every accepted Bayer-frame write; direct-Mac physical runs delivered 17.3466 fps at 1280x960/requested 1 ms, 9.5057 fps at 1280x960/250 ms, and 2.7911 fps at 3664x2748/250 ms, with every frame hash distinct | [Apple Silicon measured delivered-frame cadence](../evidence/macos-measured-frame-cadence.html) | VERIFIED LIVE OUTPUT CADENCE / SENSOR INTEGRATION AND LINUX CONSUMER TIMING NOT CLAIMED |
+| E-068 | Public commit `064cf31` renders every evidence record as HTML, supplies evidence and photo indexes, checks all internal site targets, and adds a full-history CI denylist; a fresh current-tree and object-history audit found no raw disassembly, Ghidra state/export, vendor binary, firmware, packet capture, or private-work artifact | [Public evidence site and permanent publication boundary](../evidence/public-evidence-site-and-boundary.html) | VERIFIED LIVE SITE + CLEAN PUBLIC HISTORY |
 
 ## Risk Register
 
@@ -1233,7 +1403,7 @@ Happy-day steps:
 > settings-bound map, and retains raw/corrected frames and hashes together. At
 > the next convenient cable move,
 > run the staged live Linux V4L2 acceptance so an ordinary application consumes
-> the corrected camera stream and measured timing is recorded. Known-target
+> the corrected camera stream and consumer-side cadence/drop behavior is recorded. Known-target
 > color/focus work remains the D60 exit gate; firmware discovery and
 > AVFoundation remain non-gating fallbacks.
 

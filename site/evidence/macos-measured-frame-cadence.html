@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Apple Silicon measured delivered-frame cadence — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="apple-silicon-measured-delivered-frame-cadence">Apple Silicon
+measured delivered-frame cadence</h1>
+<p>Date: 2026-10-04</p>
+<p>Public implementation commit: <a
+href="https://github.com/la3lma/tucsen-tca-camera/commit/064cf317bce660a3044e76755b6c3bc93e874b0b"><code>064cf31</code></a></p>
+<h2 id="purpose">Purpose</h2>
+<p>Replace chosen FFmpeg playback rates and whole-process wall times
+with one monotonic timestamp for each complete Bayer frame accepted by
+the reader’s output stream. This is an application-facing delivery
+measurement. It is not an embedded sensor timestamp, a proof of the
+actual integration time, or a clock recovered from the camera.</p>
+<p>The public reader now accepts an optional
+<code>--timestamps FILE.csv</code> path. It writes the exact header
+<code>frame,monotonic_ns</code> and, after each successful Bayer frame
+write, records one <code>CLOCK_MONOTONIC</code> value and flushes the
+row. The option does not add a USB request or change the default Bayer
+stream. It is rejected before transfer if it is stdout or conflicts with
+either image path. The new <code>tca-timing-stats</code> command rejects
+malformed headers, frame-number gaps, non-monotonic time, fewer than two
+frames, and output overwrite before reporting cadence as JSON.</p>
+<h2 id="physical-device-and-exact-code">Physical device and exact
+code</h2>
+<p>The camera remained directly connected to the Apple Silicon
+workstation and enumerated at high speed as <code>0547:c003</code>,
+product <code>10MP CMOS Camera</code>, USB address 24. No reset,
+configuration change, firmware action, or new request tuple was used.
+Only the previously validated mode selector, exposure, gain,
+initialization, and bulk-IN record reads were executed.</p>
+<p>The complete local suite passed before capture. Exact build inputs
+and binary:</p>
+<pre class="text"><code>3220ed86d5b7aca929ffba66b8d860bbb16145b07edfc851054cdf3844abb033  src/tca_camera.c
+98bda4bfe033683bef82108fba5c3088be72b824d406b3921ea00e59747164c4  scripts/tca-timing-stats
+c04d9b732ad25612c404ac3737bfe1485afb8fc57ede9e6da48e65dcc9dcba34  build/tca-camera</code></pre>
+<h2 id="results">Results</h2>
+<p>Each run programmed its requested controls, discarded the one
+pre-control buffered record, returned <code>status=ok</code>, produced
+the exact expected Bayer byte count, and wrote exactly one timestamp row
+per frame. Frame-by-frame hashing found 60/60, 30/30, and 12/12 distinct
+frame hashes respectively.</p>
+<table>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr>
+<th>Mode and requested controls</th>
+<th style="text-align: right;">Frames</th>
+<th style="text-align: right;">Bayer bytes</th>
+<th style="text-align: right;">Measured span</th>
+<th style="text-align: right;">Delivered fps</th>
+<th style="text-align: right;">Interval p50 / p95 / max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1280x960, 1 ms, gain 0</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">73,728,000</td>
+<td style="text-align: right;">3.401246 s</td>
+<td style="text-align: right;">17.3466</td>
+<td style="text-align: right;">55.782 / 68.478 / 101.744 ms</td>
+</tr>
+<tr>
+<td>1280x960, 250 ms, gain 0</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">36,864,000</td>
+<td style="text-align: right;">3.050803 s</td>
+<td style="text-align: right;">9.5057</td>
+<td style="text-align: right;">105.179 / 105.799 / 105.973 ms</td>
+</tr>
+<tr>
+<td>3664x2748, 250 ms, gain 0</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">120,824,064</td>
+<td style="text-align: right;">3.941140 s</td>
+<td style="text-align: right;">2.7911</td>
+<td style="text-align: right;">357.589 / 363.621 / 363.621 ms</td>
+</tr>
+</tbody>
+</table>
+<p>The 1-ms preview run has a stable approximately 55.8-ms base interval
+plus a small number of longer intervals. The 250-ms preview and
+full-resolution runs are substantially tighter. These figures establish
+realistic output cadence for the tested direct-Mac/file-output path.
+They do not independently validate the recovered row-time-to-exposure
+mapping, and Linux V4L2 consumer timing must still be measured after the
+next cable move.</p>
+<h2 id="retained-artifacts">Retained artifacts</h2>
+<p>The complete private capture bundle is retained under
+<code>work/macos-frame-timing-alpha7-final-20261004/</code>. It contains
+the untouched first device record, concatenated Bayer stream, timestamp
+CSV, validated JSON summary, and stderr transcript for each run. Its
+<code>hashes.sha256</code> covers all 15 artifacts and verifies
+completely. Raw capture files remain private; this public evidence
+record contains only measurements, hashes, and independently written
+conclusions.</p>
+<p>Selected bundle hashes:</p>
+<pre class="text"><code>45125f930e7fa5e1849b44b41af5d3cd00f6a3c657854eef26eeeb0b25acb53d  mode2-1ms-g0-60.bayer
+e8dd2d734551fded685ec02caadfb39693ca3af6a048e164f74569680c697709  mode2-1ms-g0-timing.json
+b31ce9e3d4f2913b26ca5e5002a13f406b1a7a27edb8fcfb22915876083910fe  mode2-250ms-g0-30.bayer
+fa227a48a47f4ff47535220c72c26b9342ee3fe307ef9dcf08dd910c1aca7818  mode2-250ms-g0-timing.json
+5a2d0fac592cb85ef0ed8087474b5e77a00bba3fdc8486abfdd8061090ff5bdf  mode0-250ms-g0-12.bayer
+ca45f9a636750ae16c06e980d96c1966972de205f92534f6c60263f15a7d4419  mode0-250ms-g0-timing.json</code></pre>
+<h2 id="remaining-boundary">Remaining boundary</h2>
+<p>This closes the direct-reader cadence measurement in both recovered
+modes. The physical flat-field run, known-target color/Bayer validation,
+and an ordinary Linux application’s timestamped corrected V4L2
+consumption remain open and deliberately require later operator/cable
+availability.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

@@ -13,6 +13,7 @@ from urllib.parse import unquote, urlsplit
 PAGES_ROOT = "https://la3lma.github.io/tucsen-tca-camera"
 DOCSTACK_URL = f"{PAGES_ROOT}/docstack/"
 REPORT_URL = f"{PAGES_ROOT}/report/microscope-window-sensor.pdf"
+EVIDENCE_URL = f"{PAGES_ROOT}/evidence/"
 REPOSITORY_URL = "https://github.com/la3lma/tucsen-tca-camera"
 
 
@@ -60,14 +61,41 @@ def main() -> None:
     report = root / "site/report/microscope-window-sensor.pdf"
 
     require(readme, (DOCSTACK_URL, REPORT_URL), "README")
-    require(landing, ("docstack/", "report/microscope-window-sensor.pdf", REPOSITORY_URL), "landing")
-    require(docstack, (DOCSTACK_URL, REPORT_URL, REPOSITORY_URL), "Docstack")
+    require(landing, ("docstack/", "evidence/", "report/microscope-window-sensor.pdf", REPOSITORY_URL), "landing")
+    require(docstack, (DOCSTACK_URL, REPORT_URL, EVIDENCE_URL, REPOSITORY_URL), "Docstack")
     require(workflow, ("actions/configure-pages@v5", "actions/upload-pages-artifact@v3", "actions/deploy-pages@v4", "path: ./site"), "Pages workflow")
     assert report.is_file(), report
     assert report.stat().st_size > 100_000, "published report is unexpectedly small"
     assert (root / "site/docstack/styles.css").is_file()
     assert (root / "site/docstack/app.js").is_file()
     assert (root / "site/.nojekyll").is_file()
+
+    task_ids = tuple(f"d{number:02d}" for number in range(0, 100, 10)) + ("d100", "d110", "d120")
+    ids = set(re.findall(r'\bid="([^"]+)"', docstack))
+    fragment_links = re.findall(r'href="#([^"]+)"', docstack)
+    assert fragment_links, "Docstack contains no internal navigation links"
+    assert all(fragment in ids for fragment in fragment_links), (
+        "Docstack contains a fragment link without a target",
+        sorted(set(fragment_links) - ids),
+    )
+    assert docstack.count('class="graph-node ') == len(task_ids)
+    assert docstack.count('class="task-nav"') == len(task_ids)
+    for task_id in task_ids:
+        assert task_id in ids, f"missing task anchor #{task_id}"
+        assert f'class="graph-node' in docstack and f'href="#{task_id}"' in docstack
+    assert docstack.count("Cockburn field") == 6
+    assert docstack.count('class="diagram-shell sequence-shell"') == 3
+    require(
+        docstack,
+        (
+            'id="dependency-graph"',
+            'data-graph-action="fit-width"',
+            'data-graph-action="fit-diagram"',
+            'data-graph-action="actual"',
+            'data-graph-action="fullscreen"',
+        ),
+        "Docstack dependency graph",
+    )
     evidence = root / "site/evidence"
     markdown_records = sorted(evidence.glob("*.md"))
     assert markdown_records, "no public evidence records"

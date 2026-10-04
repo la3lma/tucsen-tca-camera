@@ -6,6 +6,7 @@ sold as TCA-10.0N/IS1000-family hardware).
 
 **Project map:** [live Docstack](https://la3lma.github.io/tucsen-tca-camera/docstack/)
 · [PDF investigation report](https://la3lma.github.io/tucsen-tca-camera/report/microscope-window-sensor.pdf)
+· [rendered evidence index](https://la3lma.github.io/tucsen-tca-camera/evidence/)
 · [source and releases](https://github.com/la3lma/tucsen-tca-camera)
 
 The reader cold-initializes the camera with `libusb`, captures 1280×960 preview

@@ -18,6 +18,8 @@
   --red-soft: #fde8e7;
   --blue-soft: #dcecf7;
   --complete: #1c7c54;
+  --active: #c56700;
+  --blocked: #b63838;
   --ready: #146b91;
   --proposed: #64737c;
   --shadow: 0 18px 50px rgb(7 27 43 / 10%);
@@ -41,6 +43,8 @@
   --red-soft: #482525;
   --blue-soft: #173b52;
   --complete: #70d6a8;
+  --active: #ffb44d;
+  --blocked: #ff9898;
   --ready: #74c7ef;
   --proposed: #adbbc2;
   --shadow: 0 20px 55px rgb(0 0 0 / 28%);
@@ -267,6 +271,20 @@ tbody tr:hover { background: color-mix(in srgb, var(--panel) 90%, var(--teal-sof
 .diagram-shell .label { fill: var(--ink); font: 700 15px Inter, sans-serif; }
 .diagram-shell .small { fill: var(--muted); font: 13px Inter, sans-serif; }
 .diagram-shell .edge { fill: none; stroke: var(--line-strong); stroke-width: 2; marker-end: url(#arrow); }
+.uml-shell .system-boundary { fill: color-mix(in srgb, var(--panel) 94%, var(--blue-soft)); stroke: var(--line-strong); stroke-width: 2; stroke-dasharray: 8 5; }
+.uml-shell .boundary-label { fill: var(--muted); font: 800 14px "SFMono-Regular", Consolas, monospace; letter-spacing: .05em; text-transform: uppercase; }
+.uml-shell .actor-line, .uml-shell .association { fill: none; stroke: var(--ink); stroke-width: 2; }
+.uml-shell .actor-box { fill: var(--panel); stroke: var(--line-strong); stroke-width: 2; }
+.uml-shell .usecase { fill: var(--teal-soft); stroke: var(--teal); stroke-width: 2; }
+.sequence-shell .sequence-participant rect { fill: var(--teal-soft); stroke: var(--teal); stroke-width: 2; }
+.sequence-shell .sequence-participant text { fill: var(--ink); font: 700 15px Inter, sans-serif; }
+.sequence-shell .lifeline { fill: none; stroke: var(--line-strong); stroke-width: 1.5; stroke-dasharray: 7 6; }
+.sequence-shell .message { fill: none; stroke: var(--ink); stroke-width: 2; }
+.sequence-shell .message.return { stroke: var(--teal); stroke-dasharray: 7 4; }
+.sequence-shell .message-label { fill: var(--ink); font: 13px Inter, sans-serif; }
+.sequence-shell .activation { fill: var(--gold-soft); stroke: var(--gold); stroke-width: 1.5; }
+.sequence-shell .sequence-frame { fill: color-mix(in srgb, var(--panel) 94%, var(--blue-soft)); stroke: var(--line-strong); stroke-width: 1.5; }
+.sequence-shell .frame-label { fill: var(--muted); font: 700 12px "SFMono-Regular", Consolas, monospace; text-transform: uppercase; }
 
 .release-grid, .invariant-grid, .gate-grid {
   display: grid;
@@ -318,13 +336,17 @@ button:hover, button[aria-pressed="true"] { color: #fff; background: var(--teal)
   box-shadow: 0 8px 22px rgb(7 27 43 / 6%);
 }
 .task-card[data-state="complete"] { border-left-color: var(--complete); }
+.task-card[data-state="active"] { border-left-color: var(--active); }
+.task-card[data-state="blocked"] { border-left-color: var(--blocked); }
 .task-card[data-state="ready"] { border-left-color: var(--ready); }
 .task-card[data-state="proposed"] { border-left-color: var(--proposed); }
 .task-card[hidden] { display: none; }
-.task-card h3 { margin-top: 1rem; }
+.task-card h3 { margin-top: 1rem; scroll-margin-top: 5.4rem; }
 .task-card table { margin-bottom: 1rem; }
 .task-card td:first-child { width: 10rem; color: var(--muted); font-weight: 750; }
 .task-card ol { margin-bottom: .2rem; }
+.task-nav { display: flex; flex-wrap: wrap; gap: .4rem .8rem; margin: -.2rem 0 1rem; padding: .55rem .65rem; color: var(--muted); background: color-mix(in srgb, var(--panel) 88%, var(--blue-soft)); border: 1px solid var(--line); font-size: .82rem; }
+.task-nav a { font-weight: 750; }
 
 .dag {
   display: grid;
@@ -346,6 +368,46 @@ button:hover, button[aria-pressed="true"] { color: #fff; background: var(--teal)
 .dag .id { display: block; color: var(--teal); font: 850 .82rem/1.3 "SFMono-Regular", Consolas, monospace; }
 .dag .deps { display: block; margin-top: .35rem; color: var(--muted); font-size: .75rem; }
 .dag .merge { grid-column: span 2; }
+
+.plan-graph-wrap {
+  width: calc(100vw - var(--sidebar) - clamp(3rem, 7vw, 7rem));
+  margin: 1.2rem 0 2rem;
+}
+.plan-graph-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; margin-bottom: .55rem; }
+.plan-graph-toolbar .legend { display: flex; flex-wrap: wrap; gap: .45rem .8rem; margin-left: auto; color: var(--muted); font-size: .78rem; }
+.plan-graph-toolbar .legend span { display: inline-flex; align-items: center; gap: .3rem; }
+.plan-graph-toolbar .legend i { width: .72rem; height: .72rem; border: 2px solid currentColor; border-radius: 2px; background: var(--panel); }
+.plan-graph-toolbar .legend .complete { color: var(--complete); }
+.plan-graph-toolbar .legend .active { color: var(--active); }
+.plan-graph-toolbar .legend .blocked { color: var(--blocked); }
+.plan-graph-toolbar .legend .proposed { color: var(--proposed); }
+.plan-graph {
+  max-height: min(76vh, 970px);
+  margin: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.plan-graph svg { min-width: 0; transition: width .18s ease; }
+.plan-graph[data-graph-mode="fit-width"] svg { width: 100%; min-width: 920px; }
+.plan-graph[data-graph-mode="fit-diagram"] svg { width: auto; height: min(70vh, 900px); max-width: 100%; min-width: 0; margin-inline: auto; }
+.plan-graph[data-graph-mode="actual"] svg { width: 1220px; max-width: none; }
+.plan-graph:fullscreen { max-height: none; padding: 1.2rem; background: var(--paper); }
+.plan-graph:fullscreen svg { max-height: calc(100vh - 2.4rem); }
+.plan-graph .graph-edge { fill: none; stroke: var(--line-strong); stroke-width: 3; marker-end: url(#plan-arrow); }
+.plan-graph .graph-node rect { fill: var(--panel); stroke-width: 4; }
+.plan-graph .graph-node text { pointer-events: none; }
+.plan-graph .graph-node .node-id { fill: var(--ink); font: 850 17px "SFMono-Regular", Consolas, monospace; }
+.plan-graph .graph-node .node-label { fill: var(--ink); font: 700 15px Inter, sans-serif; }
+.plan-graph .graph-node .node-state { font: 800 12px "SFMono-Regular", Consolas, monospace; letter-spacing: .04em; }
+.plan-graph .graph-node.complete rect { stroke: var(--complete); }
+.plan-graph .graph-node.complete .node-state { fill: var(--complete); }
+.plan-graph .graph-node.active rect { stroke: var(--active); }
+.plan-graph .graph-node.active .node-state { fill: var(--active); }
+.plan-graph .graph-node.blocked rect { stroke: var(--blocked); }
+.plan-graph .graph-node.blocked .node-state { fill: var(--blocked); }
+.plan-graph .graph-node.proposed rect { stroke: var(--proposed); }
+.plan-graph .graph-node.proposed .node-state { fill: var(--proposed); }
+.plan-graph .graph-node:hover rect, .plan-graph .graph-node:focus rect { fill: var(--teal-soft); stroke-width: 6; }
 
 .risk-high { color: var(--red); font-weight: 800; }
 .risk-medium { color: var(--gold); font-weight: 800; }
@@ -382,6 +444,7 @@ body > footer { padding-bottom: 5rem; color: var(--muted); font-size: .86rem; }
   .dag { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dag .merge { grid-column: span 2; }
   .task-controls { top: .4rem; }
+  .plan-graph-wrap { width: 100%; }
 }
 
 @media (max-width: 560px) {
@@ -393,6 +456,7 @@ body > footer { padding-bottom: 5rem; color: var(--muted); font-size: .86rem; }
   table { display: block; overflow-x: auto; white-space: normal; }
   .task-card { padding-inline: .8rem; }
   .task-progress { width: 100%; margin: .3rem 0 0; }
+  .plan-graph-toolbar .legend { width: 100%; margin-left: 0; }
 }
 
 @media print {
