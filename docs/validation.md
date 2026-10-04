@@ -124,8 +124,36 @@ captured three mode-2 frames with exit zero:
 7fb92d416b0e7718299fa4ea59ed85948bc7274de85d03ebb5e6382603a2bc29  3,686,400-byte three-frame Bayer stream
 ```
 
-This proves the userspace reader's physical Apple Silicon path. It does not
-substitute for a native-cable run or an AVFoundation camera surface.
+This proved the userspace reader's physical Apple Silicon path before direct
+cable access was available. It does not provide an AVFoundation camera surface.
+
+## Apple Silicon native-cable reader
+
+Exact public tag `v0.2.0-alpha.3` at commit `3c16d2a` was rebuilt and passed
+its complete tests on the Apple Silicon workstation. With the camera connected
+directly to the Mac, IOKit reported `0547:c003` at 480 Mbit/s. The unmodified
+reader applied gain 20 and 100-ms exposure, then completed:
+
+- three 1280×960 preview frames;
+- one 3664×2748 full-resolution frame; and
+- a fresh-process return to one 1280×960 preview frame.
+
+Each successful run reported exact device and Bayer byte counts and exited
+with `status=ok`. The Bayer payload hashes were:
+
+```text
+af771bca314f99f542e77f982f6da494abe054b8d7b4f594d6a9c1f841f0a330  three preview frames
+80bd0f98e4a485bc1fd903e5350581cc70aa804cfb4a639518f0f1c8ba88626a  one full-resolution frame
+d5215e655d0a09ec5d91c942b1a7bc7baa6a3149760a48b7c9a0411224a1273c  reopened preview frame
+```
+
+The first direct invocation failed closed before capture because `b5/a2`
+returned positive length 1 where the reference predicts a stalled data stage.
+A bounded pass of only the seven known controls and all later reader processes
+received the expected stall for every step. This one self-clearing cold-attach
+transient is preserved as a reliability observation rather than hidden by
+accepting arbitrary short responses or adding a broad retry. The sensor was
+covered, so this validates direct transport in both modes rather than optics.
 
 ## Bounded recovery after relay handoff
 

@@ -46,7 +46,7 @@ still.
 | Connected-camera Pi reboot and cold reopen | Verified live |
 | Apple Silicon build | Verified |
 | Apple Silicon libusb capture through Pi relay | Verified live |
-| Native-cable capture on macOS | Not yet physically tested |
+| Native-cable capture on Apple Silicon macOS | Verified live in modes 0 and 2 |
 | Full 3664×2748 Bayer8 capture | Verified live |
 | Optical color and focus validation | Awaiting microscope setup |
 

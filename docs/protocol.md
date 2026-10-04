@@ -124,7 +124,8 @@ restricted material are deliberately excluded from this repository.
 - frame rate depends on mode and exposure; no formal performance guarantee;
 - no automatic exposure, white balance, or host color correction;
 - no hotplug daemon or multi-camera selection;
-- Apple Silicon live capture is verified through a one-device Pi relay, but a
-  native-cable macOS run and AVFoundation integration are not yet verified; and
+- Apple Silicon live capture is verified both through a one-device Pi relay
+  and over a direct native cable; AVFoundation integration is not yet
+  implemented; and
 - optical Bayer phase, color response, exposure scale, and gain response await
   the intended microscope and an uncovered sensor.
