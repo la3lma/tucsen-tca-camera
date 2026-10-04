@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Make an installed `tca-v4l2` resolve the sibling `tca-camera` and
+  `tca-flat-field` executables in `PREFIX/bin`, retain explicit development
+  overrides, and add a USB-inert `--diagnose-install` check plus staged-install
+  regression coverage.
 - Allow the Linux V4L2 bridge to opt into the reader's monotonic timestamp CSV
   through `TCA_TIMESTAMPS`, preserving producer cadence evidence alongside a
   separately measured ordinary-application consumer run.

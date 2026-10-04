@@ -35,6 +35,23 @@ def main() -> None:
             assert stat.S_ISREG(mode)
             assert mode & stat.S_IXUSR
 
+        bridge = binary_directory / "tca-v4l2"
+        diagnostic = subprocess.run(
+            [str(bridge), "--diagnose-install"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        assert (
+            f"reader={binary_directory / 'tca-camera'} executable=1"
+            in diagnostic.stdout
+        )
+        assert (
+            f"flat_field_tool={binary_directory / 'tca-flat-field'} executable=1"
+            in diagnostic.stdout
+        )
+        assert "NO USB TRANSFER SENT" in diagnostic.stdout
+
         sentinel = binary_directory / "unrelated-program"
         sentinel.write_text("must remain\n", encoding="utf-8")
         subprocess.run(

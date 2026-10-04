@@ -108,7 +108,20 @@ estimator, and flat-field calibration/filter tool under the selected prefix:
 sudo make install PREFIX=/usr/local
 ```
 
-Remove exactly those five installed programs:
+Verify that the installed bridge resolves its sibling reader and flat-field
+tool without opening the camera or loading a kernel module:
+
+```sh
+tca-v4l2 --diagnose-install
+```
+
+The diagnostic prints both resolved executable paths and
+`NO USB TRANSFER SENT`. Source-tree use continues to prefer the locally built
+programs, while an installed `tca-v4l2` automatically uses the programs beside
+it in `PREFIX/bin`. `TCA_CAMERA_READER` and `TCA_FLAT_FIELD_TOOL` remain
+explicit overrides for development and testing.
+
+Remove exactly those six installed programs:
 
 ```sh
 sudo make uninstall PREFIX=/usr/local
