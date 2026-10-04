@@ -1,6 +1,6 @@
 # Updated-firmware discovery (non-gating)
 
-Search dates: 2026-09-27, 2026-09-29, and 2026-10-03
+Search dates: 2026-09-27, 2026-09-29, 2026-10-03, and 2026-10-04
 
 This is the low-priority research lane requested by the camera owner. It does
 not gate the Linux reader plan, and no firmware image will be uploaded merely
@@ -95,14 +95,45 @@ do not claim VID/PID `0547:C003`. They are therefore evidence that Tucsen
 publishes firmware when applicable, not compatible candidates for this device.
 No new package was downloaded or executed during this refresh.
 
+## 2026-10-04 ToupTek latest-SDK and updater refresh
+
+ToupTek's official download centre now distinguishes a stable May 19, 2026
+SDK from a latest release displayed as September 11, 2026. The latest archive,
+`toupcamsdk.20260818.zip`, was downloaded only into the private project and
+inspected statically. It has SHA-256
+`3f177938023686321e7ab9de8ecc431d0ab061f5f1b72122525fc2598c47b446`
+and declares SDK version `60.32327.20260818` in `toupcam.h`.
+
+Primary source: <https://www.touptekphotonics.com/download/?category=SDK>.
+
+The x86 and x64 Windows INF tables are identical at the compatibility boundary
+relevant here: each explicitly lists 1,839 unique USB VID/PID pairs, but neither
+contains `USB\\VID_0547&PID_C003`. Compared with the previously inspected stable
+SDK's 1,768 pairs, the latest table adds 71 and removes none. All 71 additions
+are vendor `0547`, spanning product IDs `167B` through `16C1`; this demonstrates
+that the table really changed while strengthening, rather than merely
+repeating, the C003 negative result. No textual exact-model match for `C003`,
+`TCA-10.0N`, `IS1000`, or `MU1000` was found in the inspected package, and no
+standalone firmware-like filename was present.
+
+The same official page advertises `USBCameraSdkUpdate` as a driver update
+package, but marks its stable, latest, and legacy entries unavailable and
+provides no file URL or supported-model table. It is therefore not an
+obtainable firmware/updater candidate, and the generic title supplies no exact
+C003 compatibility claim. No package component was executed and the camera was
+not opened.
+
 ## Result
 
-No standalone firmware image, firmware manifest, or official updater claiming
-compatibility with `0547:c003` was found. The official archived material
+No standalone firmware image, firmware manifest, or obtainable official
+updater claiming compatibility with `0547:c003` was found. The official
+archived material
 provides Windows drivers and applications, not a separately identified camera
 firmware payload. The 2026 AmScope packages add no exact C003 claim, and the
-current Windows INF omits the device. Current Tucsen and AmScope support pages
-do not list a C003 firmware updater.
+current AmScope Windows INF omits the device. ToupTek's newer September 2026
+SDK also omits it despite adding 71 explicit USB IDs, and its generic updater
+entry is unavailable. Current Tucsen and AmScope support pages do not list a
+C003 firmware updater.
 
 This is a bounded negative result, not proof that no such artifact ever
 existed. Periodic archive and mirror searches remain worthwhile, but they must

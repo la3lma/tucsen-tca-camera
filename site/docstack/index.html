@@ -406,7 +406,7 @@ Docstack</a></td>
 </tr>
 <tr>
 <td>Revision</td>
-<td>4.7, use cases expressed in Cockburn form and UML; delivered-frame
+<td>4.8, use cases expressed in Cockburn form and UML; delivered-frame
 cadence measured in both recovered modes; Linux V4L2 producer timing and
 bounded acceptance harness prepared; camera-free consumer
 detach/reattach, slow-consumer, bounded-memory, signal, and cleanup
@@ -417,13 +417,15 @@ Silicon; exact alpha-8 live output consumed and recorded by an
 independent FFmpeg process over a plain pipe on macOS for 17,200
 distinct frames across 30 minutes with bounded memory and immediate
 camera reopen; installed V4L2 helper discovery corrected and verified in
-a fresh staged AArch64 install; uncorrected physical Linux transport
-acceptance independently runnable before optical calibration and
-protected by a recorded wall-clock consumer deadline; historical
-evidence placeholders and the decision ledger reconciled with current
-verified state; public alpha-8 packages the full-resolution application
-path and bounded Linux gate; public evidence rendered as HTML and
-guarded by a permanent full-history privacy policy</td>
+a fresh staged AArch64 install; current ToupTek SDK and USB-updater
+surfaces statically rechecked without executing vendor code; uncorrected
+physical Linux transport acceptance independently runnable before
+optical calibration and protected by a recorded wall-clock consumer
+deadline; historical evidence placeholders and the decision ledger
+reconciled with current verified state; public alpha-8 packages the
+full-resolution application path and bounded Linux gate; public evidence
+rendered as HTML and guarded by a permanent full-history privacy
+policy</td>
 </tr>
 <tr>
 <td>Execution state</td>
@@ -2099,8 +2101,16 @@ firmware payload. A 2026-10-03 official-domain refresh found firmware
 tools only for unrelated newer Tucsen families and no exact-model
 candidate. See the <a
 href="../evidence/firmware-discovery.html">firmware-discovery
-evidence</a>. This bounded negative result does not change the delivery
-dependency graph.</p>
+evidence</a>. On 2026-10-04, the newest advertised ToupCam SDK
+(<code>20260818</code>, header version <code>60.32327.20260818</code>)
+was also hash-pinned and inspected without execution. Its Windows
+manifests add 71 IDs over stable <code>20260519</code> and remove none,
+but still omit <code>0547:c003</code>; the additions are
+<code>0547:167B</code> through <code>0547:16C1</code>. ToupTek’s
+official download page lists <code>USBCameraSdkUpdate</code>, but marks
+stable, latest, and legacy variants unavailable and supplies no file.
+This bounded negative result does not change the delivery dependency
+graph.</p>
 <p>Useful search aliases include <code>TCA-10.0N</code>,
 <code>TCA-10.0-N</code>, <code>IS1000</code>, <code>0547:C003</code>,
 <code>Xintu Photonics</code>, <code>Tucsen</code>,
@@ -4387,6 +4397,22 @@ no camera was attached</td>
 helper discovery</a></td>
 <td>VERIFIED PACKAGED LINUX PATH + AARCH64 INSTALL / PHYSICAL CAMERA
 V4L2 RUN OPEN</td>
+</tr>
+<tr>
+<td>E-082</td>
+<td>The official ToupTek download surface advertises latest ToupCam SDK
+<code>20260818</code> (header <code>60.32327.20260818</code>). Static
+inspection found 1,839 Windows USB IDs: 71 additions and no removals
+relative to stable <code>20260519</code>, but no <code>0547:c003</code>,
+TCA-10.0N, IS1000, MU1000, or firmware payload. The separately listed
+<code>USBCameraSdkUpdate</code> has no available stable, latest, or
+legacy file. The private archive, official-page snapshots, derived ID
+sets, and manifest are hash-pinned; no vendor binary was executed</td>
+<td><a href="../evidence/firmware-discovery.html">Updated-firmware
+discovery</a> and <a
+href="../evidence/existing-linux-driver-candidates.html">existing Linux
+candidates</a></td>
+<td>VERIFIED STATIC NEGATIVE / NON-GATING</td>
 </tr>
 </tbody>
 </table>
