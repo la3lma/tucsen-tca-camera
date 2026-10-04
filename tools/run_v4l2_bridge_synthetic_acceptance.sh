@@ -41,6 +41,7 @@ fi
 
 project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 bridge=$project_dir/scripts/tca-v4l2
+session_wrapper=$project_dir/scripts/tca-v4l2-session
 fake_reader=$project_dir/tests/fake_tca_reader.py
 flat_field_tool=$project_dir/build/tca-flat-field
 timing_analyzer=$project_dir/scripts/tca-timing-stats
@@ -86,7 +87,7 @@ if [ -n "$(git -C "$project_dir" status --porcelain)" ]; then
     printf 'project worktree must be clean: %s\n' "$project_dir" >&2
     exit 73
 fi
-for executable in "$bridge" "$fake_reader" "$flat_field_tool" \
+for executable in "$bridge" "$session_wrapper" "$fake_reader" "$flat_field_tool" \
                   "$timing_analyzer"; do
     [ -x "$executable" ] || {
         printf 'missing executable: %s\n' "$executable" >&2
@@ -174,7 +175,7 @@ tree_rss_kib()
 
 commit=$(git -C "$project_dir" rev-parse HEAD)
 {
-    printf 'profile=tca-v4l2-synthetic-lifecycle-v4\n'
+    printf 'profile=tca-v4l2-synthetic-lifecycle-v5\n'
     printf 'usb_transfer=none\n'
     printf 'project_commit=%s\n' "$commit"
     printf 'video_device=%s\n' "$device"
@@ -316,9 +317,10 @@ done
 grep -qx 'TCA Camera 0547:c003' \
     "/sys/class/video4linux/video${video_number}/name"
 
+mkdir -m 0755 "$output_dir/existing-sessions"
+TCA_V4L2_BRIDGE="$bridge" \
 TCA_CAMERA_READER="$fake_reader" TCA_FAKE_FRAME_DELAY_MS=50 \
-TCA_TIMESTAMPS="$output_dir/existing-reader-timestamps.csv" \
-    "$bridge" --serve-existing "$output_dir/existing-first-device.raw" \
+    "$session_wrapper" --serve-existing "$output_dir/existing-sessions" \
     "$video_number" 100 20 "$mode" \
     >"$output_dir/existing-bridge.stdout.txt" \
     2>"$output_dir/existing-bridge.stderr.txt" &
@@ -348,6 +350,16 @@ done
     printf 'timed out waiting for existing device %s\n' "$device" >&2
     exit 1
 }
+existing_sessions=$(find "$output_dir/existing-sessions" -mindepth 1 \
+    -maxdepth 1 -type d -print)
+[ "$(printf '%s\n' "$existing_sessions" | grep -c .)" -eq 1 ] || {
+    printf 'expected exactly one allocated service session\n' >&2
+    exit 1
+}
+existing_session=$existing_sessions
+grep -qx 'profile=tca-v4l2-service-session-v1' \
+    "$existing_session/session.txt"
+grep -qx 'loopback_ownership=system' "$existing_session/session.txt"
 
 timeout "$consumer_timeout" v4l2-ctl -d "$device" --stream-mmap=3 \
     --stream-count="$normal_frames" \
@@ -373,8 +385,8 @@ printf '%s\n' "$existing_bridge_status" \
 grep -q '^v4l2loopback ' /proc/modules
 grep -qx 'TCA Camera 0547:c003' \
     "/sys/class/video4linux/video${video_number}/name"
-[ "$(stat -c %s "$output_dir/existing-first-device.raw")" -eq "$raw_bytes" ]
-"$timing_analyzer" "$output_dir/existing-reader-timestamps.csv" \
+[ "$(stat -c %s "$existing_session/first-device.raw")" -eq "$raw_bytes" ]
+"$timing_analyzer" "$existing_session/reader-timestamps.csv" \
     --json "$output_dir/existing-reader-timing.json"
 ffmpeg -hide_banner -loglevel error -f rawvideo -pixel_format yuyv422 \
     -video_size "${width}x${height}" \
@@ -403,6 +415,7 @@ existing_digests=$(grep -c '^[0-9]' "$output_dir/existing.framemd5")
     printf 'precreated_consumer_frames=%s\n' "$existing_digests"
     printf 'precreated_device_survived_bridge=pass\n'
     printf 'precreated_module_survived_bridge=pass\n'
+    printf 'service_session_allocation=pass\n'
     printf 'precreated_harness_cleanup=pass\n'
     printf 'usb_transfer=none\n'
 } >"$output_dir/summary.txt"

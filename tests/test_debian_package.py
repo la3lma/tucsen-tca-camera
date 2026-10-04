@@ -17,6 +17,7 @@ import tempfile
 PROGRAMS = (
     "tca-camera",
     "tca-v4l2",
+    "tca-v4l2-session",
     "tca-ffmpeg",
     "tca-frame-stats",
     "tca-timing-stats",
@@ -100,6 +101,8 @@ def main() -> None:
         assert "./usr/lib/udev/rules.d/99-tucsen-tca-camera.rules" in listing
         assert "./usr/share/doc/tucsen-tca-camera/copyright" in listing
         assert "./usr/share/doc/tucsen-tca-camera/VERSION" in listing
+        assert "./usr/share/doc/tucsen-tca-camera/examples/systemd/tca-v4l2.service.example" in listing
+        assert "./usr/share/doc/tucsen-tca-camera/examples/systemd/v4l2.env.example" in listing
 
         control_directory = temporary / "control"
         run("dpkg-deb", "--control", str(first_package), str(control_directory))
@@ -137,6 +140,15 @@ def main() -> None:
                 in diagnostic.stdout
             )
             assert "NO USB TRANSFER SENT." in diagnostic.stdout
+
+        session_diagnostic = run(
+            str(binary_directory / "tca-v4l2-session"), "--diagnose-install"
+        )
+        assert (
+            f"bridge={binary_directory / 'tca-v4l2'} executable=1"
+            in session_diagnostic.stdout
+        )
+        assert "policy=pre-created-loopback-only" in session_diagnostic.stdout
 
         rule = (
             extracted

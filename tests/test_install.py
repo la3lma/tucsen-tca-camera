@@ -10,7 +10,7 @@ import sys
 import tempfile
 
 
-PROGRAMS = ("tca-camera", "tca-v4l2", "tca-ffmpeg", "tca-frame-stats",
+PROGRAMS = ("tca-camera", "tca-v4l2", "tca-v4l2-session", "tca-ffmpeg", "tca-frame-stats",
             "tca-timing-stats", "tca-white-balance", "tca-flat-field")
 
 
@@ -51,6 +51,17 @@ def main() -> None:
             in diagnostic.stdout
         )
         assert "NO USB TRANSFER SENT" in diagnostic.stdout
+
+        session_helper = binary_directory / "tca-v4l2-session"
+        session_diagnostic = subprocess.run(
+            [str(session_helper), "--diagnose-install"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        assert f"bridge={bridge} executable=1" in session_diagnostic.stdout
+        assert "policy=pre-created-loopback-only" in session_diagnostic.stdout
+        assert "NO USB TRANSFER SENT" in session_diagnostic.stdout
 
         media_helper = binary_directory / "tca-ffmpeg"
         media_diagnostic = subprocess.run(

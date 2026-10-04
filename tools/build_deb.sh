@@ -70,6 +70,11 @@ install -m 0644 "$project_dir/docs/protocol.md" "$documentation_dir/protocol.md"
 install -m 0644 "$project_dir/docs/validation.md" "$documentation_dir/validation.md"
 install -m 0644 "$project_dir/docs/optical-validation.md" \
     "$documentation_dir/optical-validation.md"
+install -d "$documentation_dir/examples/systemd"
+install -m 0644 "$project_dir/packaging/systemd/tca-v4l2.service.example" \
+    "$documentation_dir/examples/systemd/tca-v4l2.service.example"
+install -m 0644 "$project_dir/packaging/systemd/v4l2.env.example" \
+    "$documentation_dir/examples/systemd/v4l2.env.example"
 install -m 0644 "$metadata_dir/copyright" "$documentation_dir/copyright"
 
 install -d "$staging_root/DEBIAN"

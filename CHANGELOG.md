@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add a restart-safe `tca-v4l2-session` wrapper that allocates a private,
+  collision-resistant evidence directory on every start and delegates only to
+  the explicit system-managed loopback contract.
+- Ship disabled systemd user-service and environment examples as package
+  documentation. They never auto-enable, load a module, change device
+  ownership, or restart a failed camera session automatically.
+
 ## 0.2.0-alpha.12 — 2026-10-04
 
 - Add a USB-inert `tca-camera list` preflight that reports every exact

@@ -1,0 +1,23 @@
+[Unit]
+Description=Tucsen TCA camera to a pre-created V4L2 loopback
+Documentation=https://github.com/la3lma/tucsen-tca-camera#persistent-user-service
+After=default.target
+
+[Service]
+Type=simple
+Environment=TCA_VIDEO_NUMBER=42
+Environment=TCA_EXPOSURE_MS=100
+Environment=TCA_GAIN=20
+Environment=TCA_MODE=2
+EnvironmentFile=-%h/.config/tucsen-tca-camera/v4l2.env
+ExecStartPre=/usr/bin/mkdir -p %h/.local/state/tucsen-tca-camera/sessions
+ExecStart=/usr/bin/tca-v4l2-session --serve-existing %h/.local/state/tucsen-tca-camera/sessions ${TCA_VIDEO_NUMBER} ${TCA_EXPOSURE_MS} ${TCA_GAIN} ${TCA_MODE}
+Restart=no
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.local/state/tucsen-tca-camera/sessions
+
+[Install]
+WantedBy=default.target
