@@ -39,6 +39,15 @@ def main() -> None:
     assert '"$script_dir/tca-camera"' in source
     assert '"$script_dir/tca-flat-field"' in source
     assert "--diagnose-install" in source
+    assert "--serve-existing" in source
+    assert "loopback_ownership=system" in source
+    assert "loopback_ownership=bridge" in source
+    assert "TCA Camera 0547:c003" in source
+    assert "/sys/class/video4linux/video${video_number}/name" in source
+    assert "pre-created loopback must be a writable character device" in source
+    assert "pre-created loopback has unexpected label" in source
+    assert "pre-created device is not a v4l2loopback node" in source
+    assert "the pre-created loopback device will remain" in source
     assert "TCA_FLAT_FIELD" in source
     assert "TCA_TIMESTAMPS" in source
     assert '--timestamps "$timestamps"' in source
@@ -86,6 +95,14 @@ def main() -> None:
         )
         assert invalid_mode0_exposure.returncode == 64
         assert "MODE=0 EXPOSURE_MS=1..1236" in invalid_mode0_exposure.stderr
+        assert not raw.exists()
+        invalid_operation = subprocess.run(
+            ["sh", str(script), "--serve-something", str(raw)],
+            capture_output=True,
+            text=True,
+        )
+        assert invalid_operation.returncode == 64
+        assert "NO USB TRANSFER SENT" in invalid_operation.stderr
         assert not raw.exists()
         timestamp_conflict = subprocess.run(
             ["sh", str(script), "--serve", str(raw), "42", "100", "20"],

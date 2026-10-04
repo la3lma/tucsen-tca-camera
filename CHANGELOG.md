@@ -5,6 +5,10 @@
 - Add a USB-inert `tca-camera list` preflight that reports every exact
   `0547:c003` match by bus, address, and negotiated USB speed without opening
   a device, claiming an interface, or submitting a transfer.
+- Allow `tca-v4l2 --serve-existing` to use an explicitly pre-created,
+  exact-labelled `v4l2loopback` node without loading or unloading modules,
+  changing node ownership, or claiming lifecycle ownership of system V4L2
+  state.
 
 ## 0.2.0-alpha.11 — 2026-10-04
 

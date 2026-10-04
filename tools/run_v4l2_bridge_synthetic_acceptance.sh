@@ -174,7 +174,7 @@ tree_rss_kib()
 
 commit=$(git -C "$project_dir" rev-parse HEAD)
 {
-    printf 'profile=tca-v4l2-synthetic-lifecycle-v3\n'
+    printf 'profile=tca-v4l2-synthetic-lifecycle-v4\n'
     printf 'usb_transfer=none\n'
     printf 'project_commit=%s\n' "$commit"
     printf 'video_device=%s\n' "$device"
@@ -294,6 +294,86 @@ normal_digests=$(grep -c '^[0-9]' "$output_dir/normal.framemd5")
 slow_digests=$(grep -c '^[0-9]' "$output_dir/slow.framemd5")
 [ "$normal_digests" -eq "$normal_frames" ]
 [ "$slow_digests" -eq "$slow_frames" ]
+
+/usr/sbin/modprobe v4l2loopback video_nr="$video_number" \
+    card_label="TCA Camera 0547:c003" exclusive_caps=1 max_buffers=4
+attempt=0
+while [ ! -e "$device" ] && [ "$attempt" -lt 50 ]; do
+    sleep 0.1
+    attempt=$((attempt + 1))
+done
+[ -e "$device" ] || {
+    printf 'pre-created loopback device did not appear: %s\n' "$device" >&2
+    exit 1
+}
+grep -qx 'TCA Camera 0547:c003' \
+    "/sys/class/video4linux/video${video_number}/name"
+
+TCA_CAMERA_READER="$fake_reader" TCA_FAKE_FRAME_DELAY_MS=50 \
+TCA_TIMESTAMPS="$output_dir/existing-reader-timestamps.csv" \
+    "$bridge" --serve-existing "$output_dir/existing-first-device.raw" \
+    "$video_number" 100 20 "$mode" \
+    >"$output_dir/existing-bridge.stdout.txt" \
+    2>"$output_dir/existing-bridge.stderr.txt" &
+bridge_pid=$!
+
+attempt=0
+while [ "$attempt" -lt 100 ]; do
+    if v4l2-ctl -d "$device" --all \
+           >"$output_dir/existing-device.txt" 2>/dev/null &&
+       grep -q "Pixel Format.*'YUYV'" "$output_dir/existing-device.txt"; then
+        break
+    fi
+    kill -0 "$bridge_pid" 2>/dev/null || {
+        printf 'existing-device bridge exited before readiness\n' >&2
+        exit 1
+    }
+    sleep 0.1
+    attempt=$((attempt + 1))
+done
+[ "$attempt" -lt 100 ] || {
+    printf 'timed out waiting for existing device %s\n' "$device" >&2
+    exit 1
+}
+
+timeout "$consumer_timeout" v4l2-ctl -d "$device" --stream-mmap=3 \
+    --stream-count="$normal_frames" \
+    --stream-to="$output_dir/existing-consumer.yuyv" \
+    >"$output_dir/existing-consumer.stdout.txt" \
+    2>"$output_dir/existing-consumer.stderr.txt"
+[ "$(stat -c %s "$output_dir/existing-consumer.yuyv")" -eq \
+   "$((normal_frames * yuyv_frame_bytes))" ]
+kill -TERM "$bridge_pid"
+set +e
+wait "$bridge_pid"
+existing_bridge_status=$?
+set -e
+bridge_pid=0
+[ "$existing_bridge_status" -eq 143 ] || {
+    printf 'existing-device bridge did not report TERM status: %s\n' \
+        "$existing_bridge_status" >&2
+    exit 1
+}
+printf '%s\n' "$existing_bridge_status" \
+    >"$output_dir/existing-bridge-exit-status.txt"
+[ -c "$device" ]
+grep -q '^v4l2loopback ' /proc/modules
+grep -qx 'TCA Camera 0547:c003' \
+    "/sys/class/video4linux/video${video_number}/name"
+[ "$(stat -c %s "$output_dir/existing-first-device.raw")" -eq "$raw_bytes" ]
+"$timing_analyzer" "$output_dir/existing-reader-timestamps.csv" \
+    --json "$output_dir/existing-reader-timing.json"
+ffmpeg -hide_banner -loglevel error -f rawvideo -pixel_format yuyv422 \
+    -video_size "${width}x${height}" \
+    -i "$output_dir/existing-consumer.yuyv" \
+    -frames:v "$normal_frames" -f framemd5 \
+    "$output_dir/existing.framemd5"
+existing_digests=$(grep -c '^[0-9]' "$output_dir/existing.framemd5")
+[ "$existing_digests" -eq "$normal_frames" ]
+
+/usr/sbin/modprobe -r v4l2loopback
+[ ! -e "$device" ]
+! grep -q '^v4l2loopback ' /proc/modules 2>/dev/null
 {
     printf 'mode=%s\n' "$mode"
     printf 'geometry=%sx%s\n' "$width" "$height"
@@ -307,6 +387,10 @@ slow_digests=$(grep -c '^[0-9]' "$output_dir/slow.framemd5")
     printf 'bridge_tree_rss_growth_kib=%s\n' "$rss_growth"
     printf 'device_cleanup=pass\n'
     printf 'module_cleanup=pass\n'
+    printf 'precreated_consumer_frames=%s\n' "$existing_digests"
+    printf 'precreated_device_survived_bridge=pass\n'
+    printf 'precreated_module_survived_bridge=pass\n'
+    printf 'precreated_harness_cleanup=pass\n'
     printf 'usb_transfer=none\n'
 } >"$output_dir/summary.txt"
 date -u '+%Y-%m-%dT%H:%M:%SZ' >"$output_dir/end-utc.txt"
