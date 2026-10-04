@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## 0.2.0-alpha.4 — 2026-10-04
+
+- Correct frame acquisition to use one bulk request per complete device record.
+  Separate 524,288-byte requests restart at the record origin and had produced
+  repeated image regions and a false horizontal seam.
+- Decode the Bayer raster after the record prefix: 512 bytes in 1280×960 mode
+  and 320 bytes in 3664×2748 mode.
+- Accept the narrowly observed macOS control response of one byte exactly equal
+  to the request, while continuing to reject every other short response.
+- Verify optically coherent microscope images, multi-resolution stills, and an
+  eight-frame motion sequence over a direct Apple Silicon connection.
+- Consume the one pre-control record already buffered by the device so the
+  first published frame reflects requested exposure and gain.
+- Verify monotonic analog-gain response across 0..320 and capture a brighter,
+  16-frame 100-ms/gain-256 motion sequence with 16 distinct frames.
+
 ## 0.2.0-alpha.3 — 2026-10-03
 
 - Add a dependency-free Bayer-frame statistics and focus utility.

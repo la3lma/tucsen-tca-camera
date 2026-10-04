@@ -1,8 +1,10 @@
 # Physical validation record
 
 This page records tests run against the original AmScope-branded
-`0547:c003` camera. The sensor was covered, so these runs validate transport,
-framing, controls, lifecycle, and application integration—not optical quality.
+`0547:c003` camera. The earlier runs used a covered sensor and validate USB
+stability, controls, lifecycle, and application integration. The final section
+records the later microscope-mounted optical correction and supersedes the old
+multi-request interpretation of frame assembly.
 
 ## Test bench
 
@@ -192,3 +194,79 @@ on the Pi found the complete 1,229,312-byte raw file while the 100-frame reader
 process was still active. That run subsequently completed 100/100 frames and
 exited zero. Its first-frame hash is
 `b72ce36fe4dfccb2fa82f37de6a376a4bb072e59763be650051e300705a9fb54`.
+
+## Optical correction: one request is one complete record
+
+With the camera mounted on its microscope, the old reader produced repeated
+scene regions, a sharp horizontal seam, and an apparently black lower region.
+The 1,228,800-byte output had 0.983 autocorrelation at an exact 524,288-byte
+lag. A diagnostic probe then requested the entire record with one libusb bulk
+call instead of several 524,288-byte calls.
+
+The probe established the corrected record layout:
+
+- mode 2: 1,229,312-byte record, 512-byte prefix, then 1,228,800 Bayer bytes;
+- mode 0: 10,068,992-byte record, 320-byte prefix, then 10,068,672 Bayer bytes;
+- the first ten prefix bytes are `0x88`; and
+- neither record contains another transport marker.
+
+Every separate bulk request begins at a new record origin. The marker runs
+previously reported at 524,288-byte intervals were therefore the starts of
+new records that had been concatenated, not internal boundaries in one frame.
+Earlier endurance and byte-count results still establish repeated USB delivery,
+but their reconstructed Bayer images are not spatially valid.
+
+Candidate alpha.4 source using one request per record then completed eight
+consecutive mode-2 frames and one mode-0 frame over a direct Apple Silicon
+connection. Both produced coherent microscope imagery without the former
+horizontal seam or repeated quadrants. The mode-0 rendering retains an
+unresolved 192-pixel-wide dark/purple strip at the left edge.
+
+```text
+60d7ca28b68045a5e1fede848d5d78348b18bf3fca021e7b5d2590fbc0095028  eight mode-2 Bayer frames
+d18ca2e26417c6bc5b47eb0cd04f0e8a3006a2a571cd45720c67507fee8a873f  one mode-0 Bayer frame
+a8c62e7f782500c748f47d502539d78bbc237923460ebd2fd3632c1767feabec  eight-frame 640x480 H.264 proof clip
+```
+
+The eight Bayer frames were also rendered as 1280×960, 800×600, and 640×480
+stills. The proof clip contains eight frames with a chosen 4 fps playback time
+base; because raw Bayer carries no timestamps, that value is not a measured
+camera frame-rate specification. A known color target is still required before
+the provisional `bayer_grbg8` phase can be declared final.
+
+## Optical exposure/gain response and brighter motion sequence
+
+The first record delivered after a control write retained the preceding
+settings. In paired six-frame captures, frame zero had mean 34.75 for both
+gain 0 and gain 320, while frames one through five stabilized near 14.67 and
+154.76 respectively at 100 ms. The reader now consumes exactly that one stale
+record before publishing frame zero and preserves it as `--raw-first`.
+
+After this correction, single-frame captures at 100 ms produced a monotonic
+gain response:
+
+| Gain | Mean | Median | p99 | Saturated fraction |
+|---:|---:|---:|---:|---:|
+| 0 | 14.67 | 15 | 17 | 0 |
+| 64 | 19.27 | 20 | 25 | 0 |
+| 128 | 28.28 | 30 | 39 | 0 |
+| 160 | 37.44 | 40 | 53 | 0.0000008 |
+| 192 | 46.47 | 50 | 67 | 0.0000024 |
+| 224 | 64.77 | 70 | 96 | 0.0000041 |
+| 256 | 83.23 | 91 | 125 | 0.0000049 |
+| 320 | 154.88 | 169 | 237 | 0.0014640 |
+
+A subsequent 100-ms/gain-256 run captured 16 distinct coherent frames; all 16
+had unique SHA-256 hashes. Capture, including cold initialization and the one
+settling record, completed in 2.03 seconds. The frames were encoded as a
+640×480 H.264 proof clip with a chosen 6 fps playback time base:
+
+```text
+15811e333e8fe0a4656d3f22b460402ce9bb4a12b3818cf6dfe1201be4d3e3f3  16-frame Bayer stream
+73c11d81e151b8da6004bd0057cdd09c791d22df360e03f71972bf6abec7bb31  640x480 H.264 proof clip
+919a0b98e1b8fca71e65741e1b007e68dd1dd33d2a18ff82f5e947f785e53f4e  1280x960 PNG still
+```
+
+The first corrected frame had mean 83.30, median 91, p99 125, eight saturated
+pixels out of 1,228,800, and no zero pixels. This setting is a useful starting
+point for the present microscope, not a calibrated default for other lighting.

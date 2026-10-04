@@ -5,15 +5,15 @@ USB microscope camera identified as `0547:c003` (`10MP CMOS Camera`, commonly
 sold as TCA-10.0N/IS1000-family hardware).
 
 The reader cold-initializes the camera with `libusb`, captures 1280×960 preview
-or 3664×2748 full-resolution Bayer8 frames, validates and removes transport
-markers, and exposes bounded exposure and gain controls. A Raspberry Pi 5 has
+or 3664×2748 full-resolution Bayer8 frames, validates and removes each device
+record prefix, and exposes bounded exposure and gain controls. A Raspberry Pi 5 has
 completed a 14,400-frame preview endurance run, captured consecutive full-size
 frames, and fed the preview stream through FFmpeg and a temporary V4L2 camera
 device. No vendor driver and no camera-specific kernel module are required.
 
-> **Alpha hardware support:** one physical camera has been tested. The sensor
-> was covered during protocol work, so final color/Bayer-phase confirmation
-> and image-quality calibration remain open. Preserve
+> **Alpha hardware support:** one physical camera has been tested. Microscope
+> images are now spatially coherent in both modes, but final color/Bayer-phase
+> confirmation and image-quality calibration remain open. Preserve
 > raw frames and report your hardware identity when testing another unit.
 
 ## Full report and research record
@@ -40,7 +40,7 @@ still.
 |---|---|
 | Raspberry Pi / AArch64 Linux cold start | Verified live |
 | Continuous 1280×960 Bayer8 capture | Verified live |
-| Exposure and analog gain writes | Transport-verified live |
+| Exposure and analog gain response | Optically verified live |
 | FFmpeg/stdout pipeline | Verified live |
 | Optional `/dev/video*` through `v4l2loopback` | Verified live |
 | Connected-camera Pi reboot and cold reopen | Verified live |
@@ -48,7 +48,8 @@ still.
 | Apple Silicon libusb capture through Pi relay | Verified live |
 | Native-cable capture on Apple Silicon macOS | Verified live in modes 0 and 2 |
 | Full 3664×2748 Bayer8 capture | Verified live |
-| Optical color and focus validation | Awaiting microscope setup |
+| Spatially coherent optical capture | Verified live in both modes |
+| Final Bayer phase, color, and image calibration | In progress |
 
 ## Build
 
@@ -121,8 +122,42 @@ Mode 2 (1280×960) is the default. Add `--mode 0` for 3664×2748 capture:
   --frames 0 --raw-first first-device-frame.raw --bayer - \
   --exposure-ms 400 --gain 20 \
 | ffplay -f rawvideo -pixel_format bayer_grbg8 \
-    -video_size 1280x960 -framerate 2 -i -
+    -video_size 1280x960 -framerate 6 -i -
 ```
+
+The Bayer phase is still provisional. For a lossless still at the native
+preview resolution, or a scaled still from the same full frame:
+
+```sh
+ffmpeg -hide_banner -loglevel error -f rawvideo \
+  -pixel_format bayer_grbg8 -video_size 1280x960 \
+  -i capture/one-frame.bayer -frames:v 1 capture/still-1280x960.png
+
+ffmpeg -hide_banner -loglevel error -f rawvideo \
+  -pixel_format bayer_grbg8 -video_size 1280x960 \
+  -i capture/one-frame.bayer -frames:v 1 \
+  -vf scale=800:600 capture/still-800x600.png
+```
+
+Capture a motion sequence directly to a broadly playable MP4 file:
+
+```sh
+./build/tca-camera capture \
+  --frames 0 --raw-first capture/stream-first-device.raw --bayer - \
+  --exposure-ms 100 --gain 256 \
+| ffmpeg -hide_banner -loglevel warning \
+    -f rawvideo -pixel_format bayer_grbg8 \
+    -video_size 1280x960 -framerate 6 -i - \
+    -vf scale=640:480 -c:v libx264 -pix_fmt yuv420p capture/stream.mp4
+```
+
+Raw Bayer has no timestamps, so `-framerate` sets the recording/playback time
+base; it is not a measurement of the camera's delivered frame rate. Use
+`Ctrl-C` to stop an unbounded capture cleanly. On Linux, the V4L2 bridge below
+lets ordinary camera applications consume the same corrected live stream.
+On the tested microscope, 100 ms with gain 256 was bright with only about
+0.0007% saturated raw pixels; illumination and specimens will require their
+own settings.
 
 Current controls are intentionally narrow and mode-aware:
 
@@ -131,10 +166,15 @@ Current controls are intentionally narrow and mode-aware:
 
 The reader refuses unknown or duplicate options, refuses to overwrite output
 files, and exposes no arbitrary USB request facility. If ownership has just
-returned from another host, it may discard at most two marker-invalid initial
+returned from another host, it may discard at most two prefix-invalid initial
 warm-up frames before delivering frame zero. Each discard is logged, the first
-untouched device frame remains preserved, and any marker loss after delivery
+untouched device frame remains preserved, and any prefix loss after delivery
 begins is fatal.
+
+When exposure or gain is requested, the device already has one record buffered
+under its preceding settings. The reader consumes that record before publishing
+frame zero, while preserving it in `--raw-first` for diagnosis. A one-frame
+capture therefore reflects the requested controls rather than the stale buffer.
 
 One headerless Bayer frame can be checked without NumPy or OpenCV:
 

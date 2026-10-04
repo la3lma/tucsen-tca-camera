@@ -1,8 +1,9 @@
 # Optical validation procedure
 
-This procedure closes the checks that cannot be performed while the sensor is
-covered. It validates the existing transport and reader; it does not authorize
-new USB commands or firmware writes.
+This procedure closes the remaining calibrated optical checks. Initial
+microscope imagery already exposed and corrected a frame-assembly defect; the
+steps below now validate color, response, focus, and the application boundary.
+It does not authorize new USB commands or firmware writes.
 
 ## Required setup
 
@@ -44,7 +45,7 @@ scripts/tca-frame-stats capture/optical/preview.bayer \
 ```
 
 Require exact lengths of 1,229,312 device bytes and 1,228,800 Bayer bytes,
-`frames=1 status=ok`, no marker discard after frame delivery begins, and low
+`frames=1 status=ok`, no prefix discard after frame delivery begins, and low
 zero/saturated fractions. If most pixels are zero or 255, adjust illumination
 or exposure before judging color or focus.
 
@@ -144,8 +145,8 @@ scripts/tca-frame-stats capture/optical/full.bayer \
 
 Require exact lengths of 10,068,992 device bytes and 10,068,672 Bayer bytes.
 Render it using the accepted phase at 3664x2748 and inspect the full field for
-orientation, clipping, dead rows/columns, repeated blocks, seams at marker
-boundaries, and focus consistency.
+orientation, clipping, dead rows/columns, repeated blocks, transport seams,
+the currently observed 192-pixel left strip, and focus consistency.
 
 ## 7. Application-boundary check
 
@@ -160,7 +161,7 @@ Preserve all raw Bayer files, untouched device frames, generated previews,
 JSON statistics, stderr logs, commit/version information, and SHA-256 hashes.
 Record pass/fail for:
 
-1. preview and full-resolution byte counts and marker validation;
+1. preview and full-resolution byte counts and prefix validation;
 2. Bayer phase and image orientation;
 3. monotonic, bounded exposure and gain response;
 4. a reproducible focus-score maximum near visual focus;

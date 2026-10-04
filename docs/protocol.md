@@ -32,52 +32,65 @@ with zero response bytes. This exact signature was observed for every legacy
 command in the successful Windows trace and reproduced by the native Linux
 reader. Treating the stall as a fatal command failure prevents initialization.
 
-The implementation accepts either this expected stall or a complete ten-byte
-data stage, but no other result. It does not retry a command.
+The implementation accepts this expected stall or a complete ten-byte data
+stage. Direct Apple Silicon testing additionally found an intermittent
+one-byte response whose byte exactly echoed the request (`b4`, `b5`, or `b7`):
+10 of 140 bounded startup controls produced this signature, with no arbitrary
+values. The reader therefore also accepts exactly one byte equal to the
+request. Every other short response remains fatal. It does not retry a
+command.
 
 Mode 0 uses the same fixed sequence with only step 1 changed to selector
 `0x00c0`. The recovered mode table maps it to 3664×2748, and the physical
-camera completed the resulting twenty-read frame schedule. Mode 2 remains the
-default because it is better suited to preview and the V4L2 adapter.
+camera completed full-record capture in that mode. Mode 2 remains the default
+because it is better suited to preview and the V4L2 adapter.
 
 ## Frame transport
 
-One device frame is read from endpoint `0x82` as:
+One device frame must be requested from endpoint `0x82` in one bulk API call.
+Mode 2 requests 1,229,312 bytes and mode 0 requests 10,068,992 bytes. A request
+split into separate 524,288-byte calls does not continue the same record: each
+call restarts at a new record origin. Concatenating those calls therefore
+creates repeated image regions and a sharp false seam even though the byte
+count is correct.
 
-```text
-524288 + 524288 + 180736 = 1229312 bytes
-```
+The beginning of each complete record is a transport prefix. Its first ten
+bytes are `0x88`; the remainder is currently opaque. The Bayer raster follows
+the entire prefix without further marker repair:
 
-The application image is 1280×960 Bayer8, or 1,228,800 bytes. The device/DLL
-contract rounds the transfer allocation one extra 512-byte packet beyond an
-already aligned image size, leaving 512 surplus bytes after the image.
+| Mode | Complete record | Prefix | Bayer raster |
+|---:|---:|---:|---:|
+| 2 | 1,229,312 bytes | 512 bytes | 1,228,800 bytes (1280×960) |
+| 0 | 10,068,992 bytes | 320 bytes | 10,068,672 bytes (3664×2748) |
 
 The recovered capture routine expresses that rule exactly as
 `((width * height >> 9) + 1) << 9`: select the next 512-byte boundary,
 including one extra packet when the pixel count is already aligned. Applied to
-the 3664×2748 mode, this gives 10,068,992 device bytes (nineteen 524,288-byte
-blocks plus 107,520 bytes). A physical one-frame probe validated all twenty
-predicted markers; the public reader then captured three consecutive mode-0
-frames and returned to mode 2 without a reset.
+the 3664×2748 mode, this gives 10,068,992 device bytes. In the complete-record
+interpretation the formula's surplus is the leading prefix: 512 bytes in mode
+2 and 320 bytes in mode 0. Optical captures confirmed that discarding those
+prefixes produces coherent full frames. The reader preserves the untouched
+first device record separately, validates its leading marker, and emits the
+following image bytes.
 
-A ten-byte run of `0x88` begins at each 524,288-byte read boundary: three
-markers in mode 2 and twenty in mode 0. The legacy application replaces each
-marker with the following ten pixel bytes. The reader first validates every
-marker, preserves the untouched first device frame separately, performs that
-repair in its application buffer, and emits only the mode's image bytes.
+Earlier relay traces appeared as 524,288-byte pieces and were initially
+interpreted as application-level read boundaries. Optical autocorrelation and
+single-request probes disproved that interpretation. Historical byte-count
+and endurance results remain useful for USB stability, but images assembled
+from several independent bulk calls are not spatially valid.
 
 After a VirtualHere macOS-to-Linux ownership handoff, one physical run returned
-a complete-size initial device frame whose first marker was absent while the
-later markers remained aligned. The next open produced a normal frame. The
+a complete-size initial device record whose leading marker was absent. The
+next open produced a normal record. The
 reader therefore permits a bounded initial resynchronization window: before
 delivering its first application frame, it may discard at most two
-marker-invalid warm-up frames. The first untouched device frame is still
-written once for diagnosis. Marker loss after delivery begins, or exhaustion
+prefix-invalid warm-up frames. The first untouched device record is still
+written once for diagnosis. Prefix loss after delivery begins, or exhaustion
 of the two-frame limit, remains fatal; command transfers are never retried.
 
-The present FFmpeg/V4L2 path uses `bayer_grbg8`. That phase matches recovered
-application memory conventions but still needs optical confirmation because
-the sensor was covered during protocol work.
+The present FFmpeg/V4L2 path uses provisional `bayer_grbg8`. Microscope imagery
+is spatially coherent with that interpretation, but a known color target is
+still needed to distinguish the four Bayer phases conclusively.
 
 ## Controls
 
@@ -101,9 +114,13 @@ effect.
 320:      0x1dff
 ```
 
-Both bounded controls were issued on the physical camera and followed by three
-complete frames. Their optical effect has not yet been calibrated with the
-sensor uncovered.
+Both bounded controls were issued on the physical camera and followed by
+complete frames. The device has one record already buffered under its preceding
+settings, so the reader consumes one record after a control write before it
+publishes frame zero. A microscope-mounted 100-ms sweep then showed mean raw
+intensity increasing from 14.67 at gain 0 to 154.88 at gain 320. Gain 256 gave
+mean 83.23 with only about 0.0005% saturated pixels. Absolute response still
+needs calibration against a known target and controlled illumination.
 
 ## Evidence lineage
 
@@ -126,6 +143,9 @@ restricted material are deliberately excluded from this repository.
 - no hotplug daemon or multi-camera selection;
 - Apple Silicon live capture is verified both through a one-device Pi relay
   and over a direct native cable; AVFoundation integration is not yet
-  implemented; and
-- optical Bayer phase, color response, exposure scale, and gain response await
-  the intended microscope and an uncovered sensor.
+  implemented;
+- mode 0 currently shows a 192-pixel-wide dark/purple strip at the left edge;
+  whether this is an optical-black sensor margin or a mode-register issue is
+  unresolved; and
+- final Bayer phase, color response, exposure scale, and gain response await a
+  known optical target and controlled calibration.

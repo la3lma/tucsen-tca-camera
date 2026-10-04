@@ -27,8 +27,7 @@
 #define TCA_MODE0_DEVICE_BYTES 10068992u
 #define TCA_MODE0_ROW_TIME_US 309u
 #define TCA_MAX_DEVICE_BYTES TCA_MODE0_DEVICE_BYTES
-#define TCA_FULL_CHUNK 524288u
-#define TCA_MARKER_BYTES 10u
+#define TCA_PREFIX_MARKER_BYTES 10u
 #define TCA_INITIAL_RESYNC_LIMIT 2u
 #define TCA_EXPOSURE_MAX_LINES 4000u
 #define TCA_GAIN_MAX 320u
@@ -40,6 +39,14 @@ _Static_assert(TCA_MODE2_DEVICE_BYTES ==
 _Static_assert(TCA_MODE0_DEVICE_BYTES ==
                    TCA_NEXT_PACKET_BYTES(TCA_MODE0_WIDTH * TCA_MODE0_HEIGHT),
                "mode 0 size must match the recovered next-packet formula");
+_Static_assert(TCA_MODE2_DEVICE_BYTES -
+                       TCA_MODE2_WIDTH * TCA_MODE2_HEIGHT ==
+                   512u,
+               "mode 2 record prefix must be 512 bytes");
+_Static_assert(TCA_MODE0_DEVICE_BYTES -
+                       TCA_MODE0_WIDTH * TCA_MODE0_HEIGHT ==
+                   320u,
+               "mode 0 record prefix must be 320 bytes");
 
 struct init_step {
     uint8_t request;
@@ -75,12 +82,17 @@ static const struct init_step init_steps[] = {
 };
 
 static const char execution_token[] = "capture";
-static const char version[] = "0.2.0-alpha.2";
+static const char version[] = "0.2.0-alpha.4";
 static volatile sig_atomic_t stop_requested;
 
 static size_t pixel_bytes(const struct mode_profile *mode)
 {
     return (size_t)mode->width * (size_t)mode->height;
+}
+
+static size_t prefix_bytes(const struct mode_profile *mode)
+{
+    return mode->device_bytes - pixel_bytes(mode);
 }
 
 static unsigned max_exposure_ms(const struct mode_profile *mode)
@@ -192,9 +204,6 @@ static uint16_t encode_gain(uint32_t gain)
 static void print_plan(FILE *output, const struct mode_profile *mode)
 {
     size_t pixels = pixel_bytes(mode);
-    size_t reads = (mode->device_bytes + TCA_FULL_CHUNK - 1u) /
-                   TCA_FULL_CHUNK;
-
     fprintf(output, "profile=tca-userspace-mode%u-stream-v1 target=0547:c003\n",
             mode->number);
     fprintf(output,
@@ -205,17 +214,27 @@ static void print_plan(FILE *output, const struct mode_profile *mode)
             "data-stage result is PIPE\n",
             mode->selector);
     fprintf(output,
-            "capture=endpoint-0x82 reads=%zu maximum-read=%u; validate and "
-            "repair ten-byte 0x88 markers\n",
-            reads, TCA_FULL_CHUNK);
+            "capture=endpoint-0x82 one request=%zu; validate ten-byte 0x88 "
+            "record marker and discard %zu-byte prefix\n",
+            mode->device_bytes, prefix_bytes(mode));
     fprintf(output,
             "raw-first=unmodified %zu-byte device frame; Bayer output "
-            "discards final alignment surplus\n",
-            mode->device_bytes);
+            "contains the following %zu-byte raster\n",
+            mode->device_bytes, pixels);
     fprintf(output,
           "controls=optional exposure-ms 1..%u and normalized-gain 0..320; "
           "each becomes one trace-confirmed b7 register write\n",
           max_exposure_ms(mode));
+}
+
+static int trace_command_result_accepted(
+    uint8_t request, const unsigned char response[TCA_CONTROL_LENGTH],
+    int result)
+{
+    if (result == LIBUSB_ERROR_PIPE || result == (int)TCA_CONTROL_LENGTH) {
+        return 1;
+    }
+    return result == 1 && response[0] == request;
 }
 
 static int apply_trace_command(libusb_device_handle *handle,
@@ -228,12 +247,20 @@ static int apply_trace_command(libusb_device_handle *handle,
         handle, TCA_REQUEST_TYPE, request, value, index, response,
         TCA_CONTROL_LENGTH, TCA_TIMEOUT_MS);
 
-    fprintf(stderr,
-            "%s=%zu request=0x%02x value=0x%04x index=0x%04x "
-            "result=%s (%d)\n",
-            role, sequence, request, value, index,
-            libusb_error_name(result), result);
-    if (result != LIBUSB_ERROR_PIPE && result != (int)TCA_CONTROL_LENGTH) {
+    if (result >= 0) {
+        fprintf(stderr,
+                "%s=%zu request=0x%02x value=0x%04x index=0x%04x "
+                "result=bytes (%d) first=0x%02x\n",
+                role, sequence, request, value, index, result,
+                result > 0 ? response[0] : 0u);
+    } else {
+        fprintf(stderr,
+                "%s=%zu request=0x%02x value=0x%04x index=0x%04x "
+                "result=%s (%d)\n",
+                role, sequence, request, value, index,
+                libusb_error_name(result), result);
+    }
+    if (!trace_command_result_accepted(request, response, result)) {
         return result == 0 ? LIBUSB_ERROR_OTHER : result;
     }
     if (delay_ms(delay_after_ms) != 0) {
@@ -268,56 +295,41 @@ static int read_device_frame(libusb_device_handle *handle,
                              const struct mode_profile *mode,
                              unsigned char *frame, size_t *received)
 {
-    size_t index = 0u;
+    int transferred = 0;
+    int requested = (int)mode->device_bytes;
+    int result;
 
     *received = 0u;
-    while (*received < mode->device_bytes) {
-        size_t remaining = mode->device_bytes - *received;
-        int transferred = 0;
-        int requested = (int)(remaining < TCA_FULL_CHUNK
-                                  ? remaining
-                                  : TCA_FULL_CHUNK);
-        int result = libusb_bulk_transfer(
-            handle, TCA_ENDPOINT, frame + *received, requested, &transferred,
-            TCA_TIMEOUT_MS);
-
-        if (transferred > 0) {
-            *received += (size_t)transferred;
-        }
-        if (result != 0) {
-            fprintf(stderr, "bulk=%zu result=%s (%d) transferred=%d\n",
-                    index, libusb_error_name(result), result, transferred);
-            return result;
-        }
-        if (transferred != requested) {
-            fprintf(stderr, "bulk=%zu short requested=%d transferred=%d\n",
-                    index, requested, transferred);
-            return LIBUSB_ERROR_IO;
-        }
-        ++index;
+    result = libusb_bulk_transfer(handle, TCA_ENDPOINT, frame, requested,
+                                  &transferred, TCA_TIMEOUT_MS);
+    if (transferred > 0) {
+        *received = (size_t)transferred;
+    }
+    if (result != 0) {
+        fprintf(stderr, "bulk result=%s (%d) transferred=%d\n",
+                libusb_error_name(result), result, transferred);
+        return result;
+    }
+    if (transferred != requested) {
+        fprintf(stderr, "bulk short requested=%d transferred=%d\n",
+                requested, transferred);
+        return LIBUSB_ERROR_IO;
     }
     return *received == mode->device_bytes ? 0 : LIBUSB_ERROR_IO;
 }
 
-static int validate_and_repair_markers(const struct mode_profile *mode,
-                                       unsigned char *pixels)
+static int validate_device_prefix(const struct mode_profile *mode,
+                                  const unsigned char *device_frame)
 {
-    size_t offset;
-    size_t pixel_count = pixel_bytes(mode);
+    size_t byte_index;
 
-    for (offset = 0u; offset < mode->device_bytes; offset += TCA_FULL_CHUNK) {
-        size_t byte_index;
-
-        if (offset + 2u * TCA_MARKER_BYTES > pixel_count) {
+    if (prefix_bytes(mode) < TCA_PREFIX_MARKER_BYTES) {
+        return 0;
+    }
+    for (byte_index = 0; byte_index < TCA_PREFIX_MARKER_BYTES; ++byte_index) {
+        if (device_frame[byte_index] != 0x88u) {
             return 0;
         }
-        for (byte_index = 0; byte_index < TCA_MARKER_BYTES; ++byte_index) {
-            if (pixels[offset + byte_index] != 0x88u) {
-                return 0;
-            }
-        }
-        memcpy(pixels + offset, pixels + offset + TCA_MARKER_BYTES,
-               TCA_MARKER_BYTES);
     }
     return 1;
 }
@@ -469,18 +481,6 @@ int main(int argc, char **argv)
                 libusb_error_name(result), result);
         goto done;
     }
-    if (gain_set) {
-        uint16_t encoded = encode_gain(gain);
-        result = apply_trace_command(handle, 1u, "control-gain", 0xb7u,
-                                     encoded, 0x305eu, 30u);
-        if (result != 0) {
-            fprintf(stderr, "gain control: %s (%d)\n",
-                    libusb_error_name(result), result);
-            goto done;
-        }
-        fprintf(stderr, "gain=%u programmed-register=0x%04x\n", gain,
-                encoded);
-    }
     if (exposure_set) {
         uint32_t lines = (exposure_ms * 1000u + mode->row_time_us - 1u) /
                          mode->row_time_us;
@@ -497,6 +497,42 @@ int main(int argc, char **argv)
         }
         fprintf(stderr, "exposure-ms=%u programmed-lines=%u\n",
                 exposure_ms, lines);
+    }
+    if (gain_set) {
+        uint16_t encoded = encode_gain(gain);
+        result = apply_trace_command(handle, 1u, "control-gain", 0xb7u,
+                                     encoded, 0x305eu, 30u);
+        if (result != 0) {
+            fprintf(stderr, "gain control: %s (%d)\n",
+                    libusb_error_name(result), result);
+            goto done;
+        }
+        fprintf(stderr, "gain=%u programmed-register=0x%04x\n", gain,
+                encoded);
+    }
+
+    if (exposure_set || gain_set) {
+        size_t received = 0;
+
+        result = read_device_frame(handle, mode, device_frame, &received);
+        if (result != 0) {
+            if (received > 0u &&
+                (fwrite(device_frame, 1, received, raw_first) != received ||
+                 fflush(raw_first) != 0)) {
+                perror("write partial raw-first");
+            }
+            raw_written = received > 0u;
+            goto done;
+        }
+        if (fwrite(device_frame, 1, mode->device_bytes, raw_first) !=
+                mode->device_bytes ||
+            fflush(raw_first) != 0) {
+            perror("write control-settle raw-first");
+            goto done;
+        }
+        raw_written = 1;
+        fprintf(stderr,
+                "control-settle discarded one pre-control buffered record\n");
     }
 
     while (!stop_requested &&
@@ -525,8 +561,7 @@ int main(int argc, char **argv)
             goto done;
         }
         raw_written = 1;
-        memcpy(pixels, device_frame, pixel_bytes(mode));
-        if (!validate_and_repair_markers(mode, pixels)) {
+        if (!validate_device_prefix(mode, device_frame)) {
             if (frames == 0u &&
                 initial_resyncs < TCA_INITIAL_RESYNC_LIMIT) {
                 ++initial_resyncs;
@@ -539,6 +574,7 @@ int main(int argc, char **argv)
             fputs("frame marker validation failed\n", stderr);
             goto done;
         }
+        memcpy(pixels, device_frame + prefix_bytes(mode), pixel_bytes(mode));
         if (fwrite(pixels, 1, pixel_bytes(mode), bayer) !=
             pixel_bytes(mode)) {
             perror("write Bayer stream");
