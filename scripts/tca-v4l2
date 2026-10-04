@@ -34,6 +34,7 @@ reader_pid=0
 writer_pid=0
 filter_pid=0
 stream_dir=
+requested_exit=0
 
 cleanup() {
     if [ "$reader_pid" -ne 0 ]; then
@@ -62,10 +63,19 @@ cleanup() {
     fi
 }
 
+request_exit() {
+    requested_exit=$1
+    if [ "$reader_pid" -ne 0 ]; then
+        kill -TERM "$reader_pid" 2>/dev/null || true
+    else
+        exit "$requested_exit"
+    fi
+}
+
 trap cleanup EXIT
-trap 'exit 129' HUP
-trap 'exit 130' INT
-trap 'exit 143' TERM
+trap 'request_exit 129' HUP
+trap 'request_exit 130' INT
+trap 'request_exit 143' TERM
 
 for value in "$video_number" "$exposure_ms" "$gain"; do
     case "$value" in
@@ -229,6 +239,9 @@ wait "$reader_pid"
 reader_status=$?
 set -e
 reader_pid=0
+if [ "$requested_exit" -ne 0 ]; then
+    exit "$requested_exit"
+fi
 if [ "$reader_status" -ne 0 ]; then
     echo "reader exited with status $reader_status" >&2
     exit "$reader_status"

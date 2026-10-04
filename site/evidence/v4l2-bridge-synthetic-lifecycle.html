@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>V4L2 Bridge Synthetic Lifecycle — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<p>+# Camera-free Linux V4L2 bridge lifecycle acceptance</p>
+<p>Date: 2026-10-04</p>
+<h2 id="result">Result</h2>
+<p>Candidate public commit
+<code>eb8acd32cb2b5b1440b378137142a13fdd5420d9</code> passed the
+complete native suite and a token-gated, camera-free execution of the
+real <code>scripts/tca-v4l2</code> bridge on the Raspberry Pi. The run
+substituted only the USB reader with a deterministic Bayer producer; it
+retained the real flat-field corrector, FFmpeg conversion,
+<code>v4l2loopback</code> device, ordinary V4L2 consumers, timestamp
+analyzer, signal handling, and cleanup paths.</p>
+<p>The first consumer captured four exact 1280x960 YUYV frames. It
+detached, the bridge stayed alive without a consumer, and a second
+consumer attached and captured eight exact frames while sleeping 350 ms
+after every buffer. The bridge remained alive through that
+slower-than-producer path. Its process-tree RSS changed from 114,464 KiB
+to 115,648 KiB, a bounded increase of 1,184 KiB against the harness’s
+65,536-KiB ceiling.</p>
+<p>The synthetic reader produced 93 frames over 4.679245186 seconds. The
+public timing analyzer accepted its flushed monotonic sidecar and
+measured 19.6613 frames/s, with 50.861 ms mean interval and 54.960 ms
+maximum interval. This is a test-source rate, not a camera performance
+claim.</p>
+<p>A TERM request returned the bridge’s declared status 143. The bridge
+removed the temporary <code>/dev/video44</code> node and the
+<code>v4l2loopback</code> module it had loaded. Both consumer byte
+counts, both frame-digest records, the timing report, process snapshots,
+calibration, and cleanup result are covered by a SHA-256 manifest whose
+own digest is:</p>
+<pre class="text"><code>1f6390e603b4a21fe18a19a3884243fa97c7e9256acd33d0ac3d73a5671680f5</code></pre>
+<p>The complete integration bundle remains in the private report
+workspace at
+<code>work/pi-synthetic-v4l2/tca-v4l2-synthetic-evidence-eb8acd3/</code>,
+consistent with the project’s rule that integration artifacts stay out
+of the source repository.</p>
+<h2 id="defect-found-and-corrected">Defect found and corrected</h2>
+<p>The first exact-commit trial at <code>f9341d0</code> intentionally
+failed its own final validation. It exposed two test defects rather than
+a camera or bridge failure:</p>
+<ol type="1">
+<li>the synthetic reader numbered timestamp rows from zero while the
+real reader and <code>tca-timing-stats</code> contract start at one;
+and</li>
+<li>TERM cleanup removed the device and module but returned an unstable
+bridge status.</li>
+</ol>
+<p>Commit <code>eb8acd3</code> aligns the test double with the real
+sidecar contract and makes bridge signal shutdown explicit and
+deterministic. The failed trial’s device and module cleanup were checked
+before the corrected rerun. No retry concealed a USB or image-stream
+failure.</p>
+<h2 id="reproduction-and-safety">Reproduction and safety</h2>
+<p>Running the harness without arguments is inert:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">tools/run_v4l2_bridge_synthetic_acceptance.sh</span></span></code></pre></div>
+<p>The system-mutating path requires Linux root and the exact token:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tools/run_v4l2_bridge_synthetic_acceptance.sh <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--run-v4l2-bridge-synthetic-acceptance</span> OUTPUT_DIRECTORY 44</span></code></pre></div>
+<p>The harness refuses a dirty worktree, an existing output directory,
+an existing loopback module, or an occupied device number. Its static
+test rejects camera-reader binaries, libusb transfer calls, USB resets,
+device deauthorization, configuration changes, and firmware-like
+operations. The synthetic reader contains no USB interface
+implementation. The physical camera remained connected to the Mac
+throughout both Pi trials.</p>
+<p>The exact candidate passed:</p>
+<ul>
+<li><code>make clean all test</code> in a detached Raspberry Pi AArch64
+worktree;</li>
+<li>the USB-inert dry run on that Pi;</li>
+<li>the complete root-only synthetic lifecycle acceptance; and</li>
+<li>GitHub CI run <a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37201191571">37201191571</a>
+on Ubuntu and macOS.</li>
+</ul>
+<h2 id="scope-and-remaining-gate">Scope and remaining gate</h2>
+<p>This result proves the application-facing bridge can survive consumer
+detach/reattach and slow consumption without an unbounded queue,
+preserve producer timing, perform corrected Bayer-to-YUYV conversion,
+and clean up its generic kernel compatibility layer. It does not prove
+the physical Linux camera path, optical calibration, final Bayer phase,
+or consumer behavior at the camera’s actual cadence.</p>
+<p>The remaining Linux application gate is still the exact-token
+<code>tools/run_linux_v4l2_acceptance.sh</code> run with the camera
+attached to the Pi and a valid same-settings dark/flat calibration. That
+run must preserve both producer and ordinary-application evidence and
+immediately reopen the physical reader after bridge teardown.</p>
+<h2 id="planning-provenance">Planning provenance</h2>
+<p>The Development Evidence service contract expected at
+<code>127.0.0.1:18080/openapi.json</code> again returned HTTP 404. The
+repository’s validated Docstack, Git branch, CI run, private evidence
+bundle, and rendered public evidence record therefore remain the
+authoritative fallback. No Development Evidence service state is
+claimed.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

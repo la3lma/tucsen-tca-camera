@@ -38,6 +38,9 @@ test: $(TARGET) $(FLAT_FIELD_TARGET)
 		tools/run_flat_field_capture_session.sh $(FLAT_FIELD_TARGET) scripts/tca-frame-stats
 	python3 tests/test_linux_v4l2_acceptance_static.py \
 		tools/run_linux_v4l2_acceptance.sh
+	python3 tests/test_fake_tca_reader.py tests/fake_tca_reader.py
+	python3 tests/test_v4l2_bridge_synthetic_acceptance_static.py \
+		tools/run_v4l2_bridge_synthetic_acceptance.sh
 	python3 tests/test_install.py .
 	python3 tests/test_publication_policy.py .
 	python3 tests/test_pages_static.py .

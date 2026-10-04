@@ -27,6 +27,9 @@ def main() -> None:
     assert '--timestamps "$timestamps"' in source
     assert "reader timestamp sidecar active" in source
     assert "TCA_TIMESTAMPS must name a distinct new regular file" in source
+    assert "requested_exit=0" in source
+    assert "request_exit 143" in source
+    assert 'exit "$requested_exit"' in source
     assert '"$flat_field_tool" apply --calibration "$flat_field"' in source
     assert "raw-bayer.fifo" in source
     assert "flat-field calibration must be 1280x960 GRBG for V4L2" in source
