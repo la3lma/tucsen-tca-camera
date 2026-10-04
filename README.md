@@ -4,6 +4,10 @@ Early, independently developed userspace support for the legacy AmScope/Tucsen
 USB microscope camera identified as `0547:c003` (`10MP CMOS Camera`, commonly
 sold as TCA-10.0N/IS1000-family hardware).
 
+**Project map:** [live Docstack](https://la3lma.github.io/tucsen-tca-camera/docstack/)
+· [PDF investigation report](https://la3lma.github.io/tucsen-tca-camera/report/microscope-window-sensor.pdf)
+· [source and releases](https://github.com/la3lma/tucsen-tca-camera)
+
 The reader cold-initializes the camera with `libusb`, captures 1280×960 preview
 or 3664×2748 full-resolution Bayer8 frames, validates and removes each device
 record framing, and exposes bounded exposure and gain controls. A Raspberry Pi 5 has
@@ -16,15 +20,16 @@ device. No vendor driver and no camera-specific kernel module are required.
 > confirmation and image-quality calibration remain open. Preserve
 > raw frames and report your hardware identity when testing another unit.
 
-## Full report and research record
+## Full report, Docstack, and research record
 
-The complete investigation report, including device identification, recovered
-protocol evidence, driver comparisons, and the staged validation plan, is
-intended for publication in the
-[Journal of Bjorn](https://la3lma.github.io/journal-of-bjorn/) as
-[Recovery Plan for a Legacy AmScope Microscope Camera](https://la3lma.github.io/journal-of-bjorn/papers/microscope-window-sensor.html).
-The article link is reserved for the report and may return 404 until the journal
-entry is published.
+The [live Docstack](https://la3lma.github.io/tucsen-tca-camera/docstack/)
+tracks the evidence gates, open work, and exact supporting records. The
+[current PDF report](https://la3lma.github.io/tucsen-tca-camera/report/microscope-window-sensor.pdf)
+contains the narrative investigation, device identification, recovered
+protocol, driver comparisons, and optical results. The published
+[Journal of Bjorn entry](https://la3lma.github.io/journal-of-bjorn/papers/microscope-window-sensor.html)
+provides a journal-level landing page without replacing these stable project
+URLs.
 
 Reproducible physical checks and their evidence hashes are summarized in the
 [validation record](docs/validation.md).

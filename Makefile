@@ -27,6 +27,7 @@ test: $(TARGET)
 	python3 tests/test_frame_stats.py scripts/tca-frame-stats
 	python3 tests/test_white_balance.py scripts/tca-white-balance
 	python3 tests/test_install.py .
+	python3 tests/test_pages_static.py .
 
 .PHONY: install
 install: $(TARGET)

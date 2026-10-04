@@ -1,0 +1,3440 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="dcterms.date" content="2026-09-27" />
+  <title>Microscope Camera Reader Docstack</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="styles.css" />
+  <meta name="description" content="Evidence-gated plan for a portable reader, control API, stream, and application bridge for a legacy AmScope/Tucsen microscope camera.">
+  <meta name="theme-color" content="#071b2b">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23071b2b'/%3E%3Crect x='16' y='16' width='32' height='32' rx='5' fill='none' stroke='%235de1c2' stroke-width='4'/%3E%3Ccircle cx='32' cy='32' r='8' fill='%23f6c453'/%3E%3Cpath d='M8 22h8M8 32h8M8 42h8M48 22h8M48 32h8M48 42h8' stroke='%235de1c2' stroke-width='3'/%3E%3C/svg%3E">
+
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Microscope Camera Reader Docstack</h1>
+<p class="subtitle">From recovered USB protocol to controllable still
+capture, streaming, and application integration</p>
+<p class="date">2026-09-27</p>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#objective" id="toc-objective"><span
+class="toc-section-number">1</span> Objective</a>
+<ul>
+<li><a href="#definition-of-done" id="toc-definition-of-done"><span
+class="toc-section-number">1.2</span> Definition of Done</a></li>
+<li><a href="#document-control" id="toc-document-control"><span
+class="toc-section-number">1.3</span> Document Control</a></li>
+<li><a href="#method-and-provenance"
+id="toc-method-and-provenance"><span
+class="toc-section-number">1.4</span> Method and Provenance</a></li>
+</ul></li>
+<li><a href="#concept" id="toc-concept"><span
+class="toc-section-number">2</span> Concept</a>
+<ul>
+<li><a href="#problem" id="toc-problem"><span
+class="toc-section-number">2.1</span> Problem</a></li>
+<li><a href="#product-stance" id="toc-product-stance"><span
+class="toc-section-number">2.2</span> Product Stance</a></li>
+<li><a href="#non-goals-for-the-first-release"
+id="toc-non-goals-for-the-first-release"><span
+class="toc-section-number">2.3</span> Non-Goals for the First
+Release</a></li>
+<li><a href="#architectural-invariants"
+id="toc-architectural-invariants"><span
+class="toc-section-number">2.4</span> Architectural Invariants</a></li>
+<li><a href="#actors-and-interests" id="toc-actors-and-interests"><span
+class="toc-section-number">2.5</span> Actors and Interests</a></li>
+<li><a href="#system-context" id="toc-system-context"><span
+class="toc-section-number">2.6</span> System Context</a></li>
+</ul></li>
+<li><a href="#prd" id="toc-prd"><span
+class="toc-section-number">3</span> PRD</a>
+<ul>
+<li><a href="#product-goal" id="toc-product-goal"><span
+class="toc-section-number">3.1</span> Product Goal</a></li>
+<li><a href="#release-rings" id="toc-release-rings"><span
+class="toc-section-number">3.2</span> Release Rings</a></li>
+<li><a href="#primary-use-cases" id="toc-primary-use-cases"><span
+class="toc-section-number">3.3</span> Primary Use Cases</a>
+<ul>
+<li><a href="#uc1-inspect-and-identify"
+id="toc-uc1-inspect-and-identify"><span
+class="toc-section-number">3.3.1</span> UC1 — Inspect and
+identify</a></li>
+<li><a href="#uc2-capture-one-full-resolution-still"
+id="toc-uc2-capture-one-full-resolution-still"><span
+class="toc-section-number">3.3.2</span> UC2 — Capture one
+full-resolution still</a></li>
+<li><a href="#uc3-stream-a-preview" id="toc-uc3-stream-a-preview"><span
+class="toc-section-number">3.3.3</span> UC3 — Stream a preview</a></li>
+<li><a href="#uc4-operate-camera-controls"
+id="toc-uc4-operate-camera-controls"><span
+class="toc-section-number">3.3.4</span> UC4 — Operate camera
+controls</a></li>
+<li><a href="#uc5-use-the-camera-in-an-ordinary-application"
+id="toc-uc5-use-the-camera-in-an-ordinary-application"><span
+class="toc-section-number">3.3.5</span> UC5 — Use the camera in an
+ordinary application</a></li>
+<li><a href="#uc6-recover-from-interruption"
+id="toc-uc6-recover-from-interruption"><span
+class="toc-section-number">3.3.6</span> UC6 — Recover from
+interruption</a></li>
+</ul></li>
+<li><a href="#functional-requirements"
+id="toc-functional-requirements"><span
+class="toc-section-number">3.4</span> Functional Requirements</a></li>
+<li><a href="#non-functional-requirements"
+id="toc-non-functional-requirements"><span
+class="toc-section-number">3.5</span> Non-Functional
+Requirements</a></li>
+<li><a href="#acceptance-scenarios" id="toc-acceptance-scenarios"><span
+class="toc-section-number">3.6</span> Acceptance Scenarios</a></li>
+</ul></li>
+<li><a href="#design" id="toc-design"><span
+class="toc-section-number">4</span> Design</a>
+<ul>
+<li><a href="#target-architecture" id="toc-target-architecture"><span
+class="toc-section-number">4.1</span> Target Architecture</a></li>
+<li><a href="#confirmed-protocol-boundary"
+id="toc-confirmed-protocol-boundary"><span
+class="toc-section-number">4.2</span> Confirmed Protocol
+Boundary</a></li>
+<li><a href="#reader-state-machine" id="toc-reader-state-machine"><span
+class="toc-section-number">4.3</span> Reader State Machine</a></li>
+<li><a href="#api-shape" id="toc-api-shape"><span
+class="toc-section-number">4.4</span> API Shape</a></li>
+<li><a href="#frame-and-queue-contract"
+id="toc-frame-and-queue-contract"><span
+class="toc-section-number">4.5</span> Frame and Queue Contract</a></li>
+<li><a href="#safety-model" id="toc-safety-model"><span
+class="toc-section-number">4.6</span> Safety Model</a></li>
+<li><a href="#standard-application-integration"
+id="toc-standard-application-integration"><span
+class="toc-section-number">4.7</span> Standard Application
+Integration</a>
+<ul>
+<li><a href="#linux" id="toc-linux"><span
+class="toc-section-number">4.7.1</span> Linux</a></li>
+<li><a href="#macos" id="toc-macos"><span
+class="toc-section-number">4.7.2</span> macOS</a></li>
+</ul></li>
+<li><a href="#recovery-and-rollback"
+id="toc-recovery-and-rollback"><span
+class="toc-section-number">4.8</span> Recovery and Rollback</a></li>
+<li><a href="#key-decisions" id="toc-key-decisions"><span
+class="toc-section-number">4.9</span> Key Decisions</a></li>
+</ul></li>
+<li><a href="#plan" id="toc-plan"><span
+class="toc-section-number">5</span> Plan</a>
+<ul>
+<li><a href="#execution-policy" id="toc-execution-policy"><span
+class="toc-section-number">5.1</span> Execution Policy</a></li>
+<li><a href="#delivery-gates" id="toc-delivery-gates"><span
+class="toc-section-number">5.2</span> Delivery Gates</a></li>
+<li><a href="#dependency-graph" id="toc-dependency-graph"><span
+class="toc-section-number">5.3</span> Dependency Graph</a></li>
+<li><a href="#task-summary" id="toc-task-summary"><span
+class="toc-section-number">5.4</span> Task Summary</a>
+<ul>
+<li><a href="#non-gating-research-lane-updated-firmware-discovery"
+id="toc-non-gating-research-lane-updated-firmware-discovery"><span
+class="toc-section-number">5.4.1</span> Non-gating Research Lane —
+Updated Firmware Discovery</a></li>
+<li><a
+href="#non-gating-research-lane-historical-application-integration"
+id="toc-non-gating-research-lane-historical-application-integration"><span
+class="toc-section-number">5.4.2</span> Non-gating Research Lane —
+Historical Application Integration</a></li>
+<li><a
+href="#non-gating-reverse-engineering-lane-ghidra-call-graph-recovery"
+id="toc-non-gating-reverse-engineering-lane-ghidra-call-graph-recovery"><span
+class="toc-section-number">5.4.3</span> Non-gating Reverse-Engineering
+Lane — Ghidra Call-Graph Recovery</a></li>
+</ul></li>
+<li><a href="#task-contracts" id="toc-task-contracts"><span
+class="toc-section-number">5.5</span> Task Contracts</a></li>
+<li><a href="#evidence-ledger" id="toc-evidence-ledger"><span
+class="toc-section-number">5.6</span> Evidence Ledger</a></li>
+<li><a href="#risk-register" id="toc-risk-register"><span
+class="toc-section-number">5.7</span> Risk Register</a></li>
+<li><a href="#open-decisions" id="toc-open-decisions"><span
+class="toc-section-number">5.8</span> Open Decisions</a></li>
+<li><a href="#planning-completion-checklist"
+id="toc-planning-completion-checklist"><span
+class="toc-section-number">5.9</span> Planning Completion
+Checklist</a></li>
+</ul></li>
+</ul>
+</nav>
+<main>
+<nav class="project-links" aria-label="Project documents">
+<strong>Project map</strong>
+<a href="https://github.com/la3lma/tucsen-tca-camera#readme">Code &amp;
+README</a>
+<a href="https://la3lma.github.io/tucsen-tca-camera/report/microscope-window-sensor.pdf">PDF
+report</a>
+<a href="https://la3lma.github.io/tucsen-tca-camera/docstack/" aria-current="page">Live
+Docstack</a>
+</nav>
+<h1 data-number="1" id="objective"><span
+class="header-section-number">1</span> Objective</h1>
+<div class="overview-grid">
+<div class="objective-card">
+<p class="eyebrow">
+Release objective
+</p>
+<h2 data-number="1.1"
+id="make-the-camera-usable-not-merely-understood"><span
+class="header-section-number">1.1</span> Make the camera usable, not
+merely understood</h2>
+<p>Deliver a safe, documented reader for the legacy AmScope/Tucsen
+<code>0547:c003</code> microscope camera that can initialize the device,
+acquire full frames, stream a supported preview mode, expose useful
+camera controls, and feed ordinary applications through at least one
+standard operating-system camera path.</p>
+<div class="status-row">
+<p><span class="status-chip">USB identity confirmed</span> <span
+class="status-chip">Linux cold start recovered</span> <span
+class="status-chip">Two Bayer8 modes captured</span> <span
+class="status-chip">Exposure + gain operational</span> <span
+class="status-chip">Neutral white balance measured</span> <span
+class="status-chip">V4L2 application path verified</span></p>
+</div>
+</div>
+<div class="next-card">
+<p class="eyebrow">
+Next evidence gate · D60 color and Linux integration
+</p>
+<h3 data-number="1.1.1"
+id="calibrate-color-and-retest-the-corrected-linux-application-path"><span
+class="header-section-number">1.1.1</span> Calibrate color and retest
+the corrected Linux application path</h3>
+<p>The corrected userspace reader now assembles complete frames from
+validated physical records and produces coherent 1280x960 and 3664x2748
+microscope images. Optical testing verified monotonic gain response and
+a 16-frame motion sequence; PNGs at three resolutions and an H.264 proof
+clip are preserved. Full-resolution look-ahead assembly removes the
+false 192-pixel strip without cropping, and an illuminated blank region
+now provides reproducible in-situ white balance. The next gate is a
+known color target, measured frame timing, and a live post-fix V4L2 run
+on Linux.</p>
+<p><strong>Safety boundary:</strong> preserve the raw device record,
+change one documented variable at a time, and keep provisional
+Bayer/color claims explicit.</p>
+</div>
+</div>
+<div class="evidence-strip" aria-label="Current evidence summary">
+<div>
+<span class="metric">0547:c003</span>
+<p>
+Observed device identity; product string “10MP CMOS Camera”.
+</p>
+</div>
+<div>
+<span class="metric">0x82 BULK IN</span>
+<p>
+One vendor-specific interface; 512-byte high-speed packets.
+</p>
+</div>
+<div>
+<span class="metric">2 MODES</span>
+<p>
+1280x960 preview and 3664x2748 full-resolution Bayer8 physically
+verified.
+</p>
+</div>
+<div>
+<span class="metric">14,400 FRAMES</span>
+<p>
+40-minute preview endurance completed with flat sampled memory.
+</p>
+</div>
+</div>
+<h2 data-number="1.2" id="definition-of-done"><span
+class="header-section-number">1.2</span> Definition of Done</h2>
+<p>The project is complete when all of the following are demonstrated
+from a clean checkout on documented hardware:</p>
+<ol type="1">
+<li><strong>Still acquisition:</strong> capture and decode a full-sensor
+still image with stable dimensions, bit depth, color interpretation, and
+metadata.</li>
+<li><strong>Streaming:</strong> sustain one supported preview mode for
+30 minutes without parser desynchronization, unbounded memory growth, or
+an unrecoverable USB fault; publish measured frame rate and drop
+statistics.</li>
+<li><strong>Operation:</strong> expose every control that can be
+identified and safely verified, at minimum exposure and any supported
+gain, white-balance, mode, start, and stop operations. Unsupported
+controls fail explicitly.</li>
+<li><strong>Reader API:</strong> provide a portable user-space core and
+a command-line reader with deterministic raw capture, decoded output,
+structured diagnostics, and a stable control contract.</li>
+<li><strong>Application path:</strong> make frames available to ordinary
+applications through at least Linux V4L2 or a macOS camera integration,
+while preserving a direct library/API path on both Linux and macOS.</li>
+<li><strong>Evidence and recovery:</strong> ship protocol notes,
+fixtures, hashes, safety interlocks, reset/reconnect behavior, build
+instructions, tests, and an accepted evidence bundle.</li>
+</ol>
+<h2 data-number="1.3" id="document-control"><span
+class="header-section-number">1.3</span> Document Control</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Objective</td>
+<td>Build a usable driver/reader, stream, control surface, and
+application bridge for the legacy microscope camera</td>
+</tr>
+<tr>
+<td>Canonical source</td>
+<td><a
+href="camera-reader-docstack.md">camera-reader-docstack.md</a></td>
+</tr>
+<tr>
+<td>Published website</td>
+<td><a
+href="https://la3lma.github.io/tucsen-tca-camera/docstack/">GitHub Pages
+Docstack</a></td>
+</tr>
+<tr>
+<td>Revision</td>
+<td>3.0, field-uniformity diagnosis and optical/flat-field correction
+plan added; exact alpha-6 Pi bench and post-switch optical/V4L2 harness
+prepared</td>
+</tr>
+<tr>
+<td>Execution state</td>
+<td>D00–D50 are complete and D60 is substantially advanced. Optical
+autocorrelation showed that separate 524,288-byte requests restarted at
+new record origins, causing the earlier repeated regions and false seam.
+Mode 2 fits after a 512-byte prefix. Mode 0 is assembled from record N
+<code>[512,end)</code> plus the 192-byte continuation at record N+1
+<code>[320,512)</code>. Three consecutive full-resolution frames have
+distinct hashes and no false left strip. At 100 ms, gain 0..320 is
+monotonic; gain 256 produced a bright frame with negligible clipping.
+One pre-control buffered record is consumed before frame zero. A
+16-frame run yielded distinct frames, three still sizes, and a 640x480
+H.264 proof clip. Neutral-background white balance independently
+produced approximately R/G/B <code>0.87/1.0/2.0</code> in both modes;
+alpha-6 preserves those ratios when normalizing into FFmpeg’s multiplier
+range. After changing to 10x, a bounded sweep recovered unclipped
+preview and full-resolution stills at 250 ms/gain 0. Exact alpha-6 is
+now built and fully tested on the Pi. A synthetic producer/consumer
+preflight passed six exact 1280x960 YUYV frames through the generic V4L2
+loopback and cleaned it up, and an inert one-shot camera harness is
+staged for the cable move. Final known-target Bayer/color calibration,
+measured timing, and execution of that post-fix live-camera V4L2 gate
+remain open. AVFoundation remains deferred.</td>
+</tr>
+<tr>
+<td>Acceptance authority</td>
+<td>Camera owner, or an explicitly delegated technical owner recorded in
+D120</td>
+</tr>
+<tr>
+<td>Related report</td>
+<td><a
+href="https://la3lma.github.io/tucsen-tca-camera/report/microscope-window-sensor.pdf">PDF
+report</a></td>
+</tr>
+<tr>
+<td>Reader source</td>
+<td><a href="https://github.com/la3lma/tucsen-tca-camera#readme">GitHub
+repository and README</a></td>
+</tr>
+<tr>
+<td>Primary test bench</td>
+<td>Raspberry Pi 5 <code>rpios-17</code> for physical USB, usbmon, and
+Linux validation; project-local Windows VM for reference initialization;
+macOS as the portability target and relay host</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="1.4" id="method-and-provenance"><span
+class="header-section-number">1.4</span> Method and Provenance</h2>
+<p>This plan follows the locally exported Agency Docstack
+convention:</p>
+<ul>
+<li>Concept, PRD, Design, and Plan are separate layers.</li>
+<li>Desired state, observed state, and evidence are never
+conflated.</li>
+<li>Every task has actors, dependencies, preconditions, postconditions,
+failure handling, and decidable proof.</li>
+<li>The dependency graph has one start and one exit; every task lies on
+a complete start-to-exit path.</li>
+<li>Device mutation is authorized only by its task gate, never merely
+because a request appears to be device-to-host.</li>
+<li>Evidence is append-only and contains no credentials.</li>
+</ul>
+<p>The live Agency console was unavailable while this revision was
+authored because its Docker runtime did not become ready. The structure
+was checked against the local exported <code>docstack</code> exemplar
+and cached master Docstack. This provenance limitation affects
+convention lookup, not the camera evidence.</p>
+<h1 data-number="2" id="concept"><span
+class="header-section-number">2</span> Concept</h1>
+<h2 data-number="2.1" id="problem"><span
+class="header-section-number">2.1</span> Problem</h2>
+<p>The camera is physically sound enough to enumerate but is unusable as
+a normal camera. It is not UVC. It exposes a vendor-specific USB
+interface and one bulk IN endpoint, while its lost Windows installation
+depended on a proprietary KMDF driver and model DLL. Modern applications
+therefore cannot discover, control, or consume it.</p>
+<p>The project must bridge three gaps:</p>
+<ol type="1">
+<li><strong>Protocol gap:</strong> recover initialization, mode,
+control, capture, and frame boundary semantics from static evidence and
+bounded experiments.</li>
+<li><strong>Image gap:</strong> determine dimensions, packing, bit
+depth, Bayer pattern or other encoding, calibration, and color
+conversion.</li>
+<li><strong>Application gap:</strong> turn a working low-level reader
+into a stable API and a standard camera source usable by existing
+applications.</li>
+</ol>
+<h2 data-number="2.2" id="product-stance"><span
+class="header-section-number">2.2</span> Product Stance</h2>
+<p>The first implementation is a <strong>portable user-space
+reader</strong>, not a new kernel driver. A shared core using libusb can
+run on Raspberry Pi Linux, desktop Linux, and macOS; the
+application-facing surface can then be adapted separately.</p>
+<p>A kernel driver becomes justified only if evidence shows that
+user-space USB cannot meet throughput, latency, lifecycle, or
+standard-application integration requirements. This prevents protocol
+discovery from becoming entangled with kernel development and keeps
+unsafe experiments out of privileged code.</p>
+<h2 data-number="2.3" id="non-goals-for-the-first-release"><span
+class="header-section-number">2.3</span> Non-Goals for the First
+Release</h2>
+<ul>
+<li>Reflashing or modifying persistent camera firmware.</li>
+<li>Guessing vendor requests or bulk lengths from names alone.</li>
+<li>Reproducing every feature of the legacy ISCapture application.</li>
+<li>Shipping extracted vendor binaries, proprietary code, or
+undocumented data outside the private evidence workspace.</li>
+<li>Supporting every historical Tucsen camera that shares a related
+DLL.</li>
+<li>Starting with a Linux kernel module, DriverKit extension, or macOS
+camera extension before the user-space reader is stable.</li>
+<li>Claiming a frame rate, color accuracy, or sensor model before
+measurement.</li>
+</ul>
+<h2 data-number="2.4" id="architectural-invariants"><span
+class="header-section-number">2.4</span> Architectural Invariants</h2>
+<div class="invariant-grid">
+<div class="info-card">
+<strong>Evidence before traffic</strong>
+<p>
+Every live request has a static or captured provenance, declared
+expected result, bounded timeout, and recovery action.
+</p>
+</div>
+<div class="info-card">
+<strong>Raw is authoritative</strong>
+<p>
+Raw USB and frame bytes are preserved before decoding; decoded images
+are reproducible derivatives.
+</p>
+</div>
+<div class="info-card">
+<strong>Core before adapters</strong>
+<p>
+Protocol, transport, and decoding remain independent of V4L2,
+AVFoundation, GUI, or any one application.
+</p>
+</div>
+<div class="info-card">
+<strong>No silent fallback</strong>
+<p>
+Unknown modes, controls, short reads, and parser loss fail explicitly
+with structured evidence.
+</p>
+</div>
+<div class="info-card">
+<strong>Reconnection is normal</strong>
+<p>
+Unplug, reset, process crash, and application exit leave the camera
+recoverable without rebooting the host.
+</p>
+</div>
+<div class="info-card">
+<strong>One source of protocol truth</strong>
+<p>
+Packet definitions, response lengths, and mode tables are versioned once
+and consumed by tests and implementations.
+</p>
+</div>
+</div>
+<h2 data-number="2.5" id="actors-and-interests"><span
+class="header-section-number">2.5</span> Actors and Interests</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Actor</th>
+<th>Interest</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Microscope operator</td>
+<td>See a correctly oriented, responsive preview; adjust exposure and
+capture a full-resolution still without USB knowledge</td>
+</tr>
+<tr>
+<td>Scientific application</td>
+<td>Receive frames with stable timestamps, dimensions, pixel format, and
+predictable start/stop behavior</td>
+</tr>
+<tr>
+<td>Developer</td>
+<td>Replay deterministic fixtures, inspect raw bytes, test without
+hardware, and add protocol knowledge without unsafe defaults</td>
+</tr>
+<tr>
+<td>Support engineer</td>
+<td>Diagnose permissions, enumeration, control failure, frame loss, and
+decoding problems from structured logs</td>
+</tr>
+<tr>
+<td>Camera</td>
+<td>Receive only evidence-backed commands within bounded timing and
+transfer limits</td>
+</tr>
+<tr>
+<td>Operating-system adapter</td>
+<td>Translate the stable reader contract into V4L2, AVFoundation, or
+another standard application surface</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="2.6" id="system-context"><span
+class="header-section-number">2.6</span> System Context</h2>
+<div class="diagram-shell" role="img"
+aria-label="Camera reader system context">
+<svg viewBox="0 0 1040 310" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/></marker></defs>
+<rect class="box target" x="20" y="105" width="180" height="100" rx="7"/>
+<text class="label" x="110" y="142" text-anchor="middle">Microscope
+camera</text>
+<text class="small" x="110" y="166" text-anchor="middle">0547:c003</text>
+<text class="small" x="110" y="187" text-anchor="middle">EP0 control +
+0x82 bulk IN</text>
+<rect class="box core" x="280" y="65" width="255" height="180" rx="7"/>
+<text class="label" x="407" y="102" text-anchor="middle">Portable reader
+core</text> <text class="small" x="407" y="132" text-anchor="middle">USB
+transport</text>
+<text class="small" x="407" y="158" text-anchor="middle">Protocol state
+machine</text>
+<text class="small" x="407" y="184" text-anchor="middle">Frame parser +
+decoder</text>
+<text class="small" x="407" y="210" text-anchor="middle">Controls +
+diagnostics</text>
+<rect class="box" x="620" y="20" width="180" height="78" rx="7"/>
+<text class="label" x="710" y="52" text-anchor="middle">CLI / library
+API</text> <text class="small" x="710" y="76" text-anchor="middle">raw,
+still, stream, control</text>
+<rect class="box" x="620" y="116" width="180" height="78" rx="7"/>
+<text class="label" x="710" y="148" text-anchor="middle">Linux
+adapter</text>
+<text class="small" x="710" y="172" text-anchor="middle">V4L2 loopback /
+pipeline</text>
+<rect class="box" x="620" y="212" width="180" height="78" rx="7"/>
+<text class="label" x="710" y="244" text-anchor="middle">macOS
+adapter</text>
+<text class="small" x="710" y="268" text-anchor="middle">AVFoundation /
+extension</text>
+<rect class="box target" x="860" y="105" width="160" height="100" rx="7"/>
+<text class="label" x="940" y="142" text-anchor="middle">Applications</text>
+<text class="small" x="940" y="166" text-anchor="middle">preview ·
+capture</text>
+<text class="small" x="940" y="187" text-anchor="middle">analysis ·
+recording</text> <path class="edge" d="M200 155 H280"/>
+<path class="edge" d="M535 155 C575 155 580 59 620 59"/>
+<path class="edge" d="M535 155 H620"/>
+<path class="edge" d="M535 155 C575 155 580 251 620 251"/>
+<path class="edge" d="M800 59 C840 59 820 135 860 135"/>
+<path class="edge" d="M800 155 H860"/>
+<path class="edge" d="M800 251 C840 251 820 175 860 175"/>
+</svg>
+</div>
+<h1 data-number="3" id="prd"><span
+class="header-section-number">3</span> PRD</h1>
+<h2 data-number="3.1" id="product-goal"><span
+class="header-section-number">3.1</span> Product Goal</h2>
+<p>Provide a maintainable camera reader that turns the observed
+vendor-specific USB device into a safe acquisition and control service,
+with standard application integration layered over a portable protocol
+core.</p>
+<h2 data-number="3.2" id="release-rings"><span
+class="header-section-number">3.2</span> Release Rings</h2>
+<div class="release-grid">
+<div class="release-card">
+<strong>R1 · Evidence reader</strong>
+<p>
+Confirmed commands, deterministic raw still capture, frame boundaries,
+metadata, and offline fixtures.
+</p>
+</div>
+<div class="release-card">
+<strong>R2 · Operable stream</strong>
+<p>
+Decoded preview, explicit controls, stable start/stop/reconnect, library
+API, and CLI on Linux and macOS.
+</p>
+</div>
+<div class="release-card">
+<strong>R3 · Application camera</strong>
+<p>
+At least one standard OS camera path accepted in a real application,
+with the second platform proved or explicitly deferred.
+</p>
+</div>
+</div>
+<p>R1 is not a disposable prototype: its raw artifacts and protocol
+fixtures are the executable basis for R2. R2 remains useful even if an
+OS-level virtual camera proves expensive. R3 adapts the reader; it must
+not duplicate protocol or decoder logic.</p>
+<h2 data-number="3.3" id="primary-use-cases"><span
+class="header-section-number">3.3</span> Primary Use Cases</h2>
+<h3 data-number="3.3.1" id="uc1-inspect-and-identify"><span
+class="header-section-number">3.3.1</span> UC1 — Inspect and
+identify</h3>
+<ul>
+<li><strong>Trigger:</strong> camera is connected or diagnostics are
+requested.</li>
+<li><strong>Success:</strong> reader reports exact USB path, speed,
+descriptors, permissions, endpoint topology, reader version, and
+supported proven capabilities.</li>
+<li><strong>Minimum guarantee:</strong> no vendor-specific request is
+sent in discovery mode.</li>
+</ul>
+<h3 data-number="3.3.2" id="uc2-capture-one-full-resolution-still"><span
+class="header-section-number">3.3.2</span> UC2 — Capture one
+full-resolution still</h3>
+<ul>
+<li><strong>Trigger:</strong> operator requests a still image.</li>
+<li><strong>Success:</strong> reader initializes a known mode, obtains
+one complete raw frame, verifies boundaries and byte count, decodes it,
+and stores raw plus metadata.</li>
+<li><strong>Failure:</strong> partial or ambiguous data is retained as
+failed evidence and is never presented as a successful image.</li>
+</ul>
+<h3 data-number="3.3.3" id="uc3-stream-a-preview"><span
+class="header-section-number">3.3.3</span> UC3 — Stream a preview</h3>
+<ul>
+<li><strong>Trigger:</strong> an application or operator starts
+preview.</li>
+<li><strong>Success:</strong> reader enters a proven stream state, emits
+timestamped frames in a declared pixel format, reports loss, and stops
+cleanly.</li>
+<li><strong>Failure:</strong> repeated short reads, marker loss, or
+disconnect transitions to a bounded recovery state rather than an
+infinite retry loop.</li>
+</ul>
+<h3 data-number="3.3.4" id="uc4-operate-camera-controls"><span
+class="header-section-number">3.3.4</span> UC4 — Operate camera
+controls</h3>
+<ul>
+<li><strong>Trigger:</strong> caller reads or changes an advertised
+control.</li>
+<li><strong>Success:</strong> supported range, units, current value, and
+resulting state are explicit; a read-back or observable frame change
+verifies writes where possible.</li>
+<li><strong>Failure:</strong> unknown or unsafe operations are rejected
+before USB traffic.</li>
+</ul>
+<h3 data-number="3.3.5"
+id="uc5-use-the-camera-in-an-ordinary-application"><span
+class="header-section-number">3.3.5</span> UC5 — Use the camera in an
+ordinary application</h3>
+<ul>
+<li><strong>Trigger:</strong> application opens the virtual/standard
+camera source.</li>
+<li><strong>Success:</strong> application receives frames and can
+start/stop without owning raw USB; supported controls are available
+directly or through a companion control surface.</li>
+<li><strong>Failure:</strong> one application’s crash does not strand
+the camera or corrupt the next session.</li>
+</ul>
+<h3 data-number="3.3.6" id="uc6-recover-from-interruption"><span
+class="header-section-number">3.3.6</span> UC6 — Recover from
+interruption</h3>
+<ul>
+<li><strong>Trigger:</strong> unplug, USB reset, timeout, parser
+desynchronization, or reader crash.</li>
+<li><strong>Success:</strong> reader stops transfers, releases
+resources, records the last proven state, and either reconnects through
+the full initialization sequence or exits with a specific repair
+action.</li>
+</ul>
+<h2 data-number="3.4" id="functional-requirements"><span
+class="header-section-number">3.4</span> Functional Requirements</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Acceptance evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR-01</td>
+<td>Enumerate and select only <code>0547:c003</code> by default; support
+explicit bus/path selection when several devices exist</td>
+<td>Enumeration fixture and two-device selection test</td>
+</tr>
+<tr>
+<td>FR-02</td>
+<td>Keep descriptor-only discovery physically incapable of vendor or
+bulk transfers</td>
+<td>Import/call audit and runtime USB trace</td>
+</tr>
+<tr>
+<td>FR-03</td>
+<td>Encode confirmed setup packets as
+<code>bmRequestType, bRequest, wValue, wIndex, data length</code> from
+versioned, generation-specific protocol tables</td>
+<td>Golden packet tests against matched driver/DLL evidence</td>
+</tr>
+<tr>
+<td>FR-04</td>
+<td>Model initialization, mode selection, capture, stream, stop, and
+recovery as explicit states</td>
+<td>State transition tests and structured logs</td>
+</tr>
+<tr>
+<td>FR-05</td>
+<td>Capture raw control responses and bulk data without silently
+truncating or padding</td>
+<td>Raw artifacts, lengths, hashes, and short-read tests</td>
+</tr>
+<tr>
+<td>FR-06</td>
+<td>Detect frame boundaries and validate complete frame byte counts
+before decoding</td>
+<td>Parser fixtures including corruption and split markers</td>
+</tr>
+<tr>
+<td>FR-07</td>
+<td>Decode at least one full-resolution still and one preview mode</td>
+<td>Golden raw-to-image fixtures and visual checks</td>
+</tr>
+<tr>
+<td>FR-08</td>
+<td>Expose proven controls with ranges, units, defaults, and read-back
+semantics</td>
+<td>Control matrix and before/after evidence</td>
+</tr>
+<tr>
+<td>FR-09</td>
+<td>Provide CLI operations for inspect, still, stream, controls,
+diagnostics, and fixture replay</td>
+<td>Help snapshot and end-to-end CLI tests</td>
+</tr>
+<tr>
+<td>FR-10</td>
+<td>Provide a stable library or local-process API that transports
+frames, timestamps, metadata, controls, and errors</td>
+<td>Versioned API contract and compatibility tests</td>
+</tr>
+<tr>
+<td>FR-11</td>
+<td>Feed one standard application camera interface without duplicating
+USB/protocol logic</td>
+<td>Accepted application session and adapter boundary test</td>
+</tr>
+<tr>
+<td>FR-12</td>
+<td>Recover after unplug/replug and process restart without rebooting
+the host</td>
+<td>Reconnect matrix and repeated session test</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="3.5" id="non-functional-requirements"><span
+class="header-section-number">3.5</span> Non-Functional
+Requirements</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NFR-01 Safety</td>
+<td>Live vendor operations require an explicit opt-in build/runtime
+path, bounded length and timeout, and a recorded provenance</td>
+<td>Every device task</td>
+</tr>
+<tr>
+<td>NFR-02 Portability</td>
+<td>Core builds on AArch64 Linux and Apple Silicon macOS; byte order and
+packing are explicit</td>
+<td>D70</td>
+</tr>
+<tr>
+<td>NFR-03 Determinism</td>
+<td>Offline protocol and decoder tests run without the camera and yield
+stable hashes</td>
+<td>D60 onward</td>
+</tr>
+<tr>
+<td>NFR-04 Observability</td>
+<td>Logs identify device path, state transition, request tuple,
+expected/actual bytes, duration, and outcome without dumping
+secrets</td>
+<td>D40 onward</td>
+</tr>
+<tr>
+<td>NFR-05 Stability</td>
+<td>30-minute preview has no parser loss, unrecovered timeout, or
+unbounded memory growth; frame drops are measured</td>
+<td>D100</td>
+</tr>
+<tr>
+<td>NFR-06 Resource use</td>
+<td>Reader bounds USB buffers, frame queues, and disk capture; slow
+consumers have an explicit drop/back-pressure policy</td>
+<td>D70</td>
+</tr>
+<tr>
+<td>NFR-07 Reproducibility</td>
+<td>Clean build and test instructions pin required dependencies and
+preserve source hashes</td>
+<td>D110</td>
+</tr>
+<tr>
+<td>NFR-08 Legal hygiene</td>
+<td>Vendor binaries remain evidence-only and are not redistributed in
+packages</td>
+<td>D110</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="3.6" id="acceptance-scenarios"><span
+class="header-section-number">3.6</span> Acceptance Scenarios</h2>
+<ol type="1">
+<li>On <code>rpios-17</code>, connect the camera, run inspect, capture a
+still, stream for 30 minutes, change each supported control, stop,
+unplug/replug, and repeat.</li>
+<li>On macOS, build the same core, enumerate the same identity, capture
+or replay a known frame, and prove the selected application integration
+boundary.</li>
+<li>With no camera attached, run all packet, parser, decoder,
+state-machine, and adapter contract fixtures.</li>
+<li>Inject short reads, split markers, malformed lengths, stalls,
+disconnects, and slow consumers; verify bounded failure and
+recovery.</li>
+<li>Open the standard camera source in a named real application, record
+a short session, and compare frame metadata with the reader
+diagnostics.</li>
+</ol>
+<h1 data-number="4" id="design"><span
+class="header-section-number">4</span> Design</h1>
+<h2 data-number="4.1" id="target-architecture"><span
+class="header-section-number">4.1</span> Target Architecture</h2>
+<p>The provisional implementation is a small C17 core with libusb. C
+keeps the existing descriptor probe reusable, provides a stable ABI for
+adapters, and avoids coupling the protocol to a GUI or platform runtime.
+D30 may revise this choice only through an explicit architecture
+decision with migration cost.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>Responsibility</th>
+<th>Must not own</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>usb_transport</code></td>
+<td>Device selection, claim/release, bounded control and bulk
+operations</td>
+<td>Camera semantics or image decoding</td>
+</tr>
+<tr>
+<td><code>camera_protocol</code></td>
+<td>Request table, initialization/mode/control sequences, timing, state
+transitions</td>
+<td>OS virtual-camera APIs</td>
+</tr>
+<tr>
+<td><code>frame_parser</code></td>
+<td>Bulk accumulation, marker handling, byte-count validation, frame
+metadata</td>
+<td>Color policy or application lifecycle</td>
+</tr>
+<tr>
+<td><code>frame_decoder</code></td>
+<td>Packing, Bayer/color conversion, orientation, calibration hooks</td>
+<td>USB access</td>
+</tr>
+<tr>
+<td><code>reader_api</code></td>
+<td>Stable lifecycle, frame, control, error, and diagnostics
+contract</td>
+<td>Platform-specific camera registration</td>
+</tr>
+<tr>
+<td><code>camera-reader</code> CLI</td>
+<td>Inspection, raw capture, decoded still, stream dump, replay,
+diagnostics</td>
+<td>Private protocol duplication</td>
+</tr>
+<tr>
+<td>Linux adapter</td>
+<td>Convert reader frames to V4L2/GStreamer/FFmpeg-facing stream</td>
+<td>Direct USB control</td>
+</tr>
+<tr>
+<td>macOS adapter</td>
+<td>Convert reader frames to AVFoundation-compatible buffers and chosen
+camera surface</td>
+<td>Direct USB control</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="4.2" id="confirmed-protocol-boundary"><span
+class="header-section-number">4.2</span> Confirmed Protocol
+Boundary</h2>
+<p>There are two incompatible Windows protocol generations for the same
+USB ID. The 2011 TCA driver hard-codes vendor/device/IN
+<code>0xc0</code>; the 2013 IS1000 driver derives direction from the DLL
+record and the later DLL uses vendor/device/OUT <code>0x40</code>. Both
+copy request/value/index from record offsets 4/6/8. A DLL must be paired
+with its matching driver; VID/PID alone is not sufficient
+provenance.</p>
+<p>The purchase period and official compatibility matrix make TSView7
+plus the 2011 TCA driver the primary lineage. Its fixed register read
+is:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>libusb_control_transfer<span class="op">(</span>handle<span class="op">,</span> <span class="bn">0xc0</span><span class="op">,</span> <span class="bn">0x11</span><span class="op">,</span> <span class="bn">0x0000</span><span class="op">,</span> <span class="bn">0x3ff0</span><span class="op">,</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>                        response<span class="op">,</span> <span class="dv">3</span><span class="op">,</span> timeout_ms<span class="op">);</span></span></code></pre></div>
+<p>The response is a big-endian 16-bit value followed by acknowledgement
+<code>0x08</code>. The DLL precedes register reads with
+<code>c0 02 0000 000f</code> and closes with
+<code>c0 03 0000 000e</code> for this camera’s observed product-string
+branch. Static mapping is confirmed; live state entry is not yet
+working.</p>
+<p>The data plane is bulk IN endpoint <code>0x82</code>, maximum packet
+size 512. The matching TCA DLL reads exactly one byte per pixel and
+exposes fixed 3664x2748, 1600x1200, 1280x960, 800x600, and 640x480 modes
+plus a register-derived ROI mode. It schedules four overlapped reads at
+a time, with mode-dependent chunks capped at 524,288 bytes, and
+assembles exactly <code>width * height</code> bytes. The
+<code>0x88</code>/<code>0x99</code> marker search and request
+<code>0xb3</code> belong to the incompatible later ISCapture lineage;
+they remain comparison evidence and must not be imported into the TCA
+implementation without a trace showing that this hardware uses them.</p>
+<h2 data-number="4.3" id="reader-state-machine"><span
+class="header-section-number">4.3</span> Reader State Machine</h2>
+<div class="state-machine" aria-label="Reader states">
+<div class="state">
+<strong>Disconnected</strong><br><small>No handle</small>
+</div>
+<span class="arrow">→</span>
+<div class="state">
+<strong>Enumerated</strong><br><small>Identity checked</small>
+</div>
+<span class="arrow">→</span>
+<div class="state">
+<strong>Claimed</strong><br><small>Interface 0</small>
+</div>
+<span class="arrow">→</span>
+<div class="state">
+<strong>Initialized</strong><br><small>Proven sequence</small>
+</div>
+<span class="arrow">→</span>
+<div class="state">
+<strong>Acquiring</strong><br><small>Still or stream</small>
+</div>
+<span class="arrow">→</span>
+<div class="state">
+<strong>Stopping</strong><br><small>Drain + release</small>
+</div>
+</div>
+<p>Any state may enter <code>Fault</code>. A fault record includes the
+prior state, last completed operation, expected and actual length,
+libusb/OS error, and whether a full close/reopen is required. Automatic
+recovery is allowed only for a tested transition; otherwise the reader
+releases resources and exits explicitly.</p>
+<h2 data-number="4.4" id="api-shape"><span
+class="header-section-number">4.4</span> API Shape</h2>
+<p>The stable reader surface should express capabilities rather than
+expose raw request numbers:</p>
+<pre class="text"><code>reader_open(selector, safety_policy)
+reader_capabilities()
+reader_configure(mode, control_set)
+reader_capture_still(destination)
+reader_start_stream(frame_callback, queue_policy)
+reader_set_control(control_id, value)
+reader_get_control(control_id)
+reader_stop()
+reader_diagnostics()
+reader_close()</code></pre>
+<p>An expert-only diagnostics layer may render a confirmed packet in
+dry-run mode. Arbitrary vendor requests are not part of the supported
+public API.</p>
+<h2 data-number="4.5" id="frame-and-queue-contract"><span
+class="header-section-number">4.5</span> Frame and Queue Contract</h2>
+<p>Each emitted frame carries:</p>
+<ul>
+<li>monotonically increasing reader sequence;</li>
+<li>host monotonic timestamp and acquisition duration;</li>
+<li>raw and decoded byte counts;</li>
+<li>width, height, stride, bit depth, and pixel format;</li>
+<li>current proven control snapshot;</li>
+<li>frame-integrity flags and any recovery boundary; and</li>
+<li>optional link to the raw evidence artifact.</li>
+</ul>
+<p>The live stream uses a bounded queue. The default policy keeps the
+newest frame for preview and increments a dropped-frame counter when
+consumers are slow. Lossless recording uses an explicit back-pressure or
+disk-spool mode and may refuse startup if the configured capacity is
+inadequate.</p>
+<h2 data-number="4.6" id="safety-model"><span
+class="header-section-number">4.6</span> Safety Model</h2>
+<div class="gate-grid">
+<div class="info-card">
+<strong>Static gate</strong>
+<p>
+Request tuple, caller, order, response length, and expected role are
+recovered before implementation.
+</p>
+</div>
+<div class="info-card">
+<strong>Dry-run gate</strong>
+<p>
+The tool prints exact USB fields and refuses transmission; golden tests
+compare them with evidence.
+</p>
+</div>
+<div class="info-card">
+<strong>Live gate</strong>
+<p>
+One opt-in request runs with bounded timeout/length, before-and-after
+enumeration, and a power-cycle recovery path.
+</p>
+</div>
+</div>
+<p>Device-to-host does not mean non-mutating. A vendor-IN request may
+trigger a capture, advance internal state, or clear a status latch.
+Safety classification depends on call context and observed behavior, not
+only <code>bmRequestType</code>.</p>
+<h2 data-number="4.7" id="standard-application-integration"><span
+class="header-section-number">4.7</span> Standard Application
+Integration</h2>
+<h3 data-number="4.7.1" id="linux"><span
+class="header-section-number">4.7.1</span> Linux</h3>
+<p>Prefer a user-space adapter that publishes decoded frames through an
+existing standard path. The first candidate is V4L2 loopback or a
+GStreamer/FFmpeg pipeline fed by the reader API. The adapter owns
+pixel-format negotiation and application lifecycle; it never embeds
+protocol tables.</p>
+<p>The current Micro-Manager tree has a Linux Video4Linux adapter with a
+configurable device path/resolution and YUYV handling, making the proven
+temporary V4L2 bridge the preferred first microscopy-application test.
+Its separate AmScope adapter targets Windows MU-series USB 3/ToupCam
+hardware and does not establish C003 compatibility. Pycro-Manager
+belongs above a working MMCore camera/stage configuration; it is not
+another USB transport.</p>
+<h3 data-number="4.7.2" id="macos"><span
+class="header-section-number">4.7.2</span> macOS</h3>
+<p>First prove the C reader and decoded buffers independently. Then
+select the least-complex application path that meets acceptance: direct
+AVFoundation use inside a small capture application, or a modern Camera
+Extension when the camera must appear system-wide. Signing,
+entitlements, installation, and host OS support are separate adapter
+concerns.</p>
+<h2 data-number="4.8" id="recovery-and-rollback"><span
+class="header-section-number">4.8</span> Recovery and Rollback</h2>
+<ul>
+<li>Every live experiment begins and ends with descriptor enumeration
+and an interface claim/release check.</li>
+<li>A stalled transfer is cancelled or times out; buffers are discarded
+unless explicitly retained as failed evidence.</li>
+<li>Protocol changes are table/version changes with golden fixtures;
+rollback is selection of the previous table and reader revision.</li>
+<li>Adapter failure is isolated from the core; stopping an adapter
+closes its reader session and leaves no persistent registration unless
+explicitly installed under D80 or D90.</li>
+<li>No task writes camera non-volatile firmware. Discovering a required
+volatile upload creates a new reviewed task with its own hash and
+power-cycle proof.</li>
+</ul>
+<h2 data-number="4.9" id="key-decisions"><span
+class="header-section-number">4.9</span> Key Decisions</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Current choice</th>
+<th>Revisit when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kernel versus user space</td>
+<td>User-space libusb core</td>
+<td>Measured throughput, latency, or application contract cannot be
+met</td>
+</tr>
+<tr>
+<td>Core language</td>
+<td>C17, provisional</td>
+<td>D30 compares safety, ABI, tooling, and reuse cost</td>
+</tr>
+<tr>
+<td>First physical host</td>
+<td>Raspberry Pi 5 <code>rpios-17</code>; UTM CocoaSPICE and direct-QEMU
+USB paths are closed negative branches</td>
+<td>Revisit only if a future UTM/libusb release demonstrably enumerates
+<code>0547:c003</code></td>
+</tr>
+<tr>
+<td>First app bridge</td>
+<td>Linux standard path</td>
+<td>D70 measurements or user priority justify macOS first</td>
+</tr>
+<tr>
+<td>Windows emulator</td>
+<td>Working D40 evidence bench; test mode, Tucsen driver, TSView, E1000
+networking, and live host handoff verified; usbip-win2 is a preserved
+negative transport result</td>
+<td>VirtualHere plus Linux <code>usbmon</code> exposes the successful
+initialization transactions; repeat once from a documented physical cold
+cycle</td>
+</tr>
+<tr>
+<td>Persistent firmware</td>
+<td>Prohibited</td>
+<td>New evidence proves a volatile upload is required; non-volatile
+writes remain out of scope</td>
+</tr>
+</tbody>
+</table>
+<h1 data-number="5" id="plan"><span
+class="header-section-number">5</span> Plan</h1>
+<h2 data-number="5.1" id="execution-policy"><span
+class="header-section-number">5.1</span> Execution Policy</h2>
+<p>D00 through D50 now record completed discovery and protocol work. The
+isolated Windows/VirtualHere bench supplied a successful reference trace
+after USB/IP, UTM CocoaSPICE, and direct-QEMU redirection were closed as
+preserved negative branches. Its seven-command cold initializer and
+framing rules are reproduced natively on <code>rpios-17</code>, so
+neither Windows nor a relay is a runtime dependency. Mode 2
+(<code>b4/c2</code>) is the established preview mode; mode 0
+(<code>b4/c0</code>) is the physically verified 3664×2748
+still/full-resolution mode. D60 remains active only for optical Bayer
+phase, orientation, and color validation once the camera is mounted on
+the microscope. D100 continues Linux fault/reconnect work, while D110
+maintains the public source release and evidence index.</p>
+<p>For every live-device task:</p>
+<ol type="1">
+<li>record source revision, device path, descriptors, power topology,
+and current evidence hashes;</li>
+<li>state the exact operation, expected response, timeout, byte limit,
+and abort condition;</li>
+<li>run one bounded variable at a time;</li>
+<li>preserve raw result and host log;</li>
+<li>re-enumerate and repeat the safe claim/release probe; and</li>
+<li>update the evidence ledger before declaring the task complete.</li>
+</ol>
+<p>No task is complete because code exists. Completion requires its
+declared proof, clean recovery, and updated protocol/documentation
+state.</p>
+<h2 data-number="5.2" id="delivery-gates"><span
+class="header-section-number">5.2</span> Delivery Gates</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Exit condition</th>
+<th>Unlocks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G0 Identity</td>
+<td>Descriptors, interface, endpoint, permissions, hashes, and safe
+claim/release reproduced</td>
+<td>Static protocol work</td>
+</tr>
+<tr>
+<td>G1 Control map</td>
+<td>Both driver generations, matched DLLs, exact TCA read/open/close
+tuples, and dry-run tooling independently confirmed</td>
+<td>Bounded first-response work</td>
+</tr>
+<tr>
+<td>G2 First response</td>
+<td>One non-mutating request returns a stable, understood-length
+response without harming enumeration</td>
+<td>Initialization trials</td>
+</tr>
+<tr>
+<td>G3 Raw frame</td>
+<td>One complete bulk frame is bounded, hashed, repeatable, and
+separable from headers/markers</td>
+<td>Decoder work</td>
+</tr>
+<tr>
+<td>G4 Decoded image</td>
+<td>Full still and preview mode decode reproducibly with documented
+geometry and pixel format</td>
+<td>Reader API and controls</td>
+</tr>
+<tr>
+<td>G5 Operable reader</td>
+<td>Stream, controls, stop, reconnect, fixtures, and diagnostics meet R2
+acceptance</td>
+<td>OS adapters</td>
+</tr>
+<tr>
+<td>G6 Application camera</td>
+<td>Real application consumes accepted frames; installation/removal and
+crash recovery pass</td>
+<td>Packaging and release acceptance</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="5.3" id="dependency-graph"><span
+class="header-section-number">5.3</span> Dependency Graph</h2>
+<p>Arrows are represented by each card’s dependency line. D80 and D90
+run in parallel after the core reader, then merge at D100.</p>
+<div class="dag" aria-label="Task dependency graph">
+<p><a href="#d00"><span class="id">D00 · COMPLETE</span>Preserve
+physical and USB baseline<span class="deps">START</span></a>
+<a href="#d10"><span class="id">D10 · COMPLETE</span>Separate Windows
+transport generations<span class="deps">depends D00</span></a>
+<a href="#d20"><span class="id">D20 · COMPLETE</span>Classify requests
+and call order<span class="deps">depends D10</span></a>
+<a href="#d30"><span class="id">D30 · COMPLETE</span>Build dry-run
+protocol fixtures<span class="deps">depends D20</span></a>
+<a href="#d40"><span class="id">D40 · COMPLETE</span>Resolve first safe
+live response<span class="deps">depends D30</span></a>
+<a href="#d50"><span class="id">D50 · COMPLETE</span>Recover
+initialization and modes<span class="deps">depends D40</span></a>
+<a href="#d60"><span class="id">D60 · ACTIVE (OPTICS)</span>Capture and
+decode frames<span class="deps">depends D50</span></a>
+<a href="#d70"><span class="id">D70 · COMPLETE (ALPHA)</span>Build
+operable reader core<span class="deps">depends D60</span></a>
+<a href="#d80"><span class="id">D80 · COMPLETE (LINUX)</span>Linux
+application bridge<span class="deps">depends D70</span></a>
+<a href="#d90"><span class="id">D90 · READER COMPLETE / APP
+DEFERRED</span>macOS application bridge<span class="deps">depends
+D70</span></a> <a class="merge" href="#d100"><span class="id">D100 ·
+ACTIVE (LINUX)</span>Stability, fault, and application acceptance<span
+class="deps">depends D80 + D90 or recorded macOS deferral</span></a>
+<a href="#d110"><span class="id">D110 · ACTIVE (ALPHA)</span>Package
+source, fixtures, and operations<span class="deps">depends
+D100</span></a> <a href="#d120"><span class="id">D120 ·
+EXIT</span>Accept release and residual risks<span class="deps">depends
+D110</span></a></p>
+</div>
+<h2 data-number="5.4" id="task-summary"><span
+class="header-section-number">5.4</span> Task Summary</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>Dependencies</th>
+<th>State</th>
+<th>Primary proof</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D00</td>
+<td>Preserve physical and USB baseline</td>
+<td>None</td>
+<td>Complete</td>
+<td>Photographs, descriptors, Pi enumeration, safe claim/release,
+hashes</td>
+</tr>
+<tr>
+<td>D10</td>
+<td>Separate Windows transport generations</td>
+<td>D00</td>
+<td>Complete</td>
+<td>x86/x64 agreement within both 2011 and 2013 driver pairs</td>
+</tr>
+<tr>
+<td>D20</td>
+<td>Classify requests and call order</td>
+<td>D10</td>
+<td>Complete</td>
+<td>TCA and IS1000 call graphs, safety classification, fixed TCA read
+candidate</td>
+</tr>
+<tr>
+<td>D30</td>
+<td>Build dry-run protocol fixtures</td>
+<td>D20</td>
+<td>Complete</td>
+<td>Inert-by-default plans plus separately named, fixed opt-in
+binaries</td>
+</tr>
+<tr>
+<td>D40</td>
+<td>Resolve first safe live response</td>
+<td>D30</td>
+<td>Complete</td>
+<td>744-operation Windows reference capture decoded without pairing or
+validation gaps; seven-command native cold start reproduced</td>
+</tr>
+<tr>
+<td>D50</td>
+<td>Recover initialization and modes</td>
+<td>D40</td>
+<td>Complete</td>
+<td>Repeatable mode-2 cold start, exposure/gain controls, and physically
+verified mode-0 selector/profile</td>
+</tr>
+<tr>
+<td>D60</td>
+<td>Capture and decode frames</td>
+<td>D50</td>
+<td>Active; transport complete, optics pending</td>
+<td>Continuous 1280×960 and 3664×2748 Bayer8, exact marker framing, raw
+preservation, and decoder; optical phase pending</td>
+</tr>
+<tr>
+<td>D70</td>
+<td>Build operable reader core</td>
+<td>D60</td>
+<td>Complete for alpha</td>
+<td>Public C17 libusb CLI, controls, stream, diagnostics, reopen tests,
+and cross-platform CI</td>
+</tr>
+<tr>
+<td>D80</td>
+<td>Build Linux application bridge</td>
+<td>D70</td>
+<td>Complete for alpha</td>
+<td>Live physical-camera V4L2 device consumed by <code>v4l2-ctl</code>
+and FFmpeg, then cleanly removed</td>
+</tr>
+<tr>
+<td>D90</td>
+<td>Build macOS application bridge</td>
+<td>D70</td>
+<td>Portable reader complete; AVFoundation deferred</td>
+<td>Exact alpha-3 directly captured preview and full-resolution frames
+over the native cable; system-camera surface deferred</td>
+</tr>
+<tr>
+<td>D100</td>
+<td>Prove stability and fault recovery</td>
+<td>D80,D90</td>
+<td>Active, Linux-first</td>
+<td>Reopen, endurance, process-kill, host reboot, direct Apple Silicon
+capture, and bounded ownership hand-back passed; physical Pi cable
+disconnect/reconnect remains</td>
+</tr>
+<tr>
+<td>D110</td>
+<td>Package source and operations</td>
+<td>D100</td>
+<td>Active, alpha-3 published</td>
+<td>Public GitHub repository, Apache-2.0 license, udev/V4L2 operations,
+CI, two modes, bounded initial recovery, optical procedure/analyzer,
+tested install/removal, validation record, report links</td>
+</tr>
+<tr>
+<td>D120</td>
+<td>Accept release</td>
+<td>D110</td>
+<td>Proposed</td>
+<td>Owner acceptance against Definition of Done</td>
+</tr>
+</tbody>
+</table>
+<h3 data-number="5.4.1"
+id="non-gating-research-lane-updated-firmware-discovery"><span
+class="header-section-number">5.4.1</span> Non-gating Research Lane —
+Updated Firmware Discovery</h3>
+<p>This is a <strong>low-priority, opportunistic investigation</strong>,
+not a dependency or prerequisite for D20–D120. It may run whenever
+protocol work is waiting on hardware, long tests, or review.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Priority</td>
+<td>Low, but retained in scope</td>
+</tr>
+<tr>
+<td>Goal</td>
+<td>Determine whether a newer, compatible firmware image or official
+updater exists for <code>0547:c003</code> / TCA-10.0N / IS1000</td>
+</tr>
+<tr>
+<td>Search surface</td>
+<td>Tucsen and AmScope archives/support pages; archived vendor sites;
+distributor mirrors; driver packages; updater manifests; public USB and
+Linux projects</td>
+</tr>
+<tr>
+<td>Evidence</td>
+<td>Preserve source URL, retrieval date, package hash, signatures,
+model/VID/PID claims, firmware version markers, and
+license/redistribution status</td>
+</tr>
+<tr>
+<td>Safety boundary</td>
+<td>Search and static extraction only; never upload firmware merely
+because a file or updater matches the model name</td>
+</tr>
+<tr>
+<td>Adoption gate</td>
+<td>Any candidate upload becomes a separately reviewed, explicitly
+authorized experiment with a verified target identity, recovery method,
+power-loss analysis, and rollback path</td>
+</tr>
+<tr>
+<td>Relationship to delivery</td>
+<td>Findings may simplify or improve the reader, but absence of updated
+firmware cannot block the operating-system reader plan</td>
+</tr>
+</tbody>
+</table>
+<p>Current result: no standalone firmware image or official updater has
+been found. The official Tucsen archive supplies driver/application
+packages. A 2026-09-29 static refresh preserved AmScope’s current ARM64
+Linux and Windows packages: the Linux udev rule covers vendor
+<code>0547</code> broadly, but neither package names C003/TCA/IS1000,
+and both 232-entry Windows INFs omit
+<code>USB\\VID_0547&amp;PID_C003</code>. The recovered legacy INF phrase
+<code>Firmware Device</code> is a driver label, not proof of an external
+firmware payload. A 2026-10-03 official-domain refresh found firmware
+tools only for unrelated newer Tucsen families and no exact-model
+candidate. See the <a
+href="../evidence/firmware-discovery.md">firmware-discovery
+evidence</a>. This bounded negative result does not change the delivery
+dependency graph.</p>
+<p>Useful search aliases include <code>TCA-10.0N</code>,
+<code>TCA-10.0-N</code>, <code>IS1000</code>, <code>0547:C003</code>,
+<code>Xintu Photonics</code>, <code>Tucsen</code>,
+<code>AmScope 10MP</code>, and strings or version identifiers extracted
+from the archived driver and camera DLL packages.</p>
+<h3 data-number="5.4.2"
+id="non-gating-research-lane-historical-application-integration"><span
+class="header-section-number">5.4.2</span> Non-gating Research Lane —
+Historical Application Integration</h3>
+<p>A 2014 University College London thesis explicitly identifies a
+Tucsen TCA-10.0-N running on Micro-Manager 1.4 for live view and an
+80-hour time-lapse. This proves that the exact model reached a general
+scientific-imaging application. Inspection of the official Micro-Manager
+tree at the nearest pre-publication commit finds generic TWAIN and
+OpenCV camera adapters, but no legacy Tucsen-specific adapter. The
+historical route may therefore have used a separately supplied TWAIN or
+system-camera source, or an adapter not present in the public tree; it
+remains unresolved.</p>
+<p>This finding makes Micro-Manager a credible later acceptance
+application and supports selecting a standard V4L2/media bridge on
+Linux. It does not resolve cold initialization, prove
+UVC/DirectShow/TWAIN registration, or authorize a live request. See the
+<a
+href="../evidence/micromanager-application-precedent.md">Micro-Manager
+application precedent</a>.</p>
+<h3 data-number="5.4.3"
+id="non-gating-reverse-engineering-lane-ghidra-call-graph-recovery"><span
+class="header-section-number">5.4.3</span> Non-gating
+Reverse-Engineering Lane — Ghidra Call-Graph Recovery</h3>
+<p>Ghidra is used to refine, name, and cross-check the static model
+recovered from the working purchase-era Windows stack. This lane remains
+parallel to the live transport trace: it supplies implementation
+guidance, but does not delay observation of the known-good cold-start
+sequence.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Primary target</td>
+<td>Working <code>TS1000.dll</code>, because it contains the TCA-10.0-N
+model logic, initialization tables, register semantics, modes, and frame
+handling</td>
+</tr>
+<tr>
+<td>Secondary target</td>
+<td><code>Tucsen64.sys</code>, to name IOCTL dispatch, request
+marshalling, buffer limits, completion behavior, and error translation
+in the thin USB transport</td>
+</tr>
+<tr>
+<td>Inputs</td>
+<td>Only the hash-pinned binaries from the verified Windows
+installation; preserve originals and analyze copies</td>
+</tr>
+<tr>
+<td>Method</td>
+<td>Import PE symbols and types, identify
+<code>CreateFile</code>/<code>DeviceIoControl</code> callers, propagate
+IOCTL structures, recover call graphs and state transitions, and
+correlate constants with the emulator and USB trace</td>
+</tr>
+<tr>
+<td>Required outputs</td>
+<td>Reproducible headless Ghidra project or script,
+function-address/name map, decompiler excerpts limited to project
+evidence, request-structure types, unresolved edges, and hashes</td>
+</tr>
+<tr>
+<td>Validation</td>
+<td>Every inferred request or state edge must match a captured
+transaction, an emulated execution, or a byte-level disassembly check
+before entering reader code</td>
+</tr>
+<tr>
+<td>Safety boundary</td>
+<td>Static analysis only; decompiler output never authorizes a live
+request or firmware operation by itself</td>
+</tr>
+<tr>
+<td>Integration point</td>
+<td>Feed confirmed names, sequencing, timing, and register semantics
+into D40/D50 and convert stable findings into golden protocol tests</td>
+</tr>
+</tbody>
+</table>
+<p>The first targeted headless pass is complete. Official Ghidra 12.1.4
+was hash-verified and built with project-local dependencies; persistent
+projects, reusable scripts, function inventories, and decompiler outputs
+are preserved. It independently confirms the ten-byte command ABI,
+obfuscated register writes, register reads, four implemented driver
+IOCTLs, ordinary KMDF USB enumeration/configuration, and the split
+bulk-URB path. It also proves that the DLL’s ignored
+<code>0x22208a</code> call cannot hide a USB transaction in the matched
+driver. No firmware-loader call was found in prepare-hardware. See the
+<a href="../evidence/ghidra-targeted-decompilation.md">targeted Ghidra
+evidence</a>.</p>
+<p>This substantially improves maintainability and cross-checks the
+current C17 implementation, but does not yet explain the physical-cold
+<code>0x02</code> timeout. The VirtualHere trace therefore remains the
+evidence gate.</p>
+<h2 data-number="5.5" id="task-contracts"><span
+class="header-section-number">5.5</span> Task Contracts</h2>
+<div class="task-controls" role="group"
+aria-label="Filter task contracts">
+<p><button type="button" data-task-filter="all" aria-pressed="true">All
+tasks</button>
+<button type="button" data-task-filter="ready" aria-pressed="false">Ready</button>
+<button type="button" data-task-filter="complete" aria-pressed="false">Complete</button>
+<button type="button" data-task-filter="proposed" aria-pressed="false">Proposed</button>
+<span class="task-progress" aria-live="polite"></span></p>
+</div>
+<div class="task-card" data-state="complete">
+<!-- task: D00; depends: none; state: complete -->
+<h3 data-number="5.5.1" id="d00"><span
+class="header-section-number">5.5.1</span> D00 — Preserve Physical and
+USB Baseline</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State</td>
+<td>Complete; sole start</td>
+</tr>
+<tr>
+<td>Actors</td>
+<td>Camera owner, protocol developer</td>
+</tr>
+<tr>
+<td>Goal</td>
+<td>Establish immutable identity, topology, host behavior, and safe
+access before any protocol experiment</td>
+</tr>
+<tr>
+<td>Preconditions</td>
+<td>Physical camera and at least one macOS/Linux host available</td>
+</tr>
+<tr>
+<td>Postconditions</td>
+<td>Photographs, descriptors, strings, VID/PID, endpoint layout, Pi
+enumeration, permissions, safe claim/release, and source hashes
+preserved</td>
+</tr>
+<tr>
+<td>Failure/rollback</td>
+<td>Disconnect camera; preserve partial logs; do not install speculative
+drivers</td>
+</tr>
+<tr>
+<td>Expected proof</td>
+<td><code>device-identity.md</code>, Pi enumeration, safe probe note,
+photographs, and verified hashes</td>
+</tr>
+</tbody>
+</table>
+<p>Happy-day steps:</p>
+<ol type="1">
+<li>Photograph enclosure, USB connector, and protected sensor side.</li>
+<li>Enumerate descriptors on macOS and Raspberry Pi Linux.</li>
+<li>Confirm interface <code>0xff</code> and bulk-IN endpoint
+<code>0x82</code> at high speed.</li>
+<li>Install device-specific permissions and prove open/claim/release
+with a binary that imports no transfer operation.</li>
+</ol>
+</div>
+<div class="task-card" data-state="complete">
+<!-- task: D10; depends: D00; state: complete -->
+<h3 data-number="5.5.2" id="d10"><span
+class="header-section-number">5.5.2</span> D10 — Separate Windows
+Transport Generations</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Actors</td>
+<td>Protocol developer</td>
+</tr>
+<tr>
+<td>Goal</td>
+<td>Convert each recovered DLL/driver boundary into an exact,
+generation-specific USB control-transfer shape</td>
+</tr>
+<tr>
+<td>Preconditions</td>
+<td>D00 complete; vendor archives extracted statically and hashed</td>
+</tr>
+<tr>
+<td>Postconditions</td>
+<td>IOCTL <code>0x222059</code> and record offsets independently agree
+in x86/x86-64; 2011 TCA hard-codes <code>0xc0</code>, while 2013 IS1000
+derives <code>0x40</code> from its record</td>
+</tr>
+<tr>
+<td>Failure/rollback</td>
+<td>Static-only; discard generated disassembly and retain original
+binaries unchanged</td>
+</tr>
+<tr>
+<td>Expected proof</td>
+<td><code>ts1000-static-protocol-map.md</code> and
+<code>tucsen-driver-ioctl-handler.md</code></td>
+</tr>
+</tbody>
+</table>
+<p>Happy-day steps:</p>
+<ol type="1">
+<li>Trace the DLL’s only <code>DeviceIoControl</code> call and ten-byte
+record.</li>
+<li>Locate both KMDF IOCTL handlers and their dispatch branch.</li>
+<li>Cross-check setup-packet construction in both architectures.</li>
+<li>Record the exact libusb shape without transmitting it.</li>
+</ol>
+</div>
+<div class="task-card" data-state="complete">
+<!-- task: D20; depends: D10; state: complete -->
+<h3 data-number="5.5.3" id="d20"><span
+class="header-section-number">5.5.3</span> D20 — Classify Requests and
+Call Order</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Actors</td>
+<td>Protocol developer, reviewer</td>
+</tr>
+<tr>
+<td>Goal</td>
+<td>Give every embedded request a caller, order, response length, timing
+context, and safety classification</td>
+</tr>
+<tr>
+<td>Preconditions</td>
+<td>D10 complete; DLL and disassembly hashes match evidence</td>
+</tr>
+<tr>
+<td>Postconditions</td>
+<td>Later requests <code>b3</code>–<code>be</code> are separated from
+the TCA family; TCA <code>0x11/0x3ff0</code> is classified as a
+non-mutating, three-byte register read with an exact open/close
+prefix</td>
+</tr>
+<tr>
+<td>Failure/rollback</td>
+<td>Static-only; unresolved semantics remain unknown rather than
+guessed; Windows trace becomes a targeted fallback</td>
+</tr>
+<tr>
+<td>Expected proof</td>
+<td>Annotated call graph, sequence tables, unresolved-edge list, and
+selected D40 candidate rationale</td>
+</tr>
+</tbody>
+</table>
+<p>Happy-day steps:</p>
+<ol type="1">
+<li>Trace request-table references to initialization, control, preview,
+still, and shutdown call sites.</li>
+<li>Record request/value/index/length, ordering, repetition, delays, and
+response consumers.</li>
+<li>Separate observation from semantic inference and rank candidates by
+risk.</li>
+<li>Select the first candidate only if it is nonzero-response and not
+adjacent to capture, mode change, reset, or shutdown.</li>
+</ol>
+</div>
+<div class="task-card" data-state="complete">
+<!-- task: D30; depends: D20; state: complete -->
+<h3 data-number="5.5.4" id="d30"><span
+class="header-section-number">5.5.4</span> D30 — Build the Dry-Run
+Protocol Fixture</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Actors</td>
+<td>Reader developer, reviewer</td>
+</tr>
+<tr>
+<td>Goal</td>
+<td>Encode confirmed packet construction and planned sequences while
+making transmission impossible by default</td>
+</tr>
+<tr>
+<td>Preconditions</td>
+<td>D20 complete; protocol table and first-candidate rationale
+reviewed</td>
+</tr>
+<tr>
+<td>Postconditions</td>
+<td>Tool renders exact tuples, lengths, timeouts, evidence IDs, and
+sequence order; golden tests pass on Linux/macOS</td>
+</tr>
+<tr>
+<td>Failure/rollback</td>
+<td>Tool remains dry-run-only; remove any transfer import from the
+default binary</td>
+</tr>
+<tr>
+<td>Expected proof</td>
+<td>Source review, symbol/import audit, golden output hashes,
+malformed-input refusal tests</td>
+</tr>
+</tbody>
+</table>
+<p>Happy-day steps:</p>
+<ol type="1">
+<li>Define versioned protocol records and provenance fields.</li>
+<li>Add a dry-run command that prints exact setup and expected
+response.</li>
+<li>Compile a default binary without control/bulk transfer calls.</li>
+<li>Add a separately named opt-in experimental binary only after
+review.</li>
+</ol>
+</div>
+<div class="task-card" data-state="complete">
+<!-- task: D40; depends: D30; state: complete -->
+<h3 data-number="5.5.5" id="d40"><span
+class="header-section-number">5.5.5</span> D40 — Resolve the First Safe
+Live Response</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State</td>
+<td>Complete; the successful Windows session was captured below the
+relay and its minimal cold-start sequence was reproduced natively on
+Linux</td>
+</tr>
+<tr>
+<td>Actors</td>
+<td>Camera owner, protocol developer</td>
+</tr>
+<tr>
+<td>Goal</td>
+<td>Obtain one stable vendor response without starting capture or
+degrading enumeration</td>
+</tr>
+<tr>
+<td>Preconditions</td>
+<td>D30 proof complete; exact tuple, expected length, timeout, abort,
+and power-cycle path reviewed</td>
+</tr>
+<tr>
+<td>Postconditions</td>
+<td>Response repeats across cold sessions, or a Windows USB trace
+explains the state-entry requirement; camera passes descriptor and
+claim/release post-check</td>
+</tr>
+<tr>
+<td>Failure/rollback</td>
+<td>Stop after one bounded failure; close, unplug, wait, repower, and
+run safe probe; do not vary multiple fields</td>
+</tr>
+<tr>
+<td>Expected proof</td>
+<td>Before/after inventory, raw response hashes, timing, return codes,
+kernel log, and recovery result</td>
+</tr>
+</tbody>
+</table>
+<p>Completion evidence:</p>
+<ol type="1">
+<li>The sealed trace contains 744 paired operations, including 191
+vendor controls and 528 bulk transfers, with no correlation or
+semantic-validation issue.</li>
+<li>Seven fixed vendor controls initialize mode 2. Their stalled IN data
+stages are expected side effects, not failed commands.</li>
+<li>Direct Linux replay on a cold device enables continuous bulk
+streaming; Windows and the relay are no longer runtime
+dependencies.</li>
+<li>USBPcap and USB/IP failures remain preserved as negative
+instrumentation and transport evidence rather than being silently
+discarded.</li>
+</ol>
+</div>
+<div class="task-card" data-state="complete">
+<!-- task: D50; depends: D40; state: complete -->
+<h3 data-number="5.5.6" id="d50"><span
+class="header-section-number">5.5.6</span> D50 — Recover Initialization,
+Modes, and Controls</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State</td>
+<td>Complete; preview/full-resolution initialization plus exposure/gain
+are physically verified and versioned</td>
+</tr>
+<tr>
+<td>Actors</td>
+<td>Protocol developer, camera operator</td>
+</tr>
+<tr>
+<td>Goal</td>
+<td>Establish the smallest repeatable transition from claimed device to
+a known acquisition mode</td>
+</tr>
+<tr>
+<td>Preconditions</td>
+<td>D40 stable response; remaining sequence evidence classified or a
+targeted Windows trace approved</td>
+</tr>
+<tr>
+<td>Postconditions</td>
+<td>Initialization, mode, control read/write, start, stop, and shutdown
+sequences are versioned with timing and response rules</td>
+</tr>
+<tr>
+<td>Failure/rollback</td>
+<td>Close/reopen or power-cycle; revert to last proven prefix; no
+persistent firmware action</td>
+</tr>
+<tr>
+<td>Expected proof</td>
+<td>State-machine traces, capability table, differential experiments,
+and cold-start repetitions</td>
+</tr>
+</tbody>
+</table>
+<p>Happy-day steps:</p>
+<ol type="1">
+<li>Reconstruct initialization in evidence-backed prefixes, using named
+Ghidra functions and types where they agree with the captured USB
+sequence.</li>
+<li>Add one request at a time and validate responses and device
+health.</li>
+<li>Compare isolated mode/control changes rather than long mixed
+sessions.</li>
+<li>Freeze one still mode and one preview mode for D60.</li>
+</ol>
+<p>Completion evidence: mode 2 (<code>b4/c2</code>) is the accepted
+preview mode. Selector <code>b4/c0</code>, 3664×2748 geometry, and the
+exact next-512-byte transfer formula produce a 10,068,992-byte record.
+Later optical work established that the formula’s 320-byte surplus
+precedes a 192-byte continuation from the preceding frame; the current
+frame begins at offset 512 and completes in the next record. The reader
+applies recovered row times to bounded exposure control.</p>
+</div>
+<div class="task-card" data-state="active">
+<!-- task: D60; depends: D50; state: active -->
+<h3 data-number="5.5.7" id="d60"><span
+class="header-section-number">5.5.7</span> D60 — Capture, Parse, and
+Decode Frames</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State</td>
+<td>Active; coherent preview/full-resolution images, optical gain, and
+neutral-background white balance pass; exact alpha-6 Pi bench and
+one-shot Linux application harness are ready, while final known-target
+phase/color and live execution remain</td>
+</tr>
+<tr>
+<td>Actors</td>
+<td>Protocol developer, imaging reviewer</td>
+</tr>
+<tr>
+<td>Goal</td>
+<td>Turn bounded bulk reads into reproducible full still and preview
+images</td>
+</tr>
+<tr>
+<td>Preconditions</td>
+<td>D50 sequences and exact expected bulk limits available</td>
+</tr>
+<tr>
+<td>Postconditions</td>
+<td>Parser handles transfer boundaries; frame geometry, headers,
+markers, packing, orientation, and color interpretation are documented
+and tested</td>
+</tr>
+<tr>
+<td>Failure/rollback</td>
+<td>Preserve raw bytes; decoder changes cannot alter authoritative raw
+artifacts; return to last known parser revision</td>
+</tr>
+<tr>
+<td>Expected proof</td>
+<td>Multiple cold-session raw hashes, parser corruption fixtures, golden
+decoded images, dimensions, and pixel statistics</td>
+</tr>
+</tbody>
+</table>
+<p>Happy-day steps:</p>
+<ol type="1">
+<li>Capture bounded raw bulk data with timestamps and packet/read
+lengths.</li>
+<li>Verify that each selected TCA mode yields exactly its recovered
+<code>width * height</code> byte count across arbitrary USB transfer
+splits.</li>
+<li>Determine whether the bytes are unframed Bayer samples or include a
+small header/trailer not represented in the DLL’s delivered frame
+count.</li>
+<li>Decode one full still and preview mode; confirm Bayer order,
+orientation, crop, and color with a simple physical target.</li>
+</ol>
+<p>Current slice: one bulk request retrieves a complete 1,229,312-byte
+mode-2 or 10,068,992-byte mode-0 physical record. Mode 2 emits the
+raster after offset 512. Mode 0 emits record N after offset 512 and
+appends bytes 320–511 of record N+1, retaining N+1 as look-ahead. Both
+modes now produce coherent optical images, and three consecutive
+full-resolution frames have distinct hashes. Gain response is monotonic,
+one buffered pre-control record is handled explicitly, a 16-frame motion
+proof passes, and neutral-background white balance is reproducible. The
+current 10x blank field is measurably asymmetric: equal regions range
+from mean luma 134.0 at bottom-left to 193.9 at top-middle. The <a
+href="../evidence/field-illumination-correction.md">field-uniformity
+note</a> records a Köhler alignment and relay-isolation checklist plus a
+per-Bayer-plane dark/flat correction that can run before demosaic or
+V4L2 output. File/stdout conversion passes; the existing V4L2 adapter
+awaits a live post-fix Linux retest. Exact alpha-6 already builds and
+passes its complete suite on the prepared Pi. A synthetic producer and
+separate consumer passed six exact 1280x960 YUYV frames through its
+loopback dependency, which was then removed, and an inert exact-commit
+harness is staged to capture both modes and have FFmpeg consume six
+camera frames through <code>/dev/video42</code> immediately after the
+physical cable move.</p>
+</div>
+<div class="task-card" data-state="complete">
+<!-- task: D70; depends: D60; state: complete -->
+<h3 data-number="5.5.8" id="d70"><span
+class="header-section-number">5.5.8</span> D70 — Build the Operable
+Reader Core</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State</td>
+<td>Complete for the Linux-first alpha; additional modes and optical
+calibration remain compatible extensions</td>
+</tr>
+<tr>
+<td>Actors</td>
+<td>Reader developer, API reviewer, camera operator</td>
+</tr>
+<tr>
+<td>Goal</td>
+<td>Productize protocol and decoding as a portable library and CLI with
+controls, streaming, diagnostics, and recovery</td>
+</tr>
+<tr>
+<td>Preconditions</td>
+<td>D60 golden fixtures and modes complete</td>
+</tr>
+<tr>
+<td>Postconditions</td>
+<td>C API/ABI and CLI work on Pi Linux and Apple Silicon macOS; offline
+tests need no camera; bounded queue and reconnect policies are
+explicit</td>
+</tr>
+<tr>
+<td>Failure/rollback</td>
+<td>Keep last fixture-compatible reader revision; adapters cannot bypass
+the stable API</td>
+</tr>
+<tr>
+<td>Expected proof</td>
+<td>Clean builds, API contract, CLI snapshots, unit/fixture tests,
+stream/control/reconnect sessions, memory and queue metrics</td>
+</tr>
+</tbody>
+</table>
+<p>Offline implementation slice complete:
+<code>src/tca_reader.[ch]</code> and the <code>camera-reader</code> CLI
+implement the stable session, exact-frame decode, metadata, bounded
+latest/lossless queues, control validation, diagnostics, fault/close/
+reopen behavior, mode inspection, and replay. Strict and sanitizer tests
+pass on macOS; the same sources and CLI tests pass natively on Ubuntu
+ARM64. The final public C17 executable now cold-initializes the physical
+camera directly, applies bounded exposure/gain, validates and removes
+the record framing, streams Bayer8 to a file or stdout, and releases the
+claimed interface on exit. Native ARM64 Linux and Apple Silicon builds
+pass an exact libusb import allowlist and inert CLI tests; GitHub CI
+repeats both builds. Ten separate live processes completed
+open/init/capture/close without failure. See the <a
+href="../evidence/offline-reader-session.md">portable reader
+evidence</a> and <a
+href="../evidence/public-release-live-validation.md">public
+live-validation evidence</a>.</p>
+<p>Happy-day steps:</p>
+<ol type="1">
+<li>Separate transport, protocol, parser, decoder, and public API
+modules.</li>
+<li>Implement inspect, still, stream, controls, replay, and diagnostics
+commands.</li>
+<li>Add bounded queues, structured errors, stop, close, and
+reconnect.</li>
+<li>Prove source and binary portability on both target operating
+systems.</li>
+</ol>
+</div>
+<div class="task-card" data-state="complete">
+<!-- task: D80; depends: D70; state: complete -->
+<h3 data-number="5.5.9" id="d80"><span
+class="header-section-number">5.5.9</span> D80 — Build the Linux
+Application Bridge</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State</td>
+<td>Complete for the Linux-first alpha</td>
+</tr>
+<tr>
+<td>Actors</td>
+<td>Linux adapter developer, application user</td>
+</tr>
+<tr>
+<td>Goal</td>
+<td>Make reader frames consumable through a standard Linux video or
+media pipeline</td>
+</tr>
+<tr>
+<td>Preconditions</td>
+<td>D70 stable reader API and accepted preview pixel format</td>
+</tr>
+<tr>
+<td>Postconditions</td>
+<td>Selected V4L2/GStreamer/FFmpeg path starts, streams, stops, and
+restarts in at least two representative applications</td>
+</tr>
+<tr>
+<td>Failure/rollback</td>
+<td>Remove/stop user-space adapter and any loopback device
+configuration; core reader remains usable</td>
+</tr>
+<tr>
+<td>Expected proof</td>
+<td>Install/remove script, capability listing, application
+recordings/screenshots, metadata comparison, crash/reopen test</td>
+</tr>
+</tbody>
+</table>
+<p>The final foreground bridge consumes live Bayer8 from the physical
+camera, converts it with FFmpeg, feeds a temporary 1280×960 YUYV V4L2
+device, refuses to disturb an existing loopback configuration, and
+removes only the device it created. <code>v4l2-ctl</code> reported the
+intended format and FFmpeg consumed three frames into a lossless
+recording. See the <a
+href="../evidence/linux-v4l2-replay-bridge.md">Linux V4L2 replay bridge
+evidence</a> and report milestone.</p>
+<p>Happy-day steps:</p>
+<ol type="1">
+<li>Choose the smallest standard path and document the decision.</li>
+<li>Translate reader frames and timestamps without copying protocol
+logic.</li>
+<li>Prove application negotiation, stream lifecycle, and slow-consumer
+behavior.</li>
+<li>Verify clean removal and camera reuse after application
+failure.</li>
+</ol>
+</div>
+<div class="task-card" data-state="proposed">
+<!-- task: D90; depends: D70; state: proposed -->
+<h3 data-number="5.5.10" id="d90"><span
+class="header-section-number">5.5.10</span> D90 — Build the macOS
+Application Bridge</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State</td>
+<td>Portable reader complete over the native cable; AVFoundation
+application surface deferred for the Linux-first alpha</td>
+</tr>
+<tr>
+<td>Actors</td>
+<td>macOS adapter developer, application user</td>
+</tr>
+<tr>
+<td>Goal</td>
+<td>Prove the portable reader in AVFoundation and provide the
+least-complex accepted macOS camera surface</td>
+</tr>
+<tr>
+<td>Preconditions</td>
+<td>D70 stable reader API; signing/entitlement needs inventoried</td>
+</tr>
+<tr>
+<td>Postconditions</td>
+<td>Decoded frames reach an AVFoundation consumer; direct app
+integration or Camera Extension is installed, exercised, and removable
+as selected</td>
+</tr>
+<tr>
+<td>Failure/rollback</td>
+<td>Uninstall extension/adapter and retain CLI/library path; no system
+USB driver is installed</td>
+</tr>
+<tr>
+<td>Expected proof</td>
+<td>Build/sign/install receipt as applicable, application session,
+timestamps/pixel format, crash/reopen and uninstall result</td>
+</tr>
+</tbody>
+</table>
+<p>Happy-day steps:</p>
+<ol type="1">
+<li>Bridge reader buffers into CVPixelBuffer/AVFoundation-compatible
+form.</li>
+<li>Prove capture inside a minimal host application.</li>
+<li>Decide whether system-wide discovery is required for
+acceptance.</li>
+<li>If required, implement and verify a modern Camera Extension with
+clean install/remove behavior.</li>
+</ol>
+<p>The exact alpha-3 Apple Silicon CLI/library path now captures the
+camera over a direct native cable, without Windows or a Pi relay. Three
+preview frames, one full-resolution frame, and a fresh-process preview
+reopen passed with exact sizes, controls, analysis, and exit zero. The
+first cold-attach invocation failed closed on a one-byte response where
+the trace predicts a stall; all subsequent controls returned the
+predicted stall. AVFoundation/Camera Extension work remains a recorded
+deferral under the owner’s Linux-first, macOS-non-blocking objective.
+See <a href="../evidence/macos-native-cable-validation.md">native-cable
+Apple Silicon validation</a> and <a
+href="../evidence/macos-virtualhere-live-validation.md">relay
+validation</a>.</p>
+</div>
+<div class="task-card" data-state="active">
+<!-- task: D100; depends: D80,D90; state: active -->
+<h3 data-number="5.5.11" id="d100"><span
+class="header-section-number">5.5.11</span> D100 — Prove Stability,
+Fault Handling, and Application Acceptance</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State</td>
+<td>Active, Linux-first; macOS application integration is explicitly
+non-blocking for this stabilization pass</td>
+</tr>
+<tr>
+<td>Actors</td>
+<td>Test owner, camera owner, platform reviewers</td>
+</tr>
+<tr>
+<td>Goal</td>
+<td>Demonstrate that the reader and adapters remain usable beyond a
+successful laboratory frame</td>
+</tr>
+<tr>
+<td>Preconditions</td>
+<td>D80 and D90 complete or an explicit owner-approved platform deferral
+is recorded</td>
+</tr>
+<tr>
+<td>Postconditions</td>
+<td>Stream, controls, application lifecycle, disconnect, timeout,
+malformed data, and slow-consumer cases meet declared thresholds</td>
+</tr>
+<tr>
+<td>Failure/rollback</td>
+<td>Retain failed artifacts; fix the owning layer; do not mask failures
+with retries or adapter buffering</td>
+</tr>
+<tr>
+<td>Expected proof</td>
+<td>30-minute metrics, fault-injection matrix, memory/queue profile,
+repeated cold starts, real-application acceptance record</td>
+</tr>
+</tbody>
+</table>
+<p>Happy-day steps:</p>
+<ol type="1">
+<li>Run repeated still and 30-minute preview sessions.</li>
+<li>Inject short reads, marker splits, stalls, unplug/replug, process
+crash, and slow consumption.</li>
+<li>Verify each supported control and unsupported-control refusal.</li>
+<li>Accept measured frame rate and quality against hardware limits.</li>
+</ol>
+<p>Current slice: 30 controlled frames, ten independent ten-frame
+processes, and a 14,400-frame/2,410-second continuous run passed.
+Sampled RSS remained 4,784 KiB. A first-frame flush was observed
+complete while a 100-frame process was still active. After a controlled
+<code>SIGKILL</code>, a new process immediately reopened the device and
+captured three frames. A connected-camera Pi reboot produced a new Linux
+boot ID and USB instance, after which public main rebuilt, passed its
+tests, and cold-captured three exact-size frames. Physical cable
+disconnect/reconnect remains a separate hands-on test. An inert
+exact-alpha-3 harness is staged on the Pi: it requires a real
+zero-device interval before accepting re-enumeration, then captures
+three frames, checks exact sizes and status, analyzes frame zero, and
+hashes the evidence directory. It has passed static and Pi dry-run
+checks but has deliberately not begun its operator wait. Physical Apple
+Silicon capture through a Pi relay also passed, and exact alpha-3
+subsequently passed preview, full-resolution, and reopen capture over
+the direct Mac cable. Returning the camera to Linux reproduced one
+invalid leading warm-up frame; public alpha-2 now preserves it as raw
+evidence, discards at most two invalid frames before frame zero, and
+passed the same hand-back in one process. Marker loss after delivery
+begins remains fatal.</p>
+</div>
+<div class="task-card" data-state="active">
+<!-- task: D110; depends: D100; state: active -->
+<h3 data-number="5.5.12" id="d110"><span
+class="header-section-number">5.5.12</span> D110 — Package Source,
+Fixtures, and Operations</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State</td>
+<td>Active; public alpha-3 packages the reader, optical tooling, and
+tested install/removal while residual physical validation continues</td>
+</tr>
+<tr>
+<td>Actors</td>
+<td>Release developer, support reviewer</td>
+</tr>
+<tr>
+<td>Goal</td>
+<td>Make the accepted reader reproducible and supportable without
+redistributing vendor binaries</td>
+</tr>
+<tr>
+<td>Preconditions</td>
+<td>D100 proof complete; licenses and dependency versions
+inventoried</td>
+</tr>
+<tr>
+<td>Postconditions</td>
+<td>Source release, fixture subset, build/install/remove procedures,
+udev guidance, diagnostics, and troubleshooting are complete</td>
+</tr>
+<tr>
+<td>Failure/rollback</td>
+<td>Packages are not published; retain local artifacts and correct
+reproducibility/licensing gaps</td>
+</tr>
+<tr>
+<td>Expected proof</td>
+<td>Clean Pi/macOS builds, package hashes, license manifest,
+install/remove test, documentation review, evidence bundle index</td>
+</tr>
+</tbody>
+</table>
+<p>Happy-day steps:</p>
+<ol type="1">
+<li>Pin and document build dependencies and supported platforms.</li>
+<li>Separate redistributable fixtures from private vendor evidence.</li>
+<li>Package reader, CLI, adapters, permissions, and diagnostics.</li>
+<li>Rehearse clean installation, use, removal, and rebuild.</li>
+</ol>
+<p>The early release is at <a
+href="https://github.com/la3lma/tucsen-tca-camera"
+class="uri">https://github.com/la3lma/tucsen-tca-camera</a> with an
+Apache License 2.0, C17 source, Linux/macOS CI, udev rule, optional V4L2
+adapter, protocol notes, safety boundaries, contribution guidance, and
+links back to the forthcoming Journal of Bjørn report.</p>
+<p>Public main commit <code>a61c044</code> additionally provides a
+dependency-free Bayer frame statistics/focus utility and a
+microscope-mounted optical procedure. The exact commit passed
+Ubuntu/macOS CI and all Pi tests, then cold-captured and analyzed one
+fresh physical mode-2 frame with exact byte counts and exit zero.
+Because the sensor remained covered, this is tooling readiness rather
+than an optical pass.</p>
+<p>Current main commit <code>fb502c1</code> also documents and tests
+staged installation and exact-file removal of the reader, V4L2 helper,
+and frame analyzer. The test requires an unrelated sentinel in the same
+directory to survive. It passes on Apple Silicon, the Pi, Ubuntu CI, and
+macOS CI without modifying the live Pi installation.</p>
+<p>These changes are sealed in annotated public prerelease <a
+href="https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.3"><code>v0.2.0-alpha.3</code></a>
+at exact commit <code>3c16d2a</code>. Independent main and tag CI runs
+pass on Ubuntu and macOS. A clean exact-tag Pi worktree passed all
+tests, then cold-captured and analyzed one exact-size physical frame
+with controls and exit zero.</p>
+<p>The current <a href="../evidence/release-acceptance-audit.md">release
+acceptance audit</a> marks the Linux reader/API, preview endurance,
+application bridge, direct-cable Apple Silicon reader path, safety,
+reproducibility, and legal-hygiene requirements as passed. D120 remains
+open for physical cable reconnect and optical/color validation.
+AVFoundation remains an explicit Linux-first deferral rather than an
+exit blocker.</p>
+</div>
+<div class="task-card" data-state="proposed">
+<!-- task: D120; depends: D110; state: proposed -->
+<h3 data-number="5.5.13" id="d120"><span
+class="header-section-number">5.5.13</span> D120 — Accept the Release
+and Residual Risks</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>State</td>
+<td>Proposed; sole exit</td>
+</tr>
+<tr>
+<td>Actors</td>
+<td>Camera owner/acceptance authority, technical owner</td>
+</tr>
+<tr>
+<td>Goal</td>
+<td>Decide whether the delivered reader satisfies the objective and
+record any explicit deferrals</td>
+</tr>
+<tr>
+<td>Preconditions</td>
+<td>D110 evidence bundle complete; Definition of Done evaluated line by
+line</td>
+</tr>
+<tr>
+<td>Postconditions</td>
+<td>Release is accepted with version/hash and residual risks, or
+returned to the owning task with specific failed criteria</td>
+</tr>
+<tr>
+<td>Failure/rollback</td>
+<td>Keep last accepted build; uninstall rejected adapters; preserve
+evidence and camera recoverability</td>
+</tr>
+<tr>
+<td>Expected proof</td>
+<td>Dated acceptance referencing source/package hashes, supported
+modes/controls/apps, known limits, and deferred platform work</td>
+</tr>
+</tbody>
+</table>
+<p>Happy-day steps:</p>
+<ol type="1">
+<li>Re-run the principal still, stream, control, reconnect, and
+application flows.</li>
+<li>Review installation/removal, diagnostics, source, fixtures, and
+legal hygiene.</li>
+<li>Record supported platforms, modes, controls, applications, and
+measured performance.</li>
+<li>Accept or reject each Definition of Done item and publish the
+release status.</li>
+</ol>
+</div>
+<h2 data-number="5.6" id="evidence-ledger"><span
+class="header-section-number">5.6</span> Evidence Ledger</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Claim</th>
+<th>Evidence</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E-001</td>
+<td>Physical enclosure and lack of visible model marking are
+documented</td>
+<td><a href="../evidence/photos/">Owner photographs</a></td>
+<td>VERIFIED</td>
+</tr>
+<tr>
+<td>E-002</td>
+<td>Device is <code>0547:c003</code>, high-speed USB 2.0, one
+<code>0xff</code> interface, bulk IN <code>0x82</code>, 512-byte
+packets</td>
+<td><a href="../evidence/device-identity.md">Device identity</a> and Pi
+enumeration</td>
+<td>VERIFIED</td>
+</tr>
+<tr>
+<td>E-003</td>
+<td>Linux opens and safely claims/releases interface 0 without a
+transfer-capable probe</td>
+<td><a href="../evidence/safe-libusb-probe.md">Safe libusb
+probe</a></td>
+<td>VERIFIED</td>
+</tr>
+<tr>
+<td>E-004</td>
+<td>IOCTL <code>0x222059</code> has distinct 2011 <code>0xc0</code> and
+2013 direction-aware mappings; both copy request/value/index record
+offsets</td>
+<td><a href="../evidence/tucsen-driver-ioctl-handler.md">Windows IOCTL
+handler analysis</a></td>
+<td>VERIFIED</td>
+</tr>
+<tr>
+<td>E-005</td>
+<td>DLL contains requests <code>b3</code>, <code>b4</code>,
+<code>b5</code>, <code>b6</code>, <code>b7</code>, <code>b8</code>,
+<code>ba</code>, <code>bb</code>, <code>bd</code>, <code>be</code></td>
+<td><a href="../evidence/ts1000-static-protocol-map.md">Static protocol
+map</a></td>
+<td>VERIFIED</td>
+</tr>
+<tr>
+<td>E-006</td>
+<td>Later-lineage <code>b3</code> is a capture trigger</td>
+<td>Static call proximity only</td>
+<td>INFERRED / OPEN</td>
+</tr>
+<tr>
+<td>E-007</td>
+<td>Initialization, response semantics, frame dimensions, encoding, and
+controls are known</td>
+<td>No accepted evidence yet</td>
+<td>OPEN</td>
+</tr>
+<tr>
+<td>E-008</td>
+<td>Reader streams into standard Linux/macOS applications</td>
+<td>No implementation yet</td>
+<td>OPEN</td>
+</tr>
+<tr>
+<td>E-009</td>
+<td>Official software maps TCA-10.0N <code>0547:c003</code> to
+TSView6/7; its TCA DLL exposes a fixed <code>0x11/0x3ff0</code> register
+read and open/close prefix</td>
+<td><a href="../evidence/tsview7-tca-protocol-map.md">TSView7 TCA
+protocol map</a></td>
+<td>VERIFIED</td>
+</tr>
+<tr>
+<td>E-010</td>
+<td>Nine bounded Linux trials failed without loss of enumeration; the
+final physical-cold run used the corrected TCA tuple and timed out on
+open/read/close while both health checks passed</td>
+<td><a href="../evidence/live-control-trials.md">Live control
+trials</a></td>
+<td>VERIFIED NEGATIVE</td>
+</tr>
+<tr>
+<td>E-011</td>
+<td>No standalone C003 firmware/updater was found in the official
+surfaces and recovered packages inspected; this remains a bounded search
+result</td>
+<td><a href="../evidence/firmware-discovery.md">Firmware
+discovery</a></td>
+<td>VERIFIED NEGATIVE / NON-GATING</td>
+</tr>
+<tr>
+<td>E-012</td>
+<td>Historical open-source inventory names IS1000 C003, but its
+implemented driver targets 4D88 and must not be replayed against this
+camera</td>
+<td><a href="../evidence/open-source-prior-art.md">Open-source prior
+art</a></td>
+<td>VERIFIED BOUNDARY</td>
+</tr>
+<tr>
+<td>E-013</td>
+<td>TSView7 ignores the <code>0x02</code> wrapper result, then validates
+80 even registers <code>0x0000</code>–<code>0x009e</code> with
+<code>0x11</code>; the Linux probe stopped earlier than the vendor
+path</td>
+<td><a href="../evidence/tsview7-tca-startup-validation.md">TCA startup
+validation</a></td>
+<td>VERIFIED STATIC</td>
+</tr>
+<tr>
+<td>E-014</td>
+<td>All eight USBPcap roots were captured; only QEMU
+<code>0627:0001</code> HIDs appeared, proving CocoaSPICE usbredir
+bypasses the Windows filter and requires a lower observation point</td>
+<td><a href="../evidence/windows-trace-bench.md">Windows trace
+bench</a></td>
+<td>VERIFIED NEGATIVE INSTRUMENTATION</td>
+</tr>
+<tr>
+<td>E-015</td>
+<td>TSView7 reads one byte per pixel from the bulk pipe using four
+overlapped lanes; five fixed modes range from 640x480 to 3664x2748 and
+have deterministically recovered chunk sizes</td>
+<td><a href="../evidence/tsview7-tca-acquisition-map.md">TCA acquisition
+map</a> and offline geometry fixture</td>
+<td>VERIFIED STATIC</td>
+</tr>
+<tr>
+<td>E-016</td>
+<td>The first portable C17 frame-core slice reproduces the five mode
+geometries and assembles exact-length frames across arbitrary fragments
+while rejecting short/overflow cases; native macOS and Pi tests
+pass</td>
+<td><a href="../evidence/offline-frame-core.md">Offline frame-core
+verification</a></td>
+<td>VERIFIED OFFLINE</td>
+</tr>
+<tr>
+<td>E-017</td>
+<td>Byte-accurate x86 emulation of the matching TSView7 DLL confirms
+register addresses occupy <code>wIndex</code>, recovers the obfuscated
+<code>0x0a</code> fixed-mode writes, and passes deterministic golden
+tests without a host USB API</td>
+<td><a href="../evidence/tsview7-tca-emulated-init.md">TCA
+initialization emulation</a></td>
+<td>VERIFIED EMULATED / NOT LIVE</td>
+</tr>
+<tr>
+<td>E-018</td>
+<td>Portable C17 modules encode the corrected open/read/close records
+and all five fixed-mode initialization plans, then execute them through
+a fail-fast transport contract; golden and fault-injection tests cover
+all 154 writes and every mode-4 failure boundary on macOS and Pi without
+USB imports</td>
+<td><a href="../evidence/offline-protocol-plan.md">Offline protocol-plan
+verification</a></td>
+<td>VERIFIED OFFLINE / NOT LIVE</td>
+</tr>
+<tr>
+<td>E-019</td>
+<td>Emulated TSView7 conversion identifies GRBG-to-BGR24 memory
+conventions; a portable explicit-pattern decoder and exact-frame replay
+CLI pass macOS/Pi tests and feed a synthetic RGB24 stream into
+FFmpeg</td>
+<td><a href="../evidence/offline-image-pipeline.md">Offline image
+pipeline</a></td>
+<td>VERIFIED OFFLINE / SYNTHETIC</td>
+</tr>
+<tr>
+<td>E-020</td>
+<td>Static analysis and offline DLL emulation separate sensor controls
+from host processing, recover exposure units/limits, analog-gain
+encoding, and four frame-speed PLL plans; a portable C17 planner passes
+golden tests on macOS and Pi</td>
+<td><a href="../evidence/tsview7-tca-controls.md">TCA control
+reconstruction</a></td>
+<td>VERIFIED OFFLINE / NOT LIVE</td>
+</tr>
+<tr>
+<td>E-021</td>
+<td>Offline DLL execution confirms full-chunk requests, four-lane
+rotation, and the intentional final-remainder completion for every fixed
+mode; a portable staged scheduler matches those semantics and cancels
+all outstanding reads on every injected
+submit/completion/unexpected-length failure; sanitizer and native Pi
+tests pass without USB imports</td>
+<td><a href="../evidence/offline-capture-scheduler.md">Offline capture
+scheduler</a> and <a href="../evidence/tsview7-tca-emulated-init.md">DLL
+emulation</a></td>
+<td>VERIFIED EMULATED + OFFLINE / NOT LIVE</td>
+</tr>
+<tr>
+<td>E-022</td>
+<td>The one-shot D40 harness pinned the reviewed v2 probe hash and
+captured before/after identity, kernel, safe-claim, raw result, status,
+and hashes after an owner-confirmed physical cold cycle</td>
+<td><a href="../evidence/cold-probe-harness.md">Cold-session
+harness</a></td>
+<td>EXECUTED ONCE / VERIFIED</td>
+</tr>
+<tr>
+<td>E-023</td>
+<td>On a new USB instance after physical cold power, corrected
+open/read/close all timed out; before/after descriptors and interface
+claims passed, identity was byte-identical, and no kernel fault
+occurred</td>
+<td><a href="../evidence/d40-cold-result.md">D40 physical-cold
+result</a></td>
+<td>VERIFIED NEGATIVE / TERMINAL LINUX BRANCH</td>
+</tr>
+<tr>
+<td>E-024</td>
+<td>With Secure Boot disabled only in the offline VM and Windows test
+mode active, the 2011 Tucsen driver reports <code>Started</code>;
+TSView7 discovers the camera and reaches a ready control window with
+resolution, snapshot, record, white-balance, exposure, and property
+controls</td>
+<td><a href="../evidence/windows-trace-bench.md">Windows trace
+bench</a></td>
+<td>VERIFIED LIVE WINDOWS</td>
+</tr>
+<tr>
+<td>E-025</td>
+<td>After Windows initialized the still-powered camera, macOS libusb
+captured exactly 307,200 bytes as 81,920 + 81,920 + 81,920 + 61,440; ten
+<code>0x88</code> marker bytes begin every block and GRBG replay yields
+the expected taped-sensor dark image</td>
+<td><a href="../evidence/windows-reference-live-capture.md">Working
+Windows reference and direct host capture</a></td>
+<td>VERIFIED LIVE DATA PLANE</td>
+</tr>
+<tr>
+<td>E-026</td>
+<td>The installed working <code>TS1000.dll</code> and
+<code>Tucsen64.sys</code> hashes match the analyzed purchase-era TCA
+pair, and the INF explicitly identifies <code>0547:c003</code> as
+TCA-10.0-N</td>
+<td><a href="../evidence/windows-reference-live-capture.md">Working
+Windows reference and direct host capture</a></td>
+<td>VERIFIED LINEAGE</td>
+</tr>
+<tr>
+<td>E-027</td>
+<td>Windows <code>usbip-win2</code> attached the camera and received
+valid descriptors, but its repeated 18-byte device-descriptor read timed
+out after 5.004272 seconds before <code>SET_CONFIGURATION</code>; the
+immutable usbmon capture is preserved and the transport branch is
+closed</td>
+<td><a href="../evidence/virtualhere-trace-bench.md">USB/IP result and
+VirtualHere fallback</a></td>
+<td>VERIFIED NEGATIVE TRANSPORT</td>
+</tr>
+<tr>
+<td>E-028</td>
+<td>Headless Ghidra 12.1.4 independently confirms the TCA command ABI,
+register read/write wrappers, four implemented driver IOCTLs, ordinary
+KMDF configuration, and split bulk-URB path; it finds no
+prepare-hardware firmware loader and shows ignored IOCTL
+<code>0x22208a</code> cannot hide a USB transaction</td>
+<td><a href="../evidence/ghidra-targeted-decompilation.md">Targeted
+Ghidra decompilation</a></td>
+<td>VERIFIED STATIC / NOT LIVE</td>
+</tr>
+<tr>
+<td>E-029</td>
+<td>A portable C17 startup module emits all 80 even-register validation
+reads and checks the extracted expected signature with deterministic
+first-mismatch reporting; tests pass on macOS and the Ubuntu ARM64 bench
+without USB imports</td>
+<td><a href="../evidence/offline-startup-signature.md">Offline
+startup-signature core</a></td>
+<td>VERIFIED OFFLINE / NOT LIVE</td>
+</tr>
+<tr>
+<td>E-030</td>
+<td>A 2014 UCL thesis documents exact-model TCA-10.0-N live view and
+80-hour time-lapse use in Micro-Manager 1.4; the contemporary public
+adapter tree has generic TWAIN/OpenCV adapters but no legacy
+Tucsen-specific adapter, so the application precedent is verified while
+its transport path remains unresolved</td>
+<td><a
+href="../evidence/micromanager-application-precedent.md">Historical
+Micro-Manager application precedent</a></td>
+<td>VERIFIED APPLICATION PRECEDENT / PATH OPEN</td>
+</tr>
+<tr>
+<td>E-031</td>
+<td>The live-captured mode-4 Bayer8 frame was decoded and presented
+through a removable 640x480 YUYV V4L2 loopback on Ubuntu ARM64; v4l2-ctl
+and FFmpeg each consumed three exact-size frames across a
+remove/recreate cycle, and a packaged reader-core bridge reproduced the
+capture hash while refusing existing setups and cleaning up its
+device/module</td>
+<td><a href="../evidence/linux-v4l2-replay-bridge.md">Linux V4L2 replay
+bridge</a></td>
+<td>VERIFIED APPLICATION BOUNDARY / REPLAY ONLY</td>
+</tr>
+<tr>
+<td>E-032</td>
+<td>A transport-neutral C17 reader implements the planned lifecycle,
+exact frame/decode metadata, bounded latest/lossless queues, validated
+controls, structured diagnostics, fault/close/reopen, inspect, and
+replay; strict native tests pass on macOS and Ubuntu ARM64, sanitizer
+execution passes, and the live-captured fixture decodes byte-identically
+on both</td>
+<td><a href="../evidence/offline-reader-session.md">Portable reader
+session and CLI</a></td>
+<td>VERIFIED OFFLINE CORE / COLD LIVE COMPLETION OPEN</td>
+</tr>
+<tr>
+<td>E-033</td>
+<td>An opt-in libusb backend connects the portable reader to the
+previously verified warm mode-4 data plane; native ARM64 Linux and Apple
+Silicon binaries import only the exact descriptor/open/claim/release
+plus bulk-transfer allowlist, pass inert-token and fault-injection tests
+covering the exact schedule, short/zero/error paths, no-retry behavior,
+state guards, and partial raw preservation, and contain no
+control/reset/configuration/alternate-setting path; a separately
+token-gated Linux script is ready to feed decoded frames into a
+temporary V4L2 node while preserving raw bytes; live execution remains
+deferred until a known-good warm handoff exists</td>
+<td><a href="../evidence/warm-reader-backend.md">Warm-state libusb
+reader backend</a></td>
+<td>VERIFIED BUILD + STATIC SAFETY / WARM LIVE RUN PENDING</td>
+</tr>
+<tr>
+<td>E-034</td>
+<td>A separately compiled operable backend composes the warm reader with
+checked exposure, normalized-gain, and eleven-write/two-delay
+frame-speed plans; injected native tests on Apple Silicon and ARM64
+Linux verify exact tuples, delays, configuration guards, fail-fast
+timeout/short/ack/sleep reporting, and no state update after a partial
+failed plan; a separately named inert-by-default CLI can apply exactly
+one prevalidated control and exit without starting acquisition; the
+read-only streaming binary remains unchanged and physical control
+execution is pending the known-good warm handoff</td>
+<td><a href="../evidence/operable-control-backend.md">Opt-in operable
+libusb control backend</a></td>
+<td>VERIFIED OFFLINE CONTROL TRANSPORT + CLI / LIVE CONTROL PENDING</td>
+</tr>
+<tr>
+<td>E-035</td>
+<td>A deterministic usbmon extractor correlates submit/completion URBs
+and preserves timing, setup fields, statuses, lengths, and payloads;
+synthetic vendor-control/bulk tests and the preserved USB/IP capture
+pass on macOS and ARM64 Linux, with the latter independently reproducing
+ten standard-control pairs, one 5.004272-second <code>-104</code>
+failure, no vendor request, and no bulk transfer</td>
+<td><a href="../evidence/usbmon-trace-extractor.md">Deterministic usbmon
+trace extractor</a></td>
+<td>VERIFIED OFFLINE TRACE ANALYSIS / VIRTUALHERE CAPTURE PENDING</td>
+</tr>
+<tr>
+<td>E-036</td>
+<td>The official 2026 AmScope ARM64 Linux and Windows packages were
+downloaded project-locally, hash-pinned, and extracted without
+execution; neither tree names C003/TCA/IS1000, both current 232-entry
+Windows INFs omit <code>0547:c003</code>, and no standalone
+firmware/updater file was found; the Linux package’s vendor-wide udev
+rule is permission evidence only, not a compatibility claim</td>
+<td><a href="../evidence/firmware-discovery.md">Updated-firmware
+discovery</a></td>
+<td>VERIFIED STATIC NEGATIVE / NON-GATING</td>
+</tr>
+<tr>
+<td>E-037</td>
+<td>A USB-inert semantic stage consumes only paired trace TSV, labels
+recovered TCA open/close/state/read/write and endpoint-<code>0x82</code>
+bulk events, reverses write XOR encoding, decodes big-endian read
+values, validates status/length/acknowledgement, and preserves unknown
+vendor requests as unclassified; synthetic tests pass and the USB/IP
+negative trace remains ten standard controls with one transport
+error</td>
+<td><a href="../evidence/usbmon-trace-extractor.md">Deterministic usbmon
+extractor and TCA annotator</a></td>
+<td>VERIFIED OFFLINE TRACE SEMANTICS / VIRTUALHERE CAPTURE PENDING</td>
+</tr>
+<tr>
+<td>E-038</td>
+<td>A USB-free C generator composes the existing open, 80-read
+signature, and fixed-mode plans into a 120-control mode-4 Ready
+expectation; a deterministic TSV comparator aligns captured controls and
+validates response patterns without generating USB operations; strict
+tests and the USB/IP negative-trace comparison are byte-identical on
+Apple Silicon and AArch64 Linux</td>
+<td><a href="../evidence/tca-trace-plan-comparator.md">Modeled TCA trace
+plan and comparator</a></td>
+<td>VERIFIED OFFLINE COMPARISON / SUCCESSFUL TRACE PENDING</td>
+</tr>
+<tr>
+<td>E-039</td>
+<td>Both post-reboot UTM USB paths failed without harming enumeration;
+the camera was moved cold to <code>rpios-17</code>, where exact-device
+identity, <code>usbmon3</code>, pinned VirtualHere inputs, and
+Windows-side discovery through the UTM gateway relay are live; the v4
+handoff ISO removes boot-specific addressing and verifies its embedded
+sources byte-for-byte</td>
+<td><a href="../evidence/virtualhere-trace-bench.md">VirtualHere
+fallback trace bench</a></td>
+<td>VERIFIED LIVE INFRASTRUCTURE / DEVICE ATTACH PENDING</td>
+</tr>
+<tr>
+<td>E-040</td>
+<td>The completed Windows reference capture contains 744 paired
+operations (25 standard controls, 191 vendor controls, 528 bulk
+transfers), no pairing gaps, and no semantic validation issue; it
+exposes the seven-command cold-start sequence and three-read 1280×960
+frame schedule</td>
+<td>Preserved VirtualHere session under
+<code>work/trace-captures/virtualhere-session-pi-20261003T120230Z/</code></td>
+<td>VERIFIED LIVE REFERENCE TRACE</td>
+</tr>
+<tr>
+<td>E-041</td>
+<td>Native ARM64 Linux reproduces only those seven startup commands,
+accepts their trace-confirmed stalled IN data stages, validates three
+<code>0x88</code> markers per frame, streams continuous 1280×960 Bayer8,
+and applies bounded exposure/gain writes without Windows or a
+camera-specific kernel driver</td>
+<td>Report current milestone and <a
+href="../evidence/public-release-live-validation.md">public
+validation</a></td>
+<td>VERIFIED LIVE LINUX COLD START + CONTROLS</td>
+</tr>
+<tr>
+<td>E-042</td>
+<td>A foreground bridge converts the live physical Bayer stream to a
+temporary 1280×960 YUYV V4L2 device; <code>v4l2-ctl</code> reports the
+intended format, FFmpeg consumes three frames, and cleanup removes only
+the loopback created for the session</td>
+<td>Report current milestone and V4L2 work bundle</td>
+<td>VERIFIED LIVE APPLICATION BOUNDARY</td>
+</tr>
+<tr>
+<td>E-043</td>
+<td>The exact public reader commit passes a 30-frame controlled capture,
+ten independent open/init/ten-frame/close processes (100/100 frames),
+and a 14,400-frame/2,410-second continuous run with flat sampled memory;
+Ubuntu and macOS CI pass</td>
+<td><a href="../evidence/public-release-live-validation.md">Public
+release live validation</a></td>
+<td>VERIFIED REOPEN + ENDURANCE</td>
+</tr>
+<tr>
+<td>E-044</td>
+<td>Recovered selector <code>b4/c0</code>, 3664×2748 geometry, and
+formula <code>((pixels &gt;&gt; 9) + 1) &lt;&lt; 9</code> predicted a
+10,068,992-byte frame; the guarded physical probe received that exact
+length with all twenty markers, and mode-2 recovery captured three
+frames</td>
+<td><a href="../evidence/full-resolution-probe.md">Guarded
+full-resolution probe</a></td>
+<td>VERIFIED LIVE FULL RESOLUTION + RECOVERY</td>
+</tr>
+<tr>
+<td>E-045</td>
+<td>The public two-mode reader candidate captured three consecutive
+frames in mode 0 and then mode 2 with exact raw/application byte counts;
+its mode-aware exposure conversion programmed 324 and 834 lines
+respectively at 100 ms</td>
+<td><a href="../evidence/public-release-live-validation.md">Public
+release live validation</a></td>
+<td>VERIFIED LIVE PUBLIC READER BOTH MODES</td>
+</tr>
+<tr>
+<td>E-046</td>
+<td>Exact tag <code>v0.2.0-alpha.1</code> was terminated with
+<code>SIGKILL</code> during mode-2 capture after its complete
+first-frame flush; without a USB reset or power cycle, a new tagged
+process immediately reopened and captured three frames</td>
+<td><a href="../evidence/public-release-live-validation.md">Public
+release live validation</a></td>
+<td>VERIFIED PROCESS-DEATH RECOVERY</td>
+</tr>
+<tr>
+<td>E-047</td>
+<td>Official stable 2026 and legacy 2025 ToupCam SDK packages support
+Linux/macOS/Windows and ship Python bindings, but their 1,768- and
+1,600-pair explicit Windows USB tables omit <code>0547:c003</code>; the
+Python module is a thin proprietary-library wrapper and the vendor-wide
+Linux udev rule is permission evidence, not device support</td>
+<td><a href="../evidence/existing-linux-driver-candidates.md">Existing
+Linux driver candidates</a></td>
+<td>VERIFIED STATIC NEGATIVE / API INSPIRATION</td>
+</tr>
+<tr>
+<td>E-048</td>
+<td>Micro-Manager’s AmScope adapter is Windows-only MU-series/ToupCam
+code for a different family, while its Linux Video4Linux adapter matches
+the project’s proven YUYV loopback; Pycro-Manager can add
+acquisition/stage automation only above a working MMCore adapter, and
+Fiji/MIST remain downstream tile-stitching candidates</td>
+<td><a href="../evidence/microscopy-application-stack.md">Microscopy
+application stack</a></td>
+<td>VERIFIED ARCHITECTURE / LIVE MM TEST PENDING</td>
+</tr>
+<tr>
+<td>E-049</td>
+<td>With the camera connected, a controlled Pi reboot changed the Linux
+boot ID and USB device instance; public main commit <code>71fdae1</code>
+rebuilt and passed its tests, then cold-opened the re-enumerated
+<code>0547:c003</code> camera and captured three exact-size mode-2
+frames with controls and exit zero</td>
+<td><a href="../evidence/public-release-live-validation.md">Public
+release live validation</a></td>
+<td>VERIFIED LIVE HOST-REBOOT RECOVERY</td>
+</tr>
+<tr>
+<td>E-050</td>
+<td>A line-by-line readiness audit distinguishes the useful Linux alpha
+from final acceptance: streaming, reader/API, Linux application bridge,
+portable macOS reader, and the non-functional requirements pass, while
+physical cable reconnect and optical/color checks remain open</td>
+<td><a href="../evidence/release-acceptance-audit.md">Release acceptance
+audit</a></td>
+<td>VERIFIED AUDIT; EXIT OPEN</td>
+</tr>
+<tr>
+<td>E-051</td>
+<td>The Apple Silicon public reader cold-initialized the physical
+<code>0547:c003</code> camera through a one-device Pi relay, applied
+exposure and gain, captured three exact-size mode-2 frames, and exited
+zero</td>
+<td><a href="../evidence/macos-virtualhere-live-validation.md">Apple
+Silicon relay validation</a></td>
+<td>VERIFIED LIVE MACOS READER</td>
+</tr>
+<tr>
+<td>E-052</td>
+<td>Returning ownership from macOS to Linux reproduced one
+marker-invalid leading warm-up frame; public alpha-2 preserved it once,
+discarded it under a two-frame limit, delivered three valid frames in
+the same process, and kept later marker loss fatal</td>
+<td><a href="../evidence/macos-virtualhere-live-validation.md">Apple
+Silicon relay validation</a></td>
+<td>VERIFIED BOUNDED HAND-BACK RECOVERY</td>
+</tr>
+<tr>
+<td>E-053</td>
+<td>Public commit <code>a61c044</code> adds a no-dependency Bayer
+statistics/focus utility and reproducible microscope procedure;
+Ubuntu/macOS CI passed, the exact Pi commit passed every test, and a
+fresh physical covered-sensor capture produced exact mode-2 byte counts,
+<code>frames=1 status=ok</code>, and a valid JSON analysis</td>
+<td><a href="../evidence/optical-validation-tooling.md">Optical
+validation tooling</a></td>
+<td>VERIFIED TOOLING + LIVE DARK-FRAME ANALYSIS / OPTICS OPEN</td>
+</tr>
+<tr>
+<td>E-054</td>
+<td>Public commit <code>fb502c1</code> installs and removes exactly the
+reader, V4L2 helper, and frame analyzer under
+<code>PREFIX</code>/<code>DESTDIR</code>; a staged test proves an
+unrelated same-directory sentinel survives, and the complete suite
+passes on Apple Silicon, the Pi, Ubuntu CI, and macOS CI</td>
+<td><a href="../evidence/package-operations.md">Package
+operations</a></td>
+<td>VERIFIED INSTALL/REMOVE OPERATIONS</td>
+</tr>
+<tr>
+<td>E-055</td>
+<td>Annotated public prerelease <code>v0.2.0-alpha.3</code> resolves to
+commit <code>3c16d2a</code>; independent main/tag Ubuntu and macOS CI
+runs pass, the downloaded public source archive passes every test
+outside a Git checkout, and the exact-tag Pi build passed every test
+before a controlled physical mode-2 capture and analysis completed with
+exact byte counts and exit zero</td>
+<td><a href="../evidence/public-release-alpha3.md">Public alpha-3
+release</a></td>
+<td>VERIFIED PUBLIC ARCHIVE + EXACT-TAG LIVE CAPTURE</td>
+</tr>
+<tr>
+<td>E-056</td>
+<td>An inert exact-alpha-3 reconnect harness is staged on the Pi,
+requires observation of device count zero before re-enumeration, and
+will verify a three-frame capture, exact sizes/status, first-frame
+analysis, and evidence hashes without reset, deauthorization, or
+speculative control requests</td>
+<td><a href="../evidence/physical-reconnect-harness.md">Physical
+reconnect harness</a></td>
+<td>PREPARED + INERT-VERIFIED / PHYSICAL ACTION OPEN</td>
+</tr>
+<tr>
+<td>E-057</td>
+<td>Exact public alpha-3 on Apple Silicon directly claimed USB
+<code>0547:c003</code>, applied gain/exposure, captured three preview
+frames, one full-resolution frame, and a fresh-process preview reopen
+with exact sizes and analysis; the first cold-attach invocation failed
+closed on a single one-byte control response before all subsequent
+startup controls returned the reference stall</td>
+<td><a href="../evidence/macos-native-cable-validation.md">Native-cable
+Apple Silicon validation</a></td>
+<td>VERIFIED DIRECT READER / COLD-ATTACH TRANSIENT RECORDED</td>
+</tr>
+<tr>
+<td>E-058</td>
+<td>Microscope imagery and 0.983 autocorrelation at a 524,288-byte lag
+exposed the old multi-request assembly error; single-request probes
+proved one prefix per complete record and yielded coherent 1280x960 and
+3664x2748 images</td>
+<td><a href="../evidence/first-optical-capture.md">Optical frame-layout
+correction</a></td>
+<td>VERIFIED LIVE OPTICAL / READER CORRECTED</td>
+</tr>
+<tr>
+<td>E-059</td>
+<td>At 100 ms, corrected gain 0..320 produced monotonic mean intensity
+14.67..154.88; gain 256 yielded negligible clipping, and a 16-frame run
+produced 16 distinct hashes plus multi-resolution PNGs and an H.264
+proof clip</td>
+<td><a href="../evidence/first-optical-capture.md">Optical frame-layout
+correction</a></td>
+<td>VERIFIED LIVE CONTROLS + MOTION SEQUENCE</td>
+</tr>
+<tr>
+<td>E-060</td>
+<td>Mode-0 record N <code>[512,end)</code> plus record N+1
+<code>[320,512)</code> produced three distinct complete 3664x2748 frames
+without the false left strip; neutral slide regions independently
+yielded approximately R/G/B <code>0.87/1.0/2.0</code> in both modes</td>
+<td><a href="../evidence/first-optical-capture.md">Optical frame-layout
+correction</a></td>
+<td>VERIFIED LIVE FULL-FRAME ASSEMBLY + IN-SITU WHITE BALANCE</td>
+</tr>
+<tr>
+<td>E-061</td>
+<td>After a change to 10x made the old settings nearly fully clipped, a
+gain-zero sweep found an unclipped 250-ms preview and complete
+full-resolution still; public alpha-6 at commit <code>0fded6e</code>
+emits ratio-preserving FFmpeg-safe white-balance gains</td>
+<td><a href="../evidence/first-optical-capture.md">Optical capture and
+10x recovery</a></td>
+<td>VERIFIED LIVE OPTICAL RECOVERY + RELEASE</td>
+</tr>
+<tr>
+<td>E-062</td>
+<td>Exact public alpha-6 builds and passes every test on
+<code>rpios-17</code>; a synthetic 1280x960 YUYV producer/consumer
+preflight passed six exact frames through the generic loopback and
+cleaned it up, and a static-tested inert harness is staged to verify
+both optical modes plus six ordinary V4L2-consumed camera frames after
+the cable move</td>
+<td><a href="../evidence/pi-alpha6-linux-optical-preparation.md">Pi
+alpha-6 optical preparation</a></td>
+<td>GENERIC V4L2 VERIFIED + CAMERA HARNESS PREPARED / CAMERA MOVE
+OPEN</td>
+</tr>
+<tr>
+<td>E-063</td>
+<td>Equal 256x192 regions in the 10x blank-field preview range from mean
+luma 134.0 at bottom-left to 193.9 at top-middle, showing asymmetric
+field nonuniformity rather than simple radial falloff; an optical
+alignment/isolation checklist and calibrated per-Bayer-plane dark/flat
+correction are now specified</td>
+<td><a href="../evidence/field-illumination-correction.md">Field
+illumination correction</a></td>
+<td>MEASURED DIAGNOSIS + CORRECTION PLAN</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="5.7" id="risk-register"><span
+class="header-section-number">5.7</span> Risk Register</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Likelihood / impact</th>
+<th>Mitigation and decision point</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A vendor-IN request mutates hidden device state</td>
+<td><span class="risk-medium">Medium / High</span></td>
+<td>Call-context classification, dry-run binary, one bounded request,
+cold-session repetition, power-cycle recovery</td>
+</tr>
+<tr>
+<td>Initialization depends on undiscovered timing or state</td>
+<td><span class="risk-medium">Medium / High</span></td>
+<td>Prefix experiments, explicit state model, targeted Windows/QEMU
+trace only if static work stalls</td>
+</tr>
+<tr>
+<td>Frame format is proprietary or calibrated</td>
+<td><span class="risk-medium">Medium / High</span></td>
+<td>Preserve raw frames, compare modes, inspect decoder exports/tables,
+separate transport success from decode success</td>
+</tr>
+<tr>
+<td>USB 2.0 limits full-resolution frame rate</td>
+<td><span class="risk-high">High / Medium</span></td>
+<td>Treat full resolution as still; select and measure a separate
+preview mode</td>
+</tr>
+<tr>
+<td>macOS system-wide camera integration is signing-heavy</td>
+<td><span class="risk-medium">Medium / Medium</span></td>
+<td>Prove core and AVFoundation first; keep Linux standard bridge and
+direct API independently useful</td>
+</tr>
+<tr>
+<td>Camera hardware is intermittent after long storage</td>
+<td><span class="risk-low">Low / High</span></td>
+<td>Cold-start repetitions, cable/power control, no hidden retries,
+compare failures across hosts</td>
+</tr>
+<tr>
+<td>Vendor evidence cannot be redistributed</td>
+<td><span class="risk-high">High / Medium</span></td>
+<td>Publish original code and derived protocol facts; keep vendor files
+and disassembly private</td>
+</tr>
+<tr>
+<td>Engineering cost exceeds replacement value</td>
+<td><span class="risk-medium">Medium / Medium</span></td>
+<td>Reassess after G3 and G5; continue only for learning, optics,
+preservation, or accepted utility</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="5.8" id="open-decisions"><span
+class="header-section-number">5.8</span> Open Decisions</h2>
+<ol type="1">
+<li>What driver-local side effect, prerequisite transaction, or protocol
+difference explains why the corrected TCA prefix times out even from a
+proven physical cold start?</li>
+<li>Which of the recovered fixed modes are accepted by this exact unit,
+and which mode should be the preview default?</li>
+<li>What are the Bayer pattern, orientation, optical-black/crop
+requirements, and color calibration requirements for the recovered
+one-byte-per-pixel stream?</li>
+<li>What are the exact user-facing normalization and persistence
+semantics for host-side RGB gain, gamma, contrast, saturation, white
+balance, mirrors, monochrome, and 50/60 Hz processing? The hardware
+exposure, analog-gain, and four-value frame-speed plan is recovered
+offline but not yet live-tested.</li>
+<li>Is a Linux V4L2 loopback path sufficient for first application
+acceptance, or is system-wide macOS discovery required in the same
+release?</li>
+<li>Does the user-space core meet measured throughput without
+platform-specific USB scheduling or a kernel component?</li>
+</ol>
+<h2 data-number="5.9" id="planning-completion-checklist"><span
+class="header-section-number">5.9</span> Planning Completion
+Checklist</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />Objective and Definition
+of Done are explicit.</label></li>
+<li><label><input type="checkbox" checked="" />Existing observed
+evidence is separated from inference.</label></li>
+<li><label><input type="checkbox" checked="" />Product use cases and
+requirements cover still, stream, controls, applications, and
+recovery.</label></li>
+<li><label><input type="checkbox" checked="" />User-space core and
+platform-adapter boundaries are defined.</label></li>
+<li><label><input type="checkbox" checked="" />Safety gates prohibit
+guessed USB operations.</label></li>
+<li><label><input type="checkbox" checked="" />Dependency graph has one
+start, one exit, and complete reachability.</label></li>
+<li><label><input type="checkbox" checked="" />Every task has
+preconditions, postconditions, rollback, and proof.</label></li>
+<li><label><input type="checkbox" checked="" />Acceptance authority has
+approved this plan for execution beyond D20.</label></li>
+<li><label><input type="checkbox" checked="" />First live vendor request
+was selected, reviewed, bounded, and preserved as negative
+evidence.</label></li>
+</ul>
+<blockquote>
+<p><strong>Current recommendation:</strong> stop varying Linux vendor
+requests. The physical- cold corrected prefix timed out safely and
+decisively. The isolated Windows bench, legacy driver, and TSView camera
+path now work; use the corrected exact-only VirtualHere v4 handoff to
+record a fresh attach and control session below Pi <code>usbmon3</code>.
+The physical Pi bench, gateway relay, Windows discovery, and pinned
+inputs are live; exact <code>USE</code> followed by one TSView start is
+the next live action. Independently prove the removable Linux V4L2/media
+application boundary with replay frames, using Micro-Manager as a later
+real-application target. Continue static frame/decoder analysis while
+capture is unavailable; firmware discovery remains non-gating.</p>
+</blockquote>
+</main>
+<script src="app.js"></script>
+
+</body>
+</html>

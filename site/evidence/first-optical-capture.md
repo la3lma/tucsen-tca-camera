@@ -1,0 +1,142 @@
+# Microscope-mounted optical capture and frame-layout correction
+
+Date: 2026-10-04
+
+The owner attached the camera to the microscope optical path and reconnected it
+directly to the Apple Silicon workstation. The subject was ordinary dust and
+debris on a glass plate. This session turned the covered-sensor transport work
+into useful optical evidence and exposed a major frame-assembly error.
+
+## Initial image and diagnostic symptom
+
+The alpha-3 reader returned the expected byte count, but its rendered image had
+repeated scene regions, a sharp horizontal boundary, and an apparently black
+lower region. Autocorrelation of the 1,228,800-byte payload was 0.983 at an
+exact 524,288-byte lag. What had looked like four sensor taps was therefore a
+strongly repeated byte sequence, not a spatial sensor layout.
+
+Each of the reader's separate 524,288-byte bulk requests began with ten bytes
+of `0x88` and the start of a new image record. Concatenating several requests
+had assembled repeated record prefixes into one false image.
+
+## Correct physical-record layout
+
+A bounded diagnostic tool issued one bulk request for the complete device
+record. It established these layouts:
+
+- mode 2: 1,229,312 device bytes, a 512-byte prefix, then a 1280x960 Bayer8
+  raster (1,228,800 bytes);
+- mode 0: 10,068,992-byte physical records whose 3664x2748 Bayer8 frames cross
+  the record boundary as described below; and
+- the first ten bytes of each prefix are `0x88`; no later marker occurs inside
+  either complete record.
+
+The public reader candidate was changed to one bulk request per physical
+record. It then captured eight coherent consecutive preview frames and one
+mostly coherent full-resolution frame. The former horizontal seam and repeated
+regions disappeared, while a 192-pixel-wide dark/purple strip remained at the
+left edge and prompted the follow-up below.
+
+## Full-resolution look-ahead correction
+
+A diagnostic request longer than one mode-0 record found the next ten-byte
+`0x88` marker at exact offset 10,068,992. Bytes 512 through 10,068,991 of record
+N are the first 10,068,480 pixels of the current frame. Bytes 320 through 511
+of record N+1 are its final 192 pixels; bytes 512 onward in N+1 begin the next
+frame. Treating the 320-byte alignment surplus as one simple prefix had placed
+the preceding frame's continuation at the left edge.
+
+The reader now assembles each full-resolution frame as record N `[512,end)`
+plus record N+1 `[320,512)`, retaining record N+1 as look-ahead for the next
+frame. Three consecutive complete 3664x2748 frames and a three-frame preview
+regression all exited zero and had distinct hashes. The false left strip is
+gone without cropping any pixels.
+
+## Optical gain and buffered-control behavior
+
+The sensor delivers one already-buffered record after exposure or gain is
+changed. That record still reflects the preceding settings. The reader now
+consumes exactly one such record before publishing frame zero, while preserving
+it as `--raw-first` evidence.
+
+At a fixed 100-ms exposure, corrected single-frame captures showed monotonic
+gain response. Mean raw intensity increased from 14.67 at gain 0 to 154.88 at
+gain 320. Gain 256 produced mean 83.23, median 91, p99 125, and only six parts
+per million saturated pixels. That is a useful bright starting point for the
+current microscope, although it is not a calibrated universal default.
+
+A 100-ms/gain-256 run captured 16 distinct coherent preview frames in 2.03
+seconds including cold initialization and the settling record. All 16 frames
+had different SHA-256 hashes. They were encoded as a 640x480 H.264 proof clip
+with a chosen 6-fps playback time base; raw Bayer contains no timestamps, so
+that rate is not yet a formal camera frame-rate measurement.
+
+## Neutral-background white balance
+
+The owner identified the blank illuminated slide background as white under the
+microscope's tungsten filament lamp. Robust Bayer-plane medians from clean
+regions independently yielded red/green/blue multipliers
+`0.8788/1.0/1.9773` in mode 0 and `0.8624/1.0/2.0` in mode 2. Applying those
+gains made the background neutral gray. The actual field is a stronger
+practical reference than an assumed bulb temperature because it includes the
+lamp, condenser, optics, filters, and sensor response. It does not by itself
+prove Bayer phase or replace a known color target.
+
+The first 10x neutral estimate asked for ideal red/green/blue gains of about
+`0.914/1.0/2.045`. FFmpeg's `colorchannelmixer` caps each multiplier at 2.0.
+Release alpha 6 therefore scales every emitted multiplier by the same factor,
+producing approximately `0.893/0.978/2.0` without changing their ratios.
+
+## 10x objective and exposure recovery
+
+The microscope objective was changed to 10x. Reusing 100 ms and gain 256
+clipped 99.61% of preview pixels and 98.45% of full-resolution pixels, making
+those first frames unsuitable for either imaging or focus comparison. A
+gain-zero preview sweep at 1, 5, 10, 25, 50, 100, 150, 200, and 250 ms was
+monotonic and found an unclipped working point at 250 ms.
+
+At that setting, the 1280x960 preview had mean 153.60, median 168, p99 211,
+zero saturated pixels, and a Bayer-tile Laplacian variance of 59.16. The
+complete 3664x2748 capture had mean 141.57, median 153, p99 206, zero
+saturated pixels, and a score of 28.52. The images visibly resolve dust,
+fibers, and particles. The scores are recorded for later repeatability, not as
+proof that 10x is sharper than the previous objective: magnification, field,
+exposure, scene content, and possibly the camera/binocular focal planes all
+changed together.
+
+A subsequent alpha-6 run captured 12 preview frames at 250 ms/gain 0 in 2.43
+seconds including initialization and the settling record. All 12 frame hashes
+were distinct. FFmpeg white-balanced, scaled, and encoded the stream as a
+640x480 H.264 proof clip with a selected 4-fps playback time base. As before,
+that playback rate is not a device timestamp or a formal delivered-rate
+measurement.
+
+## Evidence hashes
+
+```text
+15811e333e8fe0a4656d3f22b460402ce9bb4a12b3818cf6dfe1201be4d3e3f3  16-frame Bayer stream
+73c11d81e151b8da6004bd0057cdd09c791d22df360e03f71972bf6abec7bb31  640x480 H.264 proof clip
+919a0b98e1b8fca71e65741e1b007e68dd1dd33d2a18ff82f5e947f785e53f4e  1280x960 PNG still
+71f7a38bd280cdba5c5b5d3270d0887d7bcbd5ab7c409af16891a1ac46a06c02  mode-0 preview PNG
+9ba66e3839516d540500790924f35f671abd0fe6455a7329e786e5115d5ede8d  assembled mode-0 frame 1
+58fca6aa409e785d297851ace0f045af9224219f0695d254ca52640802bab58e  assembled mode-0 frame 2
+88d31e27174d56e6b33d7423c42bcfd1a018d587190f6cbcb8df745ea748e8fc  assembled mode-0 frame 3
+e51027addc7d6be4088683618045701627eedb74f762f98c7bdc81f9466fe53b  assembled mode-0 PNG
+2e786e6ec3c9e086469090da4f5a06cee8845edf6a456a559f6d0f5e0b81559d  white-balanced mode-2 PNG
+298bf9d11f6356cf5630b907e8550d6d972ea8688549347616d807641185cdca  white-balanced 10x mode-2 PNG
+230c10cf47705f0abe694b234edebd7f304a4b92837a131d121c75bd843bb5d1  10x complete mode-0 PNG
+22a276b222f2e7ec13d0f60993f1de2ed199d78c6af88a9ab14818b221549942  white-balanced 10x H.264 proof clip
+```
+
+The immutable raw captures, logs, gain-sweep JSON, all four provisional Bayer
+phase renders, multi-resolution stills, per-frame hashes, and proof clips are
+retained under `work/optical-macos-20261004T081321Z/`.
+
+## Acceptance effect
+
+The maintained userspace stack now produces coherent still images in both
+supported sensor modes, a controllably brighter preview, consecutive frames
+suitable for motion recording, multi-resolution PNG/MP4 derivatives, complete
+full-resolution assembly, and neutral-background white balance. Final Bayer
+phase and colorimetric calibration still require a known color target. Formal
+frame-rate measurement and the post-fix live Linux V4L2 retest remain open.
