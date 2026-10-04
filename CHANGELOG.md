@@ -11,6 +11,8 @@
 - Add a USB-inert synthetic-reader acceptance for the real V4L2 bridge,
   including application detach/reattach, deliberately slow consumption,
   bounded process-tree RSS, timestamp analysis, and exact loopback cleanup.
+- Make V4L2 bridge signal shutdown deterministic while retaining its scoped
+  process, device, FIFO, and module cleanup.
 
 ## 0.2.0-alpha.7 — 2026-10-04
 

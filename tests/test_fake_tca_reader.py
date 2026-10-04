@@ -50,7 +50,7 @@ def main() -> None:
         assert payload[FRAME_BYTES:] == bytes([61]) * FRAME_BYTES
         rows = timestamps.read_text(encoding="ascii").splitlines()
         assert rows[0] == "frame,monotonic_ns"
-        assert [row.split(",", 1)[0] for row in rows[1:]] == ["0", "1"]
+        assert [row.split(",", 1)[0] for row in rows[1:]] == ["1", "2"]
         assert int(rows[2].split(",", 1)[1]) > int(rows[1].split(",", 1)[1])
 
     print("TCA camera-free reader test double: PASS")

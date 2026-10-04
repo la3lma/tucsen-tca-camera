@@ -251,7 +251,11 @@ wait "$bridge_pid"
 bridge_status=$?
 set -e
 bridge_pid=0
-[ "$bridge_status" -eq 143 ] || [ "$bridge_status" -eq 0 ]
+[ "$bridge_status" -eq 143 ] || {
+    printf 'bridge did not report deterministic TERM status: %s\n' \
+        "$bridge_status" >&2
+    exit 1
+}
 printf '%s\n' "$bridge_status" >"$output_dir/bridge-exit-status.txt"
 [ ! -e "$device" ]
 ! grep -q '^v4l2loopback ' /proc/modules 2>/dev/null

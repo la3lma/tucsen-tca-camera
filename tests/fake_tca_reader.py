@@ -90,7 +90,7 @@ def main() -> int:
             except BrokenPipeError:
                 break
             if timestamps:
-                timestamps.write(f"{delivered},{time.monotonic_ns()}\n")
+                timestamps.write(f"{delivered + 1},{time.monotonic_ns()}\n")
                 timestamps.flush()
             delivered += 1
             if delay_ms:
