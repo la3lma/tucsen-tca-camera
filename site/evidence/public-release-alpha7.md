@@ -33,6 +33,19 @@ remains Apache-2.0 licensed and entirely in user space.
   and release contain no raw disassembly, decompiler export, Ghidra project,
   vendor binary, firmware, packet capture, VM disk, or private-work artifact.
 
+## Publication verification
+
+The post-tag documentation commit `5c1406f` published this record, the refreshed
+Docstack, and the final report. Its Ubuntu/macOS CI run `37199324399` and Pages
+deployment run `37199324353` both passed. Journal of Bjorn commit `8877b50`
+deployed successfully in run `37199153474`.
+
+The final local report, its public project copy, and its Journal of Bjorn copy
+all have SHA-256
+`a935dd68f0626ce98a942e80697bb0250bc21718d844b953790b64965ae51523`.
+A live sweep of the Docstack evidence ledger checked 51 unique evidence links;
+all returned HTTP 200.
+
 ## Measured hardware evidence included
 
 Direct Apple Silicon capture delivered 17.3466 frames/s for 1280x960 at a
