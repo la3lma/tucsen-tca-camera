@@ -69,7 +69,7 @@ def main() -> None:
     version = subprocess.run(
         [str(binary), "--version"], check=True, capture_output=True, text=True
     )
-    assert version.stdout.strip() == "tca-camera 0.2.0-alpha.5"
+    assert version.stdout.strip() == "tca-camera 0.2.0-alpha.6"
     with tempfile.TemporaryDirectory(prefix="tca-linux-stream-") as directory:
         raw = pathlib.Path(directory, "no.raw")
         bayer = pathlib.Path(directory, "no.bayer")

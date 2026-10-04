@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.2.0-alpha.6 — 2026-10-04
+
+- Preserve white-balance channel ratios when an estimated multiplier exceeds
+  FFmpeg's `colorchannelmixer` limit by scaling all three output multipliers
+  together into the accepted range.
+- Verify unclipped 10× microscope captures at gain 0 in both 1280×960 preview
+  and complete 3664×2748 still modes.
+
 ## 0.2.0-alpha.5 — 2026-10-04
 
 - Assemble full-resolution frames across their physical record boundary. Each

@@ -199,9 +199,11 @@ scripts/tca-white-balance capture/one-frame.bayer --mode 2 \
   --phase grbg --roi 448,48,576,240
 ```
 
-The JSON result includes raw channel medians, gains, and an FFmpeg
-`colorchannelmixer` filter. Apply the reported filter after Bayer conversion;
-for example, the tested tungsten-lit field produced approximately red `0.87`,
+The JSON result includes raw channel medians, ideal gains, FFmpeg-safe gains,
+and a `colorchannelmixer` filter. If an ideal gain exceeds FFmpeg's 2.0 limit,
+the utility scales all three FFmpeg gains together so their chromatic ratios
+remain unchanged. Apply the reported filter after Bayer conversion; for
+example, the tested tungsten-lit field produced approximately red `0.87`,
 green `1.0`, and blue `2.0`:
 
 ```sh

@@ -41,8 +41,11 @@ def main() -> None:
         assert parsed["gains"] == {
             "blue": 4.0, "green": 1.0, "red": 2.0,
         }
+        assert parsed["ffmpeg_gains"] == {
+            "blue": 2.0, "green": 0.5, "red": 1.0,
+        }
         assert parsed["ffmpeg_filter"] == (
-            "colorchannelmixer=rr=2.000000:gg=1.000000:bb=4.000000"
+            "colorchannelmixer=rr=1.000000:gg=0.500000:bb=2.000000"
         )
     print("TCA white-balance estimator checks: PASS")
 

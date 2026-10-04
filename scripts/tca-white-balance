@@ -107,9 +107,17 @@ def main() -> None:
         "green": 1.0,
         "blue": green / medians["b"],
     }
+    # FFmpeg's colorchannelmixer accepts channel multipliers only in [-2, 2].
+    # Scale all three together when necessary so the requested channel ratios
+    # are preserved instead of emitting an unusable filter or clipping only the
+    # strongest channel.
+    ffmpeg_scale = max(1.0, max(gains.values()) / 2.0)
+    ffmpeg_gains = {
+        name: value / ffmpeg_scale for name, value in gains.items()
+    }
     ffmpeg_filter = (
-        f"colorchannelmixer=rr={gains['red']:.6f}:"
-        f"gg={gains['green']:.6f}:bb={gains['blue']:.6f}"
+        f"colorchannelmixer=rr={ffmpeg_gains['red']:.6f}:"
+        f"gg={ffmpeg_gains['green']:.6f}:bb={ffmpeg_gains['blue']:.6f}"
     )
     if args.ffmpeg:
         print(ffmpeg_filter)
@@ -130,6 +138,7 @@ def main() -> None:
         },
         "medians": medians,
         "gains": gains,
+        "ffmpeg_gains": ffmpeg_gains,
         "ffmpeg_filter": ffmpeg_filter,
     }
     json.dump(result, sys.stdout, indent=2, sort_keys=True)

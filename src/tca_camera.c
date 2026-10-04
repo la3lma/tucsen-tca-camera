@@ -84,7 +84,7 @@ static const struct init_step init_steps[] = {
 };
 
 static const char execution_token[] = "capture";
-static const char version[] = "0.2.0-alpha.5";
+static const char version[] = "0.2.0-alpha.6";
 static volatile sig_atomic_t stop_requested;
 
 static size_t pixel_bytes(const struct mode_profile *mode)
