@@ -88,6 +88,7 @@ static const struct init_step init_steps[] = {
 };
 
 static const char execution_token[] = "capture";
+static const char list_token[] = "list";
 static const char version[] = TCA_VERSION;
 static volatile sig_atomic_t stop_requested;
 
@@ -104,6 +105,69 @@ static size_t head_bytes(const struct mode_profile *mode)
 static unsigned max_exposure_ms(const struct mode_profile *mode)
 {
     return (TCA_EXPOSURE_MAX_LINES * mode->row_time_us) / 1000u;
+}
+
+static const char *usb_speed_name(int speed)
+{
+    switch (speed) {
+    case LIBUSB_SPEED_LOW:
+        return "low";
+    case LIBUSB_SPEED_FULL:
+        return "full";
+    case LIBUSB_SPEED_HIGH:
+        return "high";
+    case LIBUSB_SPEED_SUPER:
+        return "super";
+    case LIBUSB_SPEED_SUPER_PLUS:
+        return "super-plus";
+    case LIBUSB_SPEED_UNKNOWN:
+    default:
+        return "unknown";
+    }
+}
+
+static int list_cameras(void)
+{
+    libusb_context *context = NULL;
+    libusb_device **devices = NULL;
+    ssize_t device_count;
+    size_t matches = 0u;
+    ssize_t index;
+    int result = libusb_init(&context);
+
+    if (result != 0) {
+        fprintf(stderr, "libusb_init: %s\n", libusb_error_name(result));
+        return EXIT_FAILURE;
+    }
+    device_count = libusb_get_device_list(context, &devices);
+    if (device_count < 0) {
+        fprintf(stderr, "libusb_get_device_list: %s\n",
+                libusb_error_name((int)device_count));
+        libusb_exit(context);
+        return EXIT_FAILURE;
+    }
+    printf("target=%04x:%04x\n", TCA_VID, TCA_PID);
+    for (index = 0; index < device_count; ++index) {
+        struct libusb_device_descriptor descriptor;
+
+        result = libusb_get_device_descriptor(devices[index], &descriptor);
+        if (result != 0) {
+            continue;
+        }
+        if (descriptor.idVendor != TCA_VID || descriptor.idProduct != TCA_PID) {
+            continue;
+        }
+        printf("camera=%zu bus=%u address=%u speed=%s\n", matches,
+               (unsigned)libusb_get_bus_number(devices[index]),
+               (unsigned)libusb_get_device_address(devices[index]),
+               usb_speed_name(libusb_get_device_speed(devices[index])));
+        ++matches;
+    }
+    printf("camera-count=%zu\n", matches);
+    fputs("NO DEVICE OPENED OR TRANSFER SUBMITTED.\n", stdout);
+    libusb_free_device_list(devices, 1);
+    libusb_exit(context);
+    return EXIT_SUCCESS;
 }
 
 static const struct mode_profile *find_mode(unsigned number)
@@ -384,11 +448,16 @@ int main(int argc, char **argv)
                 "[--timestamps CSV] [--mode 0|2] "
                 "[--exposure-ms MS] [--gain 0..320]\n",
                 argv[0], execution_token);
+        fprintf(stdout, "                       %s %s\n", argv[0],
+                list_token);
         return EXIT_SUCCESS;
     }
     if (argc == 2 && strcmp(argv[1], "--version") == 0) {
         fprintf(stdout, "tca-camera %s\n", version);
         return EXIT_SUCCESS;
+    }
+    if (argc == 2 && strcmp(argv[1], list_token) == 0) {
+        return list_cameras();
     }
     if (strcmp(argv[1], execution_token) != 0) {
         fputs("NO TRANSFER SENT: invalid arguments\n", stderr);

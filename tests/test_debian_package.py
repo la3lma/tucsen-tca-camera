@@ -6,6 +6,7 @@ from __future__ import annotations
 import hashlib
 import pathlib
 import platform
+import re
 import shutil
 import stat
 import subprocess
@@ -120,6 +121,10 @@ def main() -> None:
             str(binary_directory / "tca-camera"), "--version"
         ).stdout.strip()
         assert reported_version == f"tca-camera {upstream_version}"
+        listed = run(str(binary_directory / "tca-camera"), "list").stdout
+        assert "target=0547:c003\n" in listed
+        assert re.search(r"^camera-count=[0-9]+$", listed, re.MULTILINE)
+        assert "NO DEVICE OPENED OR TRANSFER SUBMITTED." in listed
         installed_version = (
             extracted / "usr" / "share" / "doc" / "tucsen-tca-camera" / "VERSION"
         ).read_text(encoding="utf-8").strip()

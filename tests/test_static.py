@@ -17,6 +17,12 @@ ALLOWED = {
     "libusb_control_transfer",
     "libusb_error_name",
     "libusb_exit",
+    "libusb_free_device_list",
+    "libusb_get_bus_number",
+    "libusb_get_device_address",
+    "libusb_get_device_descriptor",
+    "libusb_get_device_list",
+    "libusb_get_device_speed",
     "libusb_init",
     "libusb_open_device_with_vid_pid",
     "libusb_release_interface",
@@ -69,6 +75,11 @@ def main() -> None:
     assert "control-settle discarded one pre-control buffered record" in source
     assert "libusb_reset_device" not in source
     assert "libusb_set_configuration" not in source
+    assert 'static const char list_token[] = "list";' in source
+    assert "NO DEVICE OPENED OR TRANSFER SUBMITTED" in source
+    assert "libusb_get_device_list" in source
+    assert "libusb_get_device_descriptor" in source
+    assert "list_cameras" in source
     dry = subprocess.run([str(binary)], check=True, capture_output=True, text=True)
     assert "NO TRANSFER SENT" in dry.stdout
     assert "available-modes=0:3664x2748-still,2:1280x960-preview" in dry.stdout
@@ -76,6 +87,12 @@ def main() -> None:
         [str(binary), "--version"], check=True, capture_output=True, text=True
     )
     assert version.stdout.strip() == f"tca-camera {expected_version}"
+    listed = subprocess.run(
+        [str(binary), "list"], check=True, capture_output=True, text=True
+    )
+    assert "target=0547:c003\n" in listed.stdout
+    assert re.search(r"^camera-count=[0-9]+$", listed.stdout, re.MULTILINE)
+    assert "NO DEVICE OPENED OR TRANSFER SUBMITTED" in listed.stdout
     with tempfile.TemporaryDirectory(prefix="tca-linux-stream-") as directory:
         raw = pathlib.Path(directory, "no.raw")
         bayer = pathlib.Path(directory, "no.bayer")

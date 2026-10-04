@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add a USB-inert `tca-camera list` preflight that reports every exact
+  `0547:c003` match by bus, address, and negotiated USB speed without opening
+  a device, claiming an interface, or submitting a transfer.
+
 ## 0.2.0-alpha.11 — 2026-10-04
 
 - Make `VERSION` the reader's build-time version authority, verify that the
