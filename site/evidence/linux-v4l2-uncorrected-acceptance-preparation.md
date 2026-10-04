@@ -17,12 +17,17 @@ remains a later, stricter gate.
 - a calibration path, retaining strict geometry, Bayer-phase, exposure, and
   gain validation before the camera or loopback setup is touched.
 
-The evidence profile is now `tca-linux-v4l2-acceptance-v3`. Both paths record
+The follow-up hardening candidate advances the evidence profile to
+`tca-linux-v4l2-acceptance-v4`. Both paths record
 the selected `calibration_mode`, exact release commit, camera and host
 identity, reader timestamps, bounded consumer YUYV bytes, per-frame digests,
 producer/consumer counts and cadence, bridge exit status, cleanup, immediate
-reader reopen, and a SHA-256 manifest. The uncorrected path writes an explicit
-JSON marker instead of pretending that a flat-field map was applied.
+reader reopen, and a SHA-256 manifest. The FFmpeg consumer is additionally
+bounded by a recorded deadline derived from frame count and requested
+exposure. A timeout or other consumer failure records its exit status, tears
+down the bridge through the normal trap, and hashes the partial evidence
+instead of hanging indefinitely. The uncorrected path writes an explicit JSON
+marker instead of pretending that a flat-field map was applied.
 
 An uncorrected pass proves physical USB-to-application transport. It cannot
 satisfy the optical flat-field acceptance criterion and must not be described

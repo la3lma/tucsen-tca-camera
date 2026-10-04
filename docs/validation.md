@@ -496,7 +496,8 @@ separate gates. The live Linux V4L2 harness now accepts `-` instead of a map to
 run an explicitly uncorrected USB-to-application test, while a supplied map
 retains the existing strict geometry, Bayer-phase, exposure, and gain checks.
 Both paths record `calibration_mode`, producer and consumer timing, bounded
-YUYV output, frame digests, cleanup, immediate reader reopen, and a manifest.
+YUYV output, a mode/settings-derived consumer deadline and exit status, frame
+digests, cleanup, immediate reader reopen, and a manifest.
 An uncorrected pass cannot satisfy optical flat-field acceptance.
 
 The exact candidate passed the complete Apple Silicon and Raspberry Pi AArch64

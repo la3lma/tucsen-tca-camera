@@ -1,5 +1,6 @@
 #!/bin/sh
-# Corrected live-camera Linux/V4L2 acceptance. Inert without the exact token.
+# Live-camera Linux/V4L2 acceptance, uncorrected or map-backed. Inert without
+# the exact token.
 
 set -eu
 LC_ALL=C
@@ -103,6 +104,7 @@ if [ "$exposure_ms" -lt 1 ] || [ "$exposure_ms" -gt "$max_exposure_ms" ] ||
         "$mode" "$max_exposure_ms" "$max_frames" >&2
     exit 64
 fi
+consumer_timeout_seconds=$(((frames * exposure_ms + 999) / 1000 + frames + 60))
 if [ "$(uname -s)" != Linux ]; then
     printf 'this live acceptance harness requires Linux\n' >&2
     exit 69
@@ -145,7 +147,7 @@ fi
 }
 
 for command_name in awk cut date dd ffmpeg find git grep lsusb mkdir \
-                    sha256sum sort tr v4l2-ctl wc xargs; do
+                    sha256sum sort timeout tr v4l2-ctl wc xargs; do
     command -v "$command_name" >/dev/null 2>&1 || {
         printf 'missing required command: %s\n' "$command_name" >&2
         exit 69
@@ -202,7 +204,7 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 
 {
-    printf 'profile=tca-linux-v4l2-acceptance-v3\n'
+    printf 'profile=tca-linux-v4l2-acceptance-v4\n'
     printf 'target=0547:c003\n'
     printf 'release_commit=%s\n' "$release_commit"
     printf 'calibration_mode=%s\n' "$calibration_mode"
@@ -213,6 +215,7 @@ trap 'exit 143' TERM
     printf 'exposure_ms=%s\n' "$exposure_ms"
     printf 'gain=%s\n' "$gain"
     printf 'consumer_frames=%s\n' "$frames"
+    printf 'consumer_timeout_seconds=%s\n' "$consumer_timeout_seconds"
 } >"$run_dir/session.txt"
 date -u '+%Y-%m-%dT%H:%M:%SZ' >"$run_dir/start-utc.txt"
 uname -a >"$run_dir/uname.txt"
@@ -265,11 +268,22 @@ done
 }
 
 consumer_bytes=$((frames * yuyv_frame_bytes))
-/usr/bin/time -p ffmpeg -hide_banner -loglevel warning \
+set +e
+/usr/bin/time -p timeout --signal=TERM --kill-after=10s \
+    "${consumer_timeout_seconds}s" \
+    ffmpeg -hide_banner -loglevel warning \
     -f v4l2 -input_format yuyv422 -video_size "${width}x${height}" \
     -i "$device" -frames:v "$frames" -pix_fmt yuyv422 -f rawvideo \
     "$run_dir/consumer.yuyv" >"$run_dir/consumer.stdout.txt" \
     2>"$run_dir/consumer.stderr-and-time.txt"
+consumer_status=$?
+set -e
+printf '%s\n' "$consumer_status" >"$run_dir/consumer-exit-status.txt"
+[ "$consumer_status" -eq 0 ] || {
+    printf 'consumer failed or exceeded its %s-second deadline (status %s)\n' \
+        "$consumer_timeout_seconds" "$consumer_status" >&2
+    exit "$consumer_status"
+}
 [ "$(file_bytes "$run_dir/consumer.yuyv")" -eq "$consumer_bytes" ]
 
 ffmpeg -hide_banner -loglevel error -f rawvideo -pixel_format yuyv422 \

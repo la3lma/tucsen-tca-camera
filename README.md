@@ -402,7 +402,10 @@ tools/run_linux_v4l2_acceptance.sh \
 
 The live path records producer timestamps, an exact bounded YUYV consumer
 stream, per-frame digests, producer/consumer counts and cadence, device
-metadata, cleanup status, immediate reader reuse, and a SHA-256 manifest. A
+metadata, cleanup status, immediate reader reuse, and a SHA-256 manifest. The
+ordinary FFmpeg consumer also runs under a recorded wall-clock deadline based
+on frame count and requested exposure; a stall terminates the consumer, cleans
+up the bridge, and preserves the partial evidence instead of hanging. A
 producer/consumer count delta is retained as bounded pipeline evidence and is
 not automatically mislabeled as a dropped-frame count. The live harness
 defaults to mode 2; an optional final `0` selects mode 0 and applies its
