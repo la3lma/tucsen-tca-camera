@@ -240,6 +240,7 @@ For example, after capturing 32-frame mode-2 streams as `darks.bayer` and
 ./build/tca-flat-field calibrate --mode 2 --phase grbg \
   --dark capture/darks.bayer --dark-frames 32 \
   --flat capture/flats.bayer --flat-frames 32 \
+  --exposure-ms 250 --camera-gain 0 \
   --output capture/10x-mode2.tca-flat
 
 ./build/tca-flat-field inspect \
@@ -283,8 +284,8 @@ TCA_FLAT_FIELD=capture/10x-mode2.tca-flat \
   scripts/tca-v4l2 --serve first-device-frame.raw
 ```
 
-The V4L2 helper validates the calibration path before touching the camera and
-retains the first unmodified device frame as before.
+The V4L2 helper validates geometry, phase, exposure, and camera gain before
+touching the camera, and retains the first unmodified device frame as before.
 
 ## Protocol and safety
 

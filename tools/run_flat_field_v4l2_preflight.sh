@@ -87,6 +87,7 @@ dd if=/dev/zero bs=$FRAME_BYTES count=$FRAMES status=none \
 "$flat_tool" calibrate --mode 2 --phase grbg \
     --dark "$output_dir/darks.bayer" --dark-frames 2 \
     --flat "$output_dir/flats.bayer" --flat-frames 2 \
+    --exposure-ms 100 --camera-gain 20 \
     --output "$output_dir/uniform.tca-flat" \
     2> "$output_dir/calibrate.stderr.txt"
 "$flat_tool" inspect --calibration "$output_dir/uniform.tca-flat" \

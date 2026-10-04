@@ -55,6 +55,7 @@ def main() -> None:
                 "--height", str(height), "--phase", "grbg",
                 "--dark", str(darks), "--dark-frames", "2",
                 "--flat", str(flats), "--flat-frames", "2",
+                "--exposure-ms", "125", "--camera-gain", "37",
                 "--output", str(calibration),
             ],
             check=True,
@@ -74,6 +75,55 @@ def main() -> None:
         assert metadata["phase"] == "grbg"
         assert metadata["dark_frames"] == 2
         assert metadata["flat_frames"] == 2
+        assert metadata["exposure_ms"] == 125
+        assert metadata["camera_gain"] == 37
+
+        legacy_calibration = root / "legacy-compatible.tca-flat"
+        subprocess.run(
+            [
+                str(binary), "calibrate", "--width", str(width),
+                "--height", str(height), "--phase", "grbg",
+                "--dark", str(darks), "--dark-frames", "2",
+                "--flat", str(flats), "--flat-frames", "2",
+                "--output", str(legacy_calibration),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        legacy_metadata = json.loads(subprocess.run(
+            [str(binary), "inspect", "--calibration", str(legacy_calibration)],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout)
+        assert legacy_metadata["exposure_ms"] is None
+        assert legacy_metadata["camera_gain"] is None
+
+        invalid_settings = root / "invalid-settings.tca-flat"
+        invalid_bytes = bytearray(calibration.read_bytes())
+        invalid_bytes[60:62] = (481).to_bytes(2, "little")
+        invalid_settings.write_bytes(invalid_bytes)
+        rejected_settings = subprocess.run(
+            [str(binary), "inspect", "--calibration", str(invalid_settings)],
+            capture_output=True,
+            text=True,
+        )
+        assert rejected_settings.returncode != 0
+
+        missing_setting_pair = subprocess.run(
+            [
+                str(binary), "calibrate", "--width", str(width),
+                "--height", str(height), "--phase", "grbg",
+                "--dark", str(darks), "--dark-frames", "2",
+                "--flat", str(flats), "--flat-frames", "2",
+                "--exposure-ms", "125", "--output", str(root / "bad.tca-flat"),
+            ],
+            capture_output=True,
+            text=True,
+        )
+        assert missing_setting_pair.returncode == 64
+        assert "must be supplied together" in missing_setting_pair.stderr
 
         input_path.write_bytes(flat + flat)
         applied = subprocess.run(
@@ -87,6 +137,18 @@ def main() -> None:
         )
         assert "frames=2" in applied.stderr and "status=ok" in applied.stderr
         assert output_path.read_bytes() == expected_corrected(width, height) * 2
+
+        legacy_output = root / "legacy-output.bayer"
+        subprocess.run(
+            [
+                str(binary), "apply", "--calibration", str(legacy_calibration),
+                "--input", str(input_path), "--output", str(legacy_output),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        assert legacy_output.read_bytes() == output_path.read_bytes()
 
         truncated = subprocess.run(
             [

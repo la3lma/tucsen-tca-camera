@@ -14,6 +14,8 @@
 #define TCFF_VERSION 1u
 #define TCFF_RECORD_BYTES 4u
 #define TCFF_HISTOGRAM_BINS 65536u
+#define TCFF_MAX_EXPOSURE_MS 480u
+#define TCFF_MAX_CAMERA_GAIN 320u
 
 static const uint8_t tcff_magic[8] = {'T', 'C', 'A', 'F', 'F', '0', '1', 0};
 
@@ -31,6 +33,8 @@ struct calibration_header {
     uint32_t min_signal_q8;
     uint32_t max_gain_q8;
     uint32_t references_q8[4];
+    uint32_t exposure_ms;
+    uint32_t camera_gain;
 };
 
 static void usage(FILE *stream)
@@ -40,6 +44,7 @@ static void usage(FILE *stream)
             "  tca-flat-field calibrate (--mode 0|2 | --width W --height H)\\\n\n"
             "      --phase rggb|grbg|gbrg|bggr --dark DARK_STREAM --dark-frames N\\\n\n"
             "      --flat FLAT_STREAM --flat-frames N --output CALIBRATION\\\n\n"
+            "      [--exposure-ms 1..480 --camera-gain 0..320]\\\n\n"
             "      [--min-signal 8] [--max-gain 8]\n"
             "  tca-flat-field apply --calibration CALIBRATION\\\n\n"
             "      [--input BAYER_STREAM|-] [--output BAYER_STREAM|-]\n"
@@ -299,6 +304,8 @@ static int write_header(FILE *stream, const struct calibration_header *header)
         put_u32_le(bytes + 44u + channel * 4u,
                    header->references_q8[channel]);
     }
+    put_u16_le(bytes + 60, header->exposure_ms);
+    put_u16_le(bytes + 62, header->camera_gain);
     return write_all(stream, bytes, sizeof(bytes));
 }
 
@@ -335,7 +342,12 @@ static int read_calibration(const char *path, struct calibration_header *header,
     for (channel = 0; channel < 4u; ++channel) {
         header->references_q8[channel] = get_u32_le(bytes + 44u + channel * 4u);
     }
+    header->exposure_ms = get_u16_le(bytes + 60);
+    header->camera_gain = get_u16_le(bytes + 62);
     if (header->phase >= 4u ||
+        header->exposure_ms > TCFF_MAX_EXPOSURE_MS ||
+        header->camera_gain > TCFF_MAX_CAMERA_GAIN ||
+        (header->exposure_ms == 0u && header->camera_gain != 0u) ||
         checked_pixels((struct geometry){header->width, header->height},
                        pixels) != 0 ||
         *pixels > SIZE_MAX / TCFF_RECORD_BYTES) {
@@ -382,6 +394,10 @@ static int command_calibrate(int argc, char **argv)
     uint32_t mode = UINT32_MAX;
     uint32_t min_signal = 8u;
     uint32_t max_gain = 8u;
+    uint32_t exposure_ms = 0u;
+    uint32_t camera_gain = 0u;
+    int exposure_present = 0;
+    int camera_gain_present = 0;
     uint64_t *sums = NULL;
     uint16_t *dark_q8 = NULL;
     uint64_t *histograms = NULL;
@@ -430,6 +446,14 @@ static int command_calibrate(int argc, char **argv)
             if (parse_u32(value, &min_signal) != 0 || min_signal > 255u) return 64;
         } else if (strcmp(option, "--max-gain") == 0) {
             if (parse_u32(value, &max_gain) != 0 || max_gain > 255u) return 64;
+        } else if (strcmp(option, "--exposure-ms") == 0) {
+            if (parse_u32(value, &exposure_ms) != 0 || exposure_ms == 0u ||
+                exposure_ms > TCFF_MAX_EXPOSURE_MS) return 64;
+            exposure_present = 1;
+        } else if (strcmp(option, "--camera-gain") == 0) {
+            if (parse_u32(value, &camera_gain) != 0 ||
+                camera_gain > TCFF_MAX_CAMERA_GAIN) return 64;
+            camera_gain_present = 1;
         } else {
             fprintf(stderr, "unknown calibrate option: %s\n", option);
             return 64;
@@ -452,6 +476,11 @@ static int command_calibrate(int argc, char **argv)
     }
     if (strcmp(dark_path, "-") == 0 && strcmp(flat_path, "-") == 0) {
         fprintf(stderr, "dark and flat streams cannot both be standard input\n");
+        return 64;
+    }
+    if (exposure_present != camera_gain_present) {
+        fprintf(stderr,
+                "--exposure-ms and --camera-gain must be supplied together\n");
         return 64;
     }
     sums = calloc(pixels, sizeof(*sums));
@@ -497,7 +526,8 @@ static int command_calibrate(int argc, char **argv)
         struct calibration_header header = {
             geometry.width, geometry.height, phase, dark_frames, flat_frames,
             min_signal * 256u, max_gain * 256u,
-            {references[0], references[1], references[2], references[3]}
+            {references[0], references[1], references[2], references[3]},
+            exposure_ms, camera_gain
         };
         if (write_header(output, &header) != 0) goto write_failed;
     }
@@ -529,11 +559,13 @@ static int command_calibrate(int argc, char **argv)
     output = NULL;
     fprintf(stderr,
             "calibration=%s geometry=%ux%u phase=%s dark_frames=%u "
-            "flat_frames=%u references_q8=%u,%u,%u,%u "
+            "flat_frames=%u exposure_ms=%u camera_gain=%u "
+            "references_q8=%u,%u,%u,%u "
             "invalid_pixels=%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64
             " status=ok\n",
             output_path, geometry.width, geometry.height, phase_name(phase),
-            dark_frames, flat_frames, references[0], references[1],
+            dark_frames, flat_frames, exposure_ms, camera_gain,
+            references[0], references[1],
             references[2], references[3], invalid[0], invalid[1],
             invalid[2], invalid[3]);
     status = 0;
@@ -677,14 +709,22 @@ static int command_inspect(int argc, char **argv)
            "  \"phase\": \"%s\",\n"
            "  \"pixels\": %zu,\n"
            "  \"dark_frames\": %u,\n"
-           "  \"flat_frames\": %u,\n"
-           "  \"min_signal\": %.6f,\n"
+           "  \"flat_frames\": %u,\n",
+           header.width, header.height, phase_name(header.phase), pixels,
+           header.dark_frames, header.flat_frames);
+    if (header.exposure_ms == 0u) {
+        printf("  \"exposure_ms\": null,\n"
+               "  \"camera_gain\": null,\n");
+    } else {
+        printf("  \"exposure_ms\": %u,\n"
+               "  \"camera_gain\": %u,\n",
+               header.exposure_ms, header.camera_gain);
+    }
+    printf("  \"min_signal\": %.6f,\n"
            "  \"max_gain\": %.6f,\n"
            "  \"references\": {\"r\": %.6f, \"g1\": %.6f, "
            "\"g2\": %.6f, \"b\": %.6f}\n"
            "}\n",
-           header.width, header.height, phase_name(header.phase), pixels,
-           header.dark_frames, header.flat_frames,
            header.min_signal_q8 / 256.0, header.max_gain_q8 / 256.0,
            header.references_q8[0] / 256.0,
            header.references_q8[1] / 256.0,

@@ -101,6 +101,7 @@ ROI. Translate or defocus the blank between flat frames.
 ./build/tca-flat-field calibrate --mode 2 --phase grbg \
   --dark capture/optical/darks.bayer --dark-frames 32 \
   --flat capture/optical/flats.bayer --flat-frames 32 \
+  --exposure-ms 250 --camera-gain 0 \
   --output capture/optical/10x-mode2.tca-flat
 ./build/tca-flat-field inspect \
   --calibration capture/optical/10x-mode2.tca-flat \

@@ -113,6 +113,13 @@ if [ -n "$flat_field" ]; then
         echo "flat-field calibration must be 1280x960 GRBG for V4L2" >&2
         exit 65
     fi
+    if ! printf '%s\n' "$flat_field_metadata" |
+         grep -q "\"exposure_ms\": $exposure_ms," ||
+       ! printf '%s\n' "$flat_field_metadata" |
+         grep -q "\"camera_gain\": $gain,"; then
+        echo "flat-field exposure/gain must match the requested V4L2 controls" >&2
+        exit 65
+    fi
 fi
 for command in ffmpeg mkfifo mktemp sudo v4l2-ctl; do
     if ! command -v "$command" >/dev/null 2>&1; then

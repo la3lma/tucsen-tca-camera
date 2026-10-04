@@ -8,6 +8,9 @@
 - Allow `tca-v4l2` to insert a validated 1280x960 GRBG flat-field map through
   `TCA_FLAT_FIELD` while leaving the existing uncorrected bridge as the
   default.
+- Store optional exposure/gain provenance in the backward-compatible
+  calibration header and require an exact settings match for corrected V4L2
+  streaming.
 - Add a token-gated ARM64 Linux preflight that exercises calibration,
   correction, Bayer conversion, a temporary V4L2 loopback device, application
   consumption, evidence hashing, and cleanup without requiring the camera.

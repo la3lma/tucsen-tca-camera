@@ -25,6 +25,9 @@ def main() -> None:
     assert '"$flat_field_tool" apply --calibration "$flat_field"' in source
     assert "raw-bayer.fifo" in source
     assert "flat-field calibration must be 1280x960 GRBG for V4L2" in source
+    assert "flat-field exposure/gain must match" in source
+    assert '\\"exposure_ms\\": $exposure_ms,' in source
+    assert '\\"camera_gain\\": $gain,' in source
     assert "libusb_control_transfer" not in source
     with tempfile.TemporaryDirectory(prefix="tca-v4l2-inert-") as directory:
         raw = pathlib.Path(directory, "must-not-exist.raw")

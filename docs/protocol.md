@@ -107,8 +107,10 @@ The separate `tca-flat-field` user-space tool implements residual spatial
 shading correction without changing this USB protocol. It averages complete
 dark and flat Bayer streams, derives independent median-normalized R/G1/G2/B
 gain maps, stores explicit geometry and fixed-point calibration records, and
-can filter concatenated Bayer frames before demosaic or V4L2 output. Raw frames
-remain the authoritative capture.
+can filter concatenated Bayer frames before demosaic or V4L2 output. A map can
+also record the exposure and normalized camera gain used for its dark/flat
+series; the V4L2 bridge requires those settings to match before it touches the
+camera. Raw frames remain the authoritative capture.
 
 ## Controls
 
