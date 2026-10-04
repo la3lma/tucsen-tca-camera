@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Linux V4L2 producer-timing preparation — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="linux-v4l2-producer-timing-preparation">Linux V4L2
+producer-timing preparation</h1>
+<p>Date: 2026-10-04</p>
+<h2 id="result">Result</h2>
+<p>Public main commit
+<code>a60ecac38e328fd83c2a780d4bf57ddc538d48b8</code> adds an opt-in
+<code>TCA_TIMESTAMPS</code> path to the Linux V4L2 bridge. The bridge
+now passes that path to the reader’s already-validated
+<code>--timestamps</code> option while leaving the Bayer/YUYV stream and
+default behavior unchanged.</p>
+<p>This closes an instrumentation gap in the pending Linux application
+test. A normal V4L2 consumer can record its own frame count and timing
+while the reader preserves a flushed <code>CLOCK_MONOTONIC</code>
+producer sidecar. The two records must be reported separately: reader
+delivery cadence is not a claim about application display cadence, and a
+count difference can include bounded pipeline frames as well as consumer
+loss.</p>
+<h2 id="safety-and-validation">Safety and validation</h2>
+<ul>
+<li>With no arguments, <code>scripts/tca-v4l2</code> remains inert and
+prints <code>NO USB TRANSFER SENT</code>.</li>
+<li><code>TCA_TIMESTAMPS</code> is optional. When supplied, it must be a
+distinct, nonexistent regular-file path; <code>-</code>, an existing
+path, and the raw-evidence path are rejected before Linux, camera, or
+loopback checks.</li>
+<li>The bridge still exposes no arbitrary USB request, reset,
+configuration, alternate-setting, firmware, or kernel-camera-driver
+operation.</li>
+<li>The full suite passed locally on Apple Silicon.</li>
+<li>A detached exact-commit worktree at
+<code>/home/rmz/tucsen-tca-camera-v4l2-timing-a60ecac</code> passed
+<code>make clean all test</code> on Raspberry Pi AArch64. This run was
+USB-inert because the camera remained connected to the Mac.</li>
+<li>GitHub CI run <a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37199753354">37199753354</a>
+passed on Ubuntu and macOS. Pages run <a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37199753340">37199753340</a>
+also passed.</li>
+<li>The current-tree and full-history public/private publication audit
+passed in the full local checkout. The Pi’s shallow source repository
+correctly skipped only the history portion while passing the
+current-tree policy.</li>
+</ul>
+<h2 id="pending-physical-acceptance">Pending physical acceptance</h2>
+<p>After a valid same-settings dark/flat calibration exists and the
+camera moves to Linux, run the corrected bridge with both
+<code>TCA_FLAT_FIELD</code> and <code>TCA_TIMESTAMPS</code>. A separate
+ordinary V4L2 application must consume a bounded run and preserve its
+frame count, elapsed time, and logs. Acceptance requires:</p>
+<ol type="1">
+<li>a valid producer timestamp report from
+<code>tca-timing-stats</code>;</li>
+<li>exact consumer frame size and the requested bounded frame
+count;</li>
+<li>distinct consumer-frame hashes or a lossless frame digest
+record;</li>
+<li>an explicit producer-versus-consumer count/cadence comparison that
+does not mislabel bounded pipeline frames as proven drops;</li>
+<li>clean bridge shutdown, loopback removal, and immediate reader reuse;
+and</li>
+<li>a SHA-256 manifest for the complete session directory.</li>
+</ol>
+<p>No physical claim is made by this preparation record.</p>
+<h2 id="planning-provenance">Planning provenance</h2>
+<p>The local Development Evidence skill currently documents an OpenAPI
+endpoint at <code>127.0.0.1:18080</code>; its <code>/openapi.json</code>
+path returned HTTP 404 during this work. The Agency console at
+<code>127.0.0.1:18116</code> was healthy, and its live Docstack forum
+retained the single-start/single-exit DAG, evidence-gate, and
+clickable-navigation conventions already enforced by this repository’s
+local validator. The validated repository plan and GitHub state were
+therefore used as the authoritative fallback. No Development Evidence
+service record is claimed or implied by this note.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

@@ -102,8 +102,8 @@ checkout on documented hardware:
 | Objective | Build a usable driver/reader, stream, control surface, and application bridge for the legacy microscope camera |
 | Canonical source | [camera-reader-docstack.md](camera-reader-docstack.md) |
 | Published website | [GitHub Pages Docstack](https://la3lma.github.io/tucsen-tca-camera/docstack/) |
-| Revision | 3.4, use cases expressed in Cockburn form and UML; delivered-frame cadence measured in both recovered modes; public evidence rendered as HTML and guarded by a permanent full-history privacy policy |
-| Execution state | D00–D50 are complete and D60 is substantially advanced. Optical autocorrelation showed that separate 524,288-byte requests restarted at new record origins, causing the earlier repeated regions and false seam. Mode 2 fits after a 512-byte prefix. Mode 0 is assembled from record N `[512,end)` plus the 192-byte continuation at record N+1 `[320,512)`. Three consecutive full-resolution frames have distinct hashes and no false left strip. At 100 ms, gain 0..320 is monotonic; gain 256 produced a bright frame with negligible clipping. One pre-control buffered record is consumed before frame zero. A 16-frame run yielded distinct frames, three still sizes, and a 640x480 H.264 proof clip. Neutral-background white balance independently produced approximately R/G/B `0.87/1.0/2.0` in both modes; alpha-6 preserves those ratios when normalizing into FFmpeg's multiplier range. After changing to 10x, a bounded sweep recovered unclipped preview and full-resolution stills at 250 ms/gain 0. Public commit `1dc096b` adds a portable per-pixel dark/flat corrector and optional corrected V4L2 path; commit `6eb68a7` binds maps to exposure/gain and fails before camera or loopback mutation on mismatch. A real-camera diagnostic corrected eight full-size frames, reducing a 3x3 max/min region ratio from 1.336910 to 1.001023, while deliberately proving that a self-flat erases the specimen and is not a valid calibration. Public commit `176ef90` packages the correct physical calibration sequence. Public commit `064cf31` adds monotonic per-frame timestamps and reports 17.3466 delivered fps for 1280x960 at requested 1 ms, 9.5057 fps for 1280x960 at 250 ms, and 2.7911 fps for 3664x2748 at 250 ms on the direct-Mac/file-output path. The same commit renders all public evidence as navigable HTML and enforces a full-history ban on raw disassembly, vendor binaries, firmware, traces, and private work. Final known-target Bayer/color calibration, true blocked-light dark and blank-field flat execution, and execution of the live-camera Linux V4L2 gate with consumer-side timing remain open. AVFoundation remains deferred. |
+| Revision | 3.5, use cases expressed in Cockburn form and UML; delivered-frame cadence measured in both recovered modes; Linux V4L2 producer timing prepared; public evidence rendered as HTML and guarded by a permanent full-history privacy policy |
+| Execution state | D00–D50 are complete and D60 is substantially advanced. Optical autocorrelation showed that separate 524,288-byte requests restarted at new record origins, causing the earlier repeated regions and false seam. Mode 2 fits after a 512-byte prefix. Mode 0 is assembled from record N `[512,end)` plus the 192-byte continuation at record N+1 `[320,512)`. Three consecutive full-resolution frames have distinct hashes and no false left strip. At 100 ms, gain 0..320 is monotonic; gain 256 produced a bright frame with negligible clipping. One pre-control buffered record is consumed before frame zero. A 16-frame run yielded distinct frames, three still sizes, and a 640x480 H.264 proof clip. Neutral-background white balance independently produced approximately R/G/B `0.87/1.0/2.0` in both modes; alpha-6 preserves those ratios when normalizing into FFmpeg's multiplier range. After changing to 10x, a bounded sweep recovered unclipped preview and full-resolution stills at 250 ms/gain 0. Public commit `1dc096b` adds a portable per-pixel dark/flat corrector and optional corrected V4L2 path; commit `6eb68a7` binds maps to exposure/gain and fails before camera or loopback mutation on mismatch. A real-camera diagnostic corrected eight full-size frames, reducing a 3x3 max/min region ratio from 1.336910 to 1.001023, while deliberately proving that a self-flat erases the specimen and is not a valid calibration. Public commit `176ef90` packages the correct physical calibration sequence. Public commit `064cf31` adds monotonic per-frame timestamps and reports 17.3466 delivered fps for 1280x960 at requested 1 ms, 9.5057 fps for 1280x960 at 250 ms, and 2.7911 fps for 3664x2748 at 250 ms on the direct-Mac/file-output path. Public commit `a60ecac` lets the V4L2 bridge preserve that producer sidecar while a normal Linux application records its own consumer evidence; exact Apple Silicon, Pi AArch64, Ubuntu, and macOS suites pass without USB access. Public evidence is rendered as navigable HTML and protected by a full-history ban on raw disassembly, vendor binaries, firmware, traces, and private work. Final known-target Bayer/color calibration, true blocked-light dark and blank-field flat execution, and execution of the live-camera Linux V4L2 gate with consumer-side timing remain open. AVFoundation remains deferred. |
 | Acceptance authority | Camera owner, or an explicitly delegated technical owner recorded in D120 |
 | Related report | [PDF report](https://la3lma.github.io/tucsen-tca-camera/report/microscope-window-sensor.pdf) |
 | Reader source | [GitHub repository and README](https://github.com/la3lma/tucsen-tca-camera#readme) |
@@ -721,7 +721,7 @@ neighbors.
 | D70 | Build operable reader core | D60 | Complete for alpha | Public C17 libusb CLI, controls, stream, diagnostics, reopen tests, and cross-platform CI |
 | D80 | Build Linux application bridge | D70 | Complete for alpha | Live physical-camera V4L2 device consumed by `v4l2-ctl` and FFmpeg, then cleanly removed |
 | D90 | Build macOS application bridge | D70 | Portable reader complete; AVFoundation deferred | Exact alpha-3 directly captured preview and full-resolution frames over the native cable; system-camera surface deferred |
-| D100 | Prove stability and fault recovery | D80,D90 | Active, Linux-first | Reopen, endurance, process-kill, host reboot, direct Apple Silicon capture, and bounded ownership hand-back passed; physical Pi cable disconnect/reconnect remains |
+| D100 | Prove stability and fault recovery | D80,D90 | Active, Linux-first | Reopen, endurance, process-kill, host reboot, direct Apple Silicon capture, and bounded ownership hand-back passed; V4L2 producer timing is prepared; physical corrected-consumer and Pi cable reconnect runs remain |
 | D110 | Package source and operations | D100 | Active; alpha-7 released and independently verified | Public GitHub repository, Apache-2.0 license, udev/V4L2 operations, CI, two modes, bounded initial recovery, optical and calibration procedures, measured output cadence, rendered evidence, permanent publication boundary, tested install/removal, validation record, and report links |
 | D120 | Accept release | D110 | Proposed | Owner acceptance against Definition of Done |
 
@@ -1107,6 +1107,12 @@ to disturb an existing loopback configuration, and removes only the device it
 created. `v4l2-ctl` reported the intended format and FFmpeg consumed three
 frames into a lossless recording. See the [Linux V4L2 replay bridge
 evidence](../evidence/linux-v4l2-replay-bridge.html) and report milestone.
+Post-release commit `a60ecac` additionally accepts an opt-in, distinct
+`TCA_TIMESTAMPS` path and passes it to the reader's monotonic timestamp
+sidecar. This preserves producer cadence while an ordinary V4L2 client records
+its own count and timing; it deliberately does not conflate those two
+measurements. See [Linux V4L2 producer-timing
+preparation](../evidence/linux-v4l2-producer-timing-preparation.html).
 
 Happy-day steps:
 
@@ -1194,6 +1200,13 @@ the direct Mac cable. Returning the camera to Linux reproduced one invalid leadi
 now preserves it as raw evidence, discards at most two invalid frames before
 frame zero, and passed the same hand-back in one process. Marker loss after
 delivery begins remains fatal.
+
+The remaining live Linux application test is now fully instrumented:
+post-release commit `a60ecac` preserves the reader's flushed monotonic
+timestamp sidecar through the optional V4L2 bridge while the application
+records separate consumer timing and counts. Exact Apple Silicon and Raspberry
+Pi AArch64 suites plus Ubuntu/macOS CI pass without camera access. A physical
+corrected run and its producer-versus-consumer comparison remain required.
 :::
 
 ::: {.task-card data-state="active"}
@@ -1253,6 +1266,12 @@ corrected V4L2 path, guided physical calibration, monotonic frame timestamps,
 delivered-cadence analysis, rendered evidence, and permanent full-history
 publication-boundary enforcement. See the
 [alpha-7 release evidence](../evidence/public-release-alpha7.html).
+
+Post-release main commit `a60ecac` adds opt-in producer timing to the Linux
+V4L2 bridge. Its full Apple Silicon and Raspberry Pi AArch64 suites pass, as do
+Ubuntu/macOS CI, while the camera remains on the Mac. This prepares, but does
+not claim, the residual physical Linux consumer gate. See [Linux V4L2
+producer-timing preparation](../evidence/linux-v4l2-producer-timing-preparation.html).
 
 The current [release acceptance audit](../evidence/release-acceptance-audit.html)
 marks the Linux reader/API, preview endurance, application bridge, direct-cable
@@ -1360,6 +1379,7 @@ Happy-day steps:
 | E-067 | Public commit `064cf31` records one monotonic timestamp after every accepted Bayer-frame write; direct-Mac physical runs delivered 17.3466 fps at 1280x960/requested 1 ms, 9.5057 fps at 1280x960/250 ms, and 2.7911 fps at 3664x2748/250 ms, with every frame hash distinct | [Apple Silicon measured delivered-frame cadence](../evidence/macos-measured-frame-cadence.html) | VERIFIED LIVE OUTPUT CADENCE / SENSOR INTEGRATION AND LINUX CONSUMER TIMING NOT CLAIMED |
 | E-068 | Public commit `064cf31` renders every evidence record as HTML, supplies evidence and photo indexes, checks all internal site targets, and adds a full-history CI denylist; a fresh current-tree and object-history audit found no raw disassembly, Ghidra state/export, vendor binary, firmware, packet capture, or private-work artifact | [Public evidence site and permanent publication boundary](../evidence/public-evidence-site-and-boundary.html) | VERIFIED LIVE SITE + CLEAN PUBLIC HISTORY |
 | E-069 | Annotated prerelease `v0.2.0-alpha.7` resolves to exact commit `72f6e63`; independent main and tag CI pass on Ubuntu/macOS, the exact commit passes the full Raspberry Pi AArch64 suite, and the downloaded public tag archive passes the full suite outside a Git checkout | [Public alpha-7 release](../evidence/public-release-alpha7.html) | VERIFIED PUBLIC RELEASE + PI + ARCHIVE |
+| E-070 | Public main commit `a60ecac` lets the Linux V4L2 bridge preserve the reader's flushed monotonic timestamp CSV while a normal application records separate consumer evidence; the full suite passes on Apple Silicon, exact-commit Raspberry Pi AArch64, Ubuntu CI, and macOS CI without camera access | [Linux V4L2 producer-timing preparation](../evidence/linux-v4l2-producer-timing-preparation.html) | VERIFIED INSTRUMENTATION + PORTABILITY / PHYSICAL CONSUMER RUN OPEN |
 
 ## Risk Register
 

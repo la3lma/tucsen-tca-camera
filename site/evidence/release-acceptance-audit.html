@@ -16,9 +16,11 @@
   <main class="evidence-record">
 <h1 id="release-acceptance-audit">Release acceptance audit</h1>
 <p>Date: 2026-10-04</p>
-<p>Scope: public Linux-first prerelease <code>v0.2.0-alpha.6</code>,
+<p>Scope: public Linux-first prerelease <code>v0.2.0-alpha.7</code> plus
+the post-release producer-timing preparation at <code>a60ecac</code>,
 including optically validated record-boundary assembly, gain, motion,
-and white-balance evidence.</p>
+white-balance, calibrated-field tooling, and measured direct-reader
+cadence.</p>
 <p>This is a readiness audit, not owner acceptance. It distinguishes a
 useful Linux alpha from completion of every item in the Docstack
 Definition of Done.</p>
@@ -52,8 +54,10 @@ known-target color response remain open.</td>
 <td>Pass for userspace stream; Linux application retest partial</td>
 <td>A corrected 16-frame run produced 16 distinct coherent frames and an
 H.264 proof clip. Earlier 14,400-frame testing establishes USB/process
-endurance but used the superseded multi-request image assembly. Post-fix
-Linux V4L2 should be retested.</td>
+endurance but used the superseded multi-request image assembly.
+Post-release main now lets the V4L2 bridge preserve the reader’s
+monotonic producer sidecar, but the post-fix physical Linux consumer
+cadence/drop comparison remains open.</td>
 </tr>
 <tr>
 <td>3. Operation</td>
@@ -61,11 +65,12 @@ Linux V4L2 should be retested.</td>
 <td>Cold start, mode 0/mode 2 selection, start/stop lifecycle, exposure,
 and analog gain are bounded. A 100-ms optical sweep verified monotonic
 gain 0..320, and one stale pre-control record is now discarded before
-frame zero. Neutral-background white-balance estimation is verified. New
-flat-field maps bind exposure/gain and the V4L2 path fails before camera
+frame zero. Neutral-background white-balance estimation is verified.
+Flat-field maps bind exposure/gain and the V4L2 path fails before camera
 or loopback mutation on mismatch; true blocked-light dark and
-blank-field calibration, automatic exposure, and adaptive color
-correction remain open.</td>
+blank-field calibration remain open. Automatic exposure and continuously
+adaptive color correction are explicit non-goals for this bounded alpha
+rather than hidden acceptance gates.</td>
 </tr>
 <tr>
 <td>4. Reader API</td>
@@ -78,21 +83,23 @@ no arbitrary USB request surface. Ubuntu and macOS CI pass.</td>
 <td>5. Application path</td>
 <td>Partial</td>
 <td>FFmpeg creates coherent stills and H.264 from the corrected macOS
-reader. The existing Linux V4L2 adapter consumes reader stdout; a
-synthetic corrected-stream preflight delivered six frames through a
-temporary loopback to a separate consumer, but the live-camera proof
-still predates the assembly correction. AVFoundation remains
-deferred.</td>
+reader. The Linux V4L2 adapter consumes reader stdout; a synthetic
+corrected-stream preflight delivered six frames through a temporary
+loopback to a separate consumer. Commit <code>a60ecac</code> adds
+separately recorded producer timestamps for the pending live-camera
+Linux run, whose earlier proof still predates the assembly correction.
+AVFoundation remains deferred.</td>
 </tr>
 <tr>
 <td>6. Evidence and recovery</td>
-<td>Pass for reconnect; ongoing for calibration</td>
+<td>Pass for process/host recovery; physical reconnect open</td>
 <td>Protocol notes, hashes, safety boundaries, tests, process-kill
 recovery, repeated reopen, endurance, host reboot, ownership hand-back,
-physical cable reconnect, microscope-mounted capture, and a clearly
-labeled physical-size self-flat diagnostic are recorded. The diagnostic
-proves correction plumbing while explicitly rejecting its scene-erasing
-output as optical calibration.</td>
+microscope-mounted capture, and a clearly labeled physical-size
+self-flat diagnostic are recorded. The diagnostic proves correction
+plumbing while explicitly rejecting its scene-erasing output as optical
+calibration. The inert physical disconnect/reconnect harness is prepared
+but has not run.</td>
 </tr>
 </tbody>
 </table>
@@ -156,12 +163,13 @@ v4l2loopback.</td>
 <tr>
 <td>NFR-07 reproducibility</td>
 <td>Pass</td>
-<td>Exact tag <code>v0.2.0-alpha.6</code> is published from commit
-<code>0fded6e</code>. Its release binary passed the complete local suite
-and an exact-size physical preview smoke capture; the unchanged frame
-assembler passed exact-size physical captures in both modes immediately
-before release. Prior exact-tag Pi and independent CI evidence remains
-recorded.</td>
+<td>Exact tag <code>v0.2.0-alpha.7</code> is published from commit
+<code>72f6e63</code>. Independent main/tag Ubuntu and macOS CI passed;
+the exact commit passed the complete Raspberry Pi AArch64 suite; and the
+downloaded tag archive passed the suite outside a Git checkout.
+Post-release commit <code>a60ecac</code> independently passes the
+complete Apple Silicon, Raspberry Pi AArch64, Ubuntu, and macOS
+suites.</td>
 </tr>
 <tr>
 <td>NFR-08 legal hygiene</td>

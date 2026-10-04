@@ -406,9 +406,10 @@ Docstack</a></td>
 </tr>
 <tr>
 <td>Revision</td>
-<td>3.4, use cases expressed in Cockburn form and UML; delivered-frame
-cadence measured in both recovered modes; public evidence rendered as
-HTML and guarded by a permanent full-history privacy policy</td>
+<td>3.5, use cases expressed in Cockburn form and UML; delivered-frame
+cadence measured in both recovered modes; Linux V4L2 producer timing
+prepared; public evidence rendered as HTML and guarded by a permanent
+full-history privacy policy</td>
 </tr>
 <tr>
 <td>Execution state</td>
@@ -438,12 +439,15 @@ physical calibration sequence. Public commit <code>064cf31</code> adds
 monotonic per-frame timestamps and reports 17.3466 delivered fps for
 1280x960 at requested 1 ms, 9.5057 fps for 1280x960 at 250 ms, and
 2.7911 fps for 3664x2748 at 250 ms on the direct-Mac/file-output path.
-The same commit renders all public evidence as navigable HTML and
-enforces a full-history ban on raw disassembly, vendor binaries,
-firmware, traces, and private work. Final known-target Bayer/color
-calibration, true blocked-light dark and blank-field flat execution, and
-execution of the live-camera Linux V4L2 gate with consumer-side timing
-remain open. AVFoundation remains deferred.</td>
+Public commit <code>a60ecac</code> lets the V4L2 bridge preserve that
+producer sidecar while a normal Linux application records its own
+consumer evidence; exact Apple Silicon, Pi AArch64, Ubuntu, and macOS
+suites pass without USB access. Public evidence is rendered as navigable
+HTML and protected by a full-history ban on raw disassembly, vendor
+binaries, firmware, traces, and private work. Final known-target
+Bayer/color calibration, true blocked-light dark and blank-field flat
+execution, and execution of the live-camera Linux V4L2 gate with
+consumer-side timing remain open. AVFoundation remains deferred.</td>
 </tr>
 <tr>
 <td>Acceptance authority</td>
@@ -1945,8 +1949,9 @@ over the native cable; system-camera surface deferred</td>
 <td>D80,D90</td>
 <td>Active, Linux-first</td>
 <td>Reopen, endurance, process-kill, host reboot, direct Apple Silicon
-capture, and bounded ownership hand-back passed; physical Pi cable
-disconnect/reconnect remains</td>
+capture, and bounded ownership hand-back passed; V4L2 producer timing is
+prepared; physical corrected-consumer and Pi cable reconnect runs
+remain</td>
 </tr>
 <tr>
 <td>D110</td>
@@ -2853,7 +2858,14 @@ removes only the device it created. <code>v4l2-ctl</code> reported the
 intended format and FFmpeg consumed three frames into a lossless
 recording. See the <a
 href="../evidence/linux-v4l2-replay-bridge.html">Linux V4L2 replay
-bridge evidence</a> and report milestone.</p>
+bridge evidence</a> and report milestone. Post-release commit
+<code>a60ecac</code> additionally accepts an opt-in, distinct
+<code>TCA_TIMESTAMPS</code> path and passes it to the reader’s monotonic
+timestamp sidecar. This preserves producer cadence while an ordinary
+V4L2 client records its own count and timing; it deliberately does not
+conflate those two measurements. See <a
+href="../evidence/linux-v4l2-producer-timing-preparation.html">Linux
+V4L2 producer-timing preparation</a>.</p>
 <p>Happy-day steps:</p>
 <ol type="1">
 <li>Choose the smallest standard path and document the decision.</li>
@@ -3034,6 +3046,13 @@ invalid leading warm-up frame; public alpha-2 now preserves it as raw
 evidence, discards at most two invalid frames before frame zero, and
 passed the same hand-back in one process. Marker loss after delivery
 begins remains fatal.</p>
+<p>The remaining live Linux application test is now fully instrumented:
+post-release commit <code>a60ecac</code> preserves the reader’s flushed
+monotonic timestamp sidecar through the optional V4L2 bridge while the
+application records separate consumer timing and counts. Exact Apple
+Silicon and Raspberry Pi AArch64 suites plus Ubuntu/macOS CI pass
+without camera access. A physical corrected run and its
+producer-versus-consumer comparison remain required.</p>
 </div>
 <div class="task-card" data-state="active">
 <!-- task: D110; depends: D100; state: active -->
@@ -3138,6 +3157,13 @@ delivered-cadence analysis, rendered evidence, and permanent
 full-history publication-boundary enforcement. See the <a
 href="../evidence/public-release-alpha7.html">alpha-7 release
 evidence</a>.</p>
+<p>Post-release main commit <code>a60ecac</code> adds opt-in producer
+timing to the Linux V4L2 bridge. Its full Apple Silicon and Raspberry Pi
+AArch64 suites pass, as do Ubuntu/macOS CI, while the camera remains on
+the Mac. This prepares, but does not claim, the residual physical Linux
+consumer gate. See <a
+href="../evidence/linux-v4l2-producer-timing-preparation.html">Linux
+V4L2 producer-timing preparation</a>.</p>
 <p>The current <a
 href="../evidence/release-acceptance-audit.html">release acceptance
 audit</a> marks the Linux reader/API, preview endurance, application
@@ -3962,6 +3988,19 @@ outside a Git checkout</td>
 <td><a href="../evidence/public-release-alpha7.html">Public alpha-7
 release</a></td>
 <td>VERIFIED PUBLIC RELEASE + PI + ARCHIVE</td>
+</tr>
+<tr>
+<td>E-070</td>
+<td>Public main commit <code>a60ecac</code> lets the Linux V4L2 bridge
+preserve the reader’s flushed monotonic timestamp CSV while a normal
+application records separate consumer evidence; the full suite passes on
+Apple Silicon, exact-commit Raspberry Pi AArch64, Ubuntu CI, and macOS
+CI without camera access</td>
+<td><a
+href="../evidence/linux-v4l2-producer-timing-preparation.html">Linux
+V4L2 producer-timing preparation</a></td>
+<td>VERIFIED INSTRUMENTATION + PORTABILITY / PHYSICAL CONSUMER RUN
+OPEN</td>
 </tr>
 </tbody>
 </table>
