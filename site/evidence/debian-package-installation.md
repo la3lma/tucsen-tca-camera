@@ -61,6 +61,30 @@ exact-main archive was installed with `dpkg -i`, which reported
 files. Both installed diagnostics resolved `/usr/bin/tca-camera` plus their
 required sibling tools and ended with `NO USB TRANSFER SENT`.
 
+## Native removal and reinstallation lifecycle
+
+The installed package was subsequently exercised through a complete native
+package lifecycle on `rpios-17`, again with no `0547:c003` camera attached.
+Before mutation, the retained archive was re-hashed to the value above and
+the package database reported `install ok installed`, version
+`0.2.0~alpha10-1`, architecture `arm64`.
+
+`dpkg --remove tucsen-tca-camera` completed successfully. Debian retained the
+normal `deinstall ok config-files` database state, but every delivered helper,
+the exact-model udev rule, and `/usr/share/doc/tucsen-tca-camera` were absent.
+The same archive was then installed again with `dpkg -i`. The final state was
+`install ok installed`; `dpkg -V` was empty, the camera remained absent, and
+both installed diagnostics again resolved their sibling tools and ended with
+`NO USB TRANSFER SENT`.
+
+The first lifecycle harness expected the package record itself to disappear
+after `--remove` and stopped after successful removal. Inspection showed that
+the delivered paths were gone and the package database was in Debian's normal
+non-installed state. The exact package was restored immediately, and the
+corrected lifecycle was then repeated from beginning to end. This records the
+test-harness correction rather than hiding it and leaves the Pi in the desired
+installed state.
+
 Hosted Ubuntu and macOS CI passed on exact main in
 [run 37216640301](https://github.com/la3lma/tucsen-tca-camera/actions/runs/37216640301).
 The macOS lane verifies the rest of the portable suite and explicitly skips the
@@ -70,10 +94,10 @@ Linux-only `dpkg-deb` test; the Ubuntu and Raspberry Pi lanes execute it.
 
 The native package is now installed on `rpios-17`, so the Pi is prepared for
 the direct-cable Linux acceptance run when the camera is moved from the Mac.
-This evidence proves package construction, contents, installation, integrity,
-helper discovery, and udev deployment. It does not claim camera enumeration,
-frame transfer, or V4L2 application consumption from the installed package;
-the bounded physical Linux gate remains open.
+This evidence proves package construction, contents, installation, removal,
+reinstallation, integrity, helper discovery, and udev deployment. It does not
+claim camera enumeration, frame transfer, or V4L2 application consumption from
+the installed package; the bounded physical Linux gate remains open.
 
 No vendor binary, disassembly, firmware, packet capture, raw camera frame, or
 credential is included in the public repository or package.
