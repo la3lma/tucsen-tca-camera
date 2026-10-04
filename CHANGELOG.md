@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add a rootless, reproducible, architecture-native Debian binary-package
+  builder with installed-helper diagnostics, exact 0547:c003 udev metadata,
+  safe udev-rule reload hooks, documentation, collision refusal, and dynamic
+  package inspection in CI.
+
 ## 0.2.0-alpha.9 — 2026-10-04
 
 - Add `tca-ffmpeg`, a cross-platform one-command live FFplay viewer and bounded

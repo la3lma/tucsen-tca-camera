@@ -132,6 +132,36 @@ Packagers can set `DESTDIR` for a staged install or removal. These targets do
 not modify the optional udev rule or distribution-managed `v4l2loopback`
 package.
 
+### Debian binary package
+
+On Debian, Ubuntu, Raspberry Pi OS, and derivatives, build an
+architecture-native package without root access:
+
+```sh
+make deb
+```
+
+The package is written under `dist/`, refuses to overwrite an existing file,
+and is reproducible for the same source, toolchain, and
+`SOURCE_DATE_EPOCH`. It installs the seven programs under `/usr/bin`, the
+exact `0547:c003` udev rule, public documentation, and package metadata. The
+build itself does not install anything, open the camera, or load a kernel
+module. Installation and removal ask udev to reload its rules when `udevadm`
+is present; this never resets or opens a USB device. Inspect and install it
+with:
+
+```sh
+dpkg-deb --info dist/tucsen-tca-camera_*.deb
+sudo apt install ./dist/tucsen-tca-camera_*.deb
+tca-v4l2 --diagnose-install
+```
+
+The core reader remains a userspace libusb program. FFmpeg, V4L2 utilities,
+and `v4l2loopback` are recommended application-bridge packages; the
+camera-specific package does not supply a kernel driver. Reconnect the camera
+after installation so the packaged udev rule is applied. Remove the package
+with `sudo apt remove tucsen-tca-camera`.
+
 ## Capture
 
 Capture three frames while preserving the first untouched device frame:
