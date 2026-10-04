@@ -211,8 +211,15 @@ bridge_pid=$!
 
 attempt=0
 while [ "$attempt" -lt 100 ]; do
-    if v4l2-ctl -d "$device" --all >"$output_dir/device.txt" 2>/dev/null &&
-       grep -q "Pixel Format.*'YUYV'" "$output_dir/device.txt"; then
+    if grep -qx capture "/sys/class/video4linux/video${video_number}/state" \
+           2>/dev/null &&
+       grep -q "^YUYV:${width}x${height}@" \
+           "/sys/class/video4linux/video${video_number}/format" 2>/dev/null; then
+        {
+            printf 'state='; cat "/sys/class/video4linux/video${video_number}/state"
+            printf 'format='; cat "/sys/class/video4linux/video${video_number}/format"
+            printf 'buffers='; cat "/sys/class/video4linux/video${video_number}/buffers"
+        } >"$output_dir/device.txt"
         break
     fi
     kill -0 "$bridge_pid" 2>/dev/null || {
@@ -319,9 +326,15 @@ bridge_pid=$!
 
 attempt=0
 while [ "$attempt" -lt 100 ]; do
-    if v4l2-ctl -d "$device" --all \
-           >"$output_dir/existing-device.txt" 2>/dev/null &&
-       grep -q "Pixel Format.*'YUYV'" "$output_dir/existing-device.txt"; then
+    if grep -qx capture "/sys/class/video4linux/video${video_number}/state" \
+           2>/dev/null &&
+       grep -q "^YUYV:${width}x${height}@" \
+           "/sys/class/video4linux/video${video_number}/format" 2>/dev/null; then
+        {
+            printf 'state='; cat "/sys/class/video4linux/video${video_number}/state"
+            printf 'format='; cat "/sys/class/video4linux/video${video_number}/format"
+            printf 'buffers='; cat "/sys/class/video4linux/video${video_number}/buffers"
+        } >"$output_dir/existing-device.txt"
         break
     fi
     kill -0 "$bridge_pid" 2>/dev/null || {

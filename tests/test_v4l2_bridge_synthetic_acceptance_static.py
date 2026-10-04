@@ -43,6 +43,8 @@ def main() -> None:
         "precreated_harness_cleanup=pass",
         "existing-reader-timestamps.csv",
         "existing-consumer.yuyv",
+        'grep -qx capture "/sys/class/video4linux/video${video_number}/state"',
+        '"/sys/class/video4linux/video${video_number}/format"',
         "manifest.sha256",
         "usb_transfer=none",
     )

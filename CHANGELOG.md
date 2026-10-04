@@ -11,6 +11,9 @@
   state.
 - Pace V4L2 conversion at each mode's nominal ceiling so a fast producer
   cannot exhaust the loopback buffer while an application is attaching.
+- Detect V4L2 writer readiness through non-opening sysfs state rather than a
+  probe that briefly opens and closes the capture side, and treat an
+  unexpected end of an unbounded reader as a bridge failure.
 
 ## 0.2.0-alpha.11 — 2026-10-04
 

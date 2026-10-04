@@ -50,6 +50,10 @@ def main() -> None:
     assert "pre-created device is not a virtual V4L2 node" in source
     assert 'CDPATH= cd -P -- "/sys/class/video4linux/video${video_number}"' in source
     assert "the pre-created loopback device will remain" in source
+    assert 'grep -qx capture "/sys/class/video4linux/video${video_number}/state"' in source
+    assert '"/sys/class/video4linux/video${video_number}/format"' in source
+    assert "reader exited unexpectedly during unbounded V4L2 service" in source
+    assert "v4l2-ctl -d \"$device\" --all" not in source
     assert "TCA_FLAT_FIELD" in source
     assert "TCA_TIMESTAMPS" in source
     assert '--timestamps "$timestamps"' in source
