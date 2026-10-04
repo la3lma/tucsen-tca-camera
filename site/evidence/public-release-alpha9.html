@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Public prerelease v0.2.0-alpha.9 — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="public-prerelease-v0.2.0-alpha.9">Public prerelease
+<code>v0.2.0-alpha.9</code></h1>
+<p>Date: 2026-10-04</p>
+<h2 id="result">Result</h2>
+<p>The annotated public tag <code>v0.2.0-alpha.9</code> resolves to
+exact commit <code>a254f53018fc6513200a525c6512bd1a997f7b80</code> and
+is published as a GitHub prerelease:</p>
+<p><a
+href="https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.9"
+class="uri">https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.9</a></p>
+<p>Alpha 9 packages the recovered camera as a practical
+application-facing tool: <code>tca-ffmpeg</code> provides a one-command
+FFplay live view or exact-count H.264 recording in both recovered
+geometries while retaining the untouched first device record and
+producer timestamps. The helper supervises the existing reader and
+contains no duplicate USB protocol or arbitrary request surface.</p>
+<p>The release also contains corrected installed-helper discovery, a
+USB-inert installation diagnostic, producer/consumer timing, both Linux
+V4L2 geometries, camera-free application detach/reattach and
+slow-consumer tests, the bounded uncorrected physical Linux gate,
+Docstack 5.0, the 17-page report, and rendered public evidence. It
+remains Apache-2.0 licensed and entirely in user space.</p>
+<h2 id="independent-verification">Independent verification</h2>
+<ul>
+<li><a href="https://github.com/la3lma/tucsen-tca-camera/pull/24">PR
+#24</a> prepared the release changelog and passed all Ubuntu/macOS
+pull-request checks.</li>
+<li>Exact main <code>a254f53</code> passed independent post-merge
+Ubuntu/macOS CI in <a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37215043641">run
+37215043641</a>, and its Pages deployment passed in <a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37215043591">run
+37215043591</a>.</li>
+<li>The annotated tag independently passed Ubuntu/macOS CI in <a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37215098691">run
+37215098691</a>.</li>
+<li>Exact commit <code>a254f53</code> passed
+<code>make clean &amp;&amp; make test</code> on Raspberry Pi AArch64.
+The Pi then fetched the annotated tag and proved that it resolves to
+that same tested commit. The camera remained on the Mac, so this run was
+USB-inert.</li>
+<li>GitHub’s source archive was downloaded into the private report
+project, extracted outside a Git checkout, and passed the complete suite
+on Apple Silicon and Raspberry Pi AArch64. Both hosts measured the same
+SHA-256:</li>
+</ul>
+<pre class="text"><code>97750800e90783aaf606c160fdd33925f60e56b7f7464113077c5524b259ea52  tucsen-tca-camera-v0.2.0-alpha.9.tar.gz</code></pre>
+<ul>
+<li>The Apple Silicon host’s default <code>pkg-config</code> reproduced
+the known mixed-Homebrew failure by selecting Intel libusb. The
+documented scoped <code>LIBUSB_PKG_CONFIG_PATH</code> selected the
+project-local native ARM64 library and the complete exact-main and
+downloaded-archive suites passed.</li>
+<li>The release commit, exact tag, and downloaded archive pass the
+permanent current-tree/full-history publication boundary: no raw frames,
+vendor binaries, disassembly, firmware, packet captures, VM disks, or
+private work are included.</li>
+</ul>
+<h2 id="physical-application-evidence-carried-into-the-release">Physical
+application evidence carried into the release</h2>
+<p>Candidate <code>f524560</code>, merged before the release as public
+main <code>f297834</code>, ran the packaged helper against the
+Mac-attached microscope camera at mode 2, requested 250 ms, gain 0, and
+a 10-fps media time base. The reader delivered exactly 12 complete
+1280x960 frames at 9.494922 measured fps with 104.693-106.253-ms
+intervals. Independent FFprobe/FFmpeg validation decoded exactly 12
+H.264 frames without errors, and a fresh process immediately reopened
+the camera and captured another complete unclipped Bayer frame.</p>
+<p>The earlier exact alpha-8 archive remains the long-duration
+application authority: 17,200 distinct preview frames passed through
+independent FFmpeg over 1,809.739 seconds with bounded reader/consumer
+memory, exact decode counts, no FFmpeg diagnostics, and immediate camera
+reopen. Alpha 9 packages the ergonomic wrapper around that
+already-proven reader/consumer boundary.</p>
+<h2 id="explicit-residual-gates">Explicit residual gates</h2>
+<p>This is a useful prerelease, not final acceptance. The remaining
+physical work is unchanged:</p>
+<ol type="1">
+<li>move the camera to the Raspberry Pi and execute the prepared
+uncorrected preview and full-resolution V4L2 application gates;</li>
+<li>acquire true blocked-light dark and translated/defocused blank-field
+flat sets at locked settings, then repeat the physical Linux gate with
+the accepted map;</li>
+<li>confirm Bayer phase, orientation, color response, and focus behavior
+with a known target; and</li>
+<li>complete the physical cable disconnect/reconnect acceptance
+case.</li>
+</ol>
+<p>AVFoundation/system-wide macOS camera discovery remains a
+non-blocking deferral. The portable reader and packaged FFplay/H.264
+path work on macOS without it.</p>
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>
