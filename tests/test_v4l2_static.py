@@ -30,9 +30,14 @@ def main() -> None:
     assert "requested_exit=0" in source
     assert "request_exit 143" in source
     assert 'exit "$requested_exit"' in source
+    assert '--mode "$mode"' in source
+    assert "MODE must be 0 or 2" in source
+    assert "width=3664" in source
+    assert "height=2748" in source
+    assert "max_exposure_ms=1236" in source
     assert '"$flat_field_tool" apply --calibration "$flat_field"' in source
     assert "raw-bayer.fifo" in source
-    assert "flat-field calibration must be 1280x960 GRBG for V4L2" in source
+    assert "flat-field calibration must be ${width}x${height} GRBG" in source
     assert "flat-field exposure/gain must match" in source
     assert '\\"exposure_ms\\": $exposure_ms,' in source
     assert '\\"camera_gain\\": $gain,' in source
@@ -46,6 +51,24 @@ def main() -> None:
             text=True,
         )
         assert invalid.returncode == 64
+        assert not raw.exists()
+        invalid_mode = subprocess.run(
+            ["sh", str(script), "--serve", str(raw),
+             "42", "100", "20", "1"],
+            capture_output=True,
+            text=True,
+        )
+        assert invalid_mode.returncode == 64
+        assert "MODE must be 0 or 2" in invalid_mode.stderr
+        assert not raw.exists()
+        invalid_mode0_exposure = subprocess.run(
+            ["sh", str(script), "--serve", str(raw),
+             "42", "1237", "20", "0"],
+            capture_output=True,
+            text=True,
+        )
+        assert invalid_mode0_exposure.returncode == 64
+        assert "MODE=0 EXPOSURE_MS=1..1236" in invalid_mode0_exposure.stderr
         assert not raw.exists()
         timestamp_conflict = subprocess.run(
             ["sh", str(script), "--serve", str(raw), "42", "100", "20"],

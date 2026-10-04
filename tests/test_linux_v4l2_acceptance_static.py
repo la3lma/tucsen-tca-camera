@@ -32,6 +32,7 @@ def main() -> None:
     required = (
         "--run-live-linux-v4l2-acceptance",
         "TCA_FLAT_FIELD=\"$calibration\" TCA_TIMESTAMPS=\"$timestamps\"",
+        "profile=tca-linux-v4l2-acceptance-v2",
         "reader-timestamps.csv",
         "consumer.yuyv",
         "consumer.framemd5",
@@ -44,6 +45,13 @@ def main() -> None:
         "sudo -n true",
         "release worktree must be clean",
         "expected exactly one 0547:c003 camera",
+        "MODE must be 0 or 2",
+        "width=3664",
+        "height=2748",
+        "yuyv_frame_bytes=20137344",
+        '"$exposure_ms" "$gain" "$mode"',
+        '--mode "$mode"',
+        'geometry=%sx%s',
         "linux_v4l2_acceptance=PASS",
     )
     for token in required:

@@ -10,13 +10,10 @@ DEFAULT_VIDEO_NUMBER=42
 DEFAULT_EXPOSURE_MS=250
 DEFAULT_GAIN=0
 DEFAULT_FRAMES=60
-MODE2_RAW_BYTES=1229312
-MODE2_FRAME_BYTES=1228800
-YUYV_FRAME_BYTES=2457600
 
 usage()
 {
-    printf 'usage: %s %s RELEASE_ROOT CALIBRATION EVIDENCE_PARENT [VIDEO_NUMBER [EXPOSURE_MS [GAIN [FRAMES]]]]\n' \
+    printf 'usage: %s %s RELEASE_ROOT CALIBRATION EVIDENCE_PARENT [VIDEO_NUMBER [EXPOSURE_MS [GAIN [FRAMES [MODE]]]]]\n' \
         "$0" "$TOKEN"
 }
 
@@ -53,7 +50,7 @@ if [ "$#" -eq 0 ]; then
     exit 0
 fi
 
-if [ "$#" -lt 4 ] || [ "$#" -gt 8 ] || [ "$1" != "$TOKEN" ]; then
+if [ "$#" -lt 4 ] || [ "$#" -gt 9 ] || [ "$1" != "$TOKEN" ]; then
     usage >&2
     printf 'NO USB TRANSFER SENT.\n' >&2
     exit 64
@@ -66,17 +63,44 @@ video_number=${5:-$DEFAULT_VIDEO_NUMBER}
 exposure_ms=${6:-$DEFAULT_EXPOSURE_MS}
 gain=${7:-$DEFAULT_GAIN}
 frames=${8:-$DEFAULT_FRAMES}
+mode=${9:-2}
 device=/dev/video$video_number
 
-for value in "$video_number" "$exposure_ms" "$gain" "$frames"; do
+for value in "$video_number" "$exposure_ms" "$gain" "$frames" "$mode"; do
     is_decimal "$value" || {
-        printf 'video number, exposure, gain, and frames must be decimal integers\n' >&2
+        printf 'video number, exposure, gain, frames, and mode must be decimal integers\n' >&2
         exit 64
     }
 done
-if [ "$exposure_ms" -lt 1 ] || [ "$exposure_ms" -gt 480 ] ||
-   [ "$gain" -gt 320 ] || [ "$frames" -lt 2 ] || [ "$frames" -gt 600 ]; then
-    printf 'ranges: EXPOSURE_MS=1..480 GAIN=0..320 FRAMES=2..600\n' >&2
+case "$mode" in
+    0)
+        width=3664
+        height=2748
+        max_exposure_ms=1236
+        max_frames=30
+        raw_bytes=10068992
+        frame_bytes=10068672
+        yuyv_frame_bytes=20137344
+        ;;
+    2)
+        width=1280
+        height=960
+        max_exposure_ms=480
+        max_frames=600
+        raw_bytes=1229312
+        frame_bytes=1228800
+        yuyv_frame_bytes=2457600
+        ;;
+    *)
+        printf 'MODE must be 0 or 2\n' >&2
+        exit 64
+        ;;
+esac
+if [ "$exposure_ms" -lt 1 ] || [ "$exposure_ms" -gt "$max_exposure_ms" ] ||
+   [ "$gain" -gt 320 ] || [ "$frames" -lt 2 ] ||
+   [ "$frames" -gt "$max_frames" ]; then
+    printf 'ranges: MODE=%s EXPOSURE_MS=1..%s GAIN=0..320 FRAMES=2..%s\n' \
+        "$mode" "$max_exposure_ms" "$max_frames" >&2
     exit 64
 fi
 if [ "$(uname -s)" != Linux ]; then
@@ -173,11 +197,13 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 
 {
-    printf 'profile=tca-linux-v4l2-acceptance-v1\n'
+    printf 'profile=tca-linux-v4l2-acceptance-v2\n'
     printf 'target=0547:c003\n'
     printf 'release_commit=%s\n' "$release_commit"
     printf 'calibration=%s\n' "$calibration"
     printf 'video_device=%s\n' "$device"
+    printf 'mode=%s\n' "$mode"
+    printf 'geometry=%sx%s\n' "$width" "$height"
     printf 'exposure_ms=%s\n' "$exposure_ms"
     printf 'gain=%s\n' "$gain"
     printf 'consumer_frames=%s\n' "$frames"
@@ -195,7 +221,7 @@ sha256sum "$reader" "$analyzer" "$timing_analyzer" "$bridge" \
 timestamps=$run_dir/reader-timestamps.csv
 TCA_FLAT_FIELD="$calibration" TCA_TIMESTAMPS="$timestamps" \
     "$bridge" --serve "$run_dir/bridge-first-device.raw" "$video_number" \
-    "$exposure_ms" "$gain" >"$run_dir/bridge.stdout.txt" \
+    "$exposure_ms" "$gain" "$mode" >"$run_dir/bridge.stdout.txt" \
     2>"$run_dir/bridge.stderr.txt" &
 bridge_pid=$!
 
@@ -217,21 +243,21 @@ done
     exit 1
 }
 
-consumer_bytes=$((frames * YUYV_FRAME_BYTES))
+consumer_bytes=$((frames * yuyv_frame_bytes))
 /usr/bin/time -p ffmpeg -hide_banner -loglevel warning \
-    -f v4l2 -input_format yuyv422 -video_size 1280x960 \
+    -f v4l2 -input_format yuyv422 -video_size "${width}x${height}" \
     -i "$device" -frames:v "$frames" -pix_fmt yuyv422 -f rawvideo \
     "$run_dir/consumer.yuyv" >"$run_dir/consumer.stdout.txt" \
     2>"$run_dir/consumer.stderr-and-time.txt"
 [ "$(file_bytes "$run_dir/consumer.yuyv")" -eq "$consumer_bytes" ]
 
 ffmpeg -hide_banner -loglevel error -f rawvideo -pixel_format yuyv422 \
-    -video_size 1280x960 -i "$run_dir/consumer.yuyv" \
+    -video_size "${width}x${height}" -i "$run_dir/consumer.yuyv" \
     -frames:v "$frames" -f framemd5 "$run_dir/consumer.framemd5"
 dd if="$run_dir/consumer.yuyv" of="$run_dir/consumer-first-frame.yuyv" \
-    bs="$YUYV_FRAME_BYTES" count=1 status=none
+    bs="$yuyv_frame_bytes" count=1 status=none
 ffmpeg -hide_banner -loglevel error -f rawvideo -pixel_format yuyv422 \
-    -video_size 1280x960 -i "$run_dir/consumer-first-frame.yuyv" \
+    -video_size "${width}x${height}" -i "$run_dir/consumer-first-frame.yuyv" \
     -frames:v 1 "$run_dir/consumer-first-frame.png"
 
 kill -TERM "$bridge_pid"
@@ -276,15 +302,15 @@ distinct_digests=$(grep '^[0-9]' "$run_dir/consumer.framemd5" | \
     printf 'interpretation=delta includes bounded in-flight pipeline frames and is not by itself a proven drop count\n'
 } >"$run_dir/producer-consumer-summary.txt"
 
-"$reader" capture --mode 2 --frames 1 \
+"$reader" capture --frames 1 \
     --raw-first "$run_dir/reopen-first-device.raw" \
     --bayer "$run_dir/reopen-one-frame.bayer" \
-    --exposure-ms "$exposure_ms" --gain "$gain" \
+    --mode "$mode" --exposure-ms "$exposure_ms" --gain "$gain" \
     >"$run_dir/reopen.stdout.txt" 2>"$run_dir/reopen.stderr.txt"
-[ "$(file_bytes "$run_dir/reopen-first-device.raw")" -eq "$MODE2_RAW_BYTES" ]
-[ "$(file_bytes "$run_dir/reopen-one-frame.bayer")" -eq "$MODE2_FRAME_BYTES" ]
+[ "$(file_bytes "$run_dir/reopen-first-device.raw")" -eq "$raw_bytes" ]
+[ "$(file_bytes "$run_dir/reopen-one-frame.bayer")" -eq "$frame_bytes" ]
 grep -Fx 'frames=1 status=ok' "$run_dir/reopen.stderr.txt" >/dev/null
-"$analyzer" "$run_dir/reopen-one-frame.bayer" --mode 2 \
+"$analyzer" "$run_dir/reopen-one-frame.bayer" --mode "$mode" \
     --json "$run_dir/reopen-one-frame.stats.json"
 
 date -u '+%Y-%m-%dT%H:%M:%SZ' >"$run_dir/end-utc.txt"

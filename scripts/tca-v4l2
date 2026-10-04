@@ -5,8 +5,8 @@ set -eu
 TOKEN=--serve
 
 usage() {
-    echo "usage: $0 $TOKEN RAW_FIRST [VIDEO_NUMBER] [EXPOSURE_MS] [GAIN]" >&2
-    echo "       exposes the trace-confirmed 1280x960 stream as temporary V4L2" >&2
+    echo "usage: $0 $TOKEN RAW_FIRST [VIDEO_NUMBER] [EXPOSURE_MS] [GAIN] [MODE]" >&2
+    echo "       MODE 2 exposes 1280x960 (default); MODE 0 exposes 3664x2748" >&2
     echo "       optional TCA_TIMESTAMPS writes the reader's monotonic CSV sidecar" >&2
 }
 
@@ -15,7 +15,7 @@ if [ "$#" -eq 0 ]; then
     echo "NO USB TRANSFER SENT." >&2
     exit 0
 fi
-if [ "$#" -lt 2 ] || [ "$#" -gt 5 ] || [ "$1" != "$TOKEN" ]; then
+if [ "$#" -lt 2 ] || [ "$#" -gt 6 ] || [ "$1" != "$TOKEN" ]; then
     usage
     echo "NO USB TRANSFER SENT." >&2
     exit 64
@@ -25,6 +25,7 @@ raw_output=$2
 video_number=${3:-42}
 exposure_ms=${4:-400}
 gain=${5:-20}
+mode=${6:-2}
 timestamps=${TCA_TIMESTAMPS:-}
 device=/dev/video${video_number}
 project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
@@ -77,17 +78,33 @@ trap 'request_exit 129' HUP
 trap 'request_exit 130' INT
 trap 'request_exit 143' TERM
 
-for value in "$video_number" "$exposure_ms" "$gain"; do
+for value in "$video_number" "$exposure_ms" "$gain" "$mode"; do
     case "$value" in
         ''|*[!0-9]*)
-            echo "video number, exposure, and gain must be decimal integers" >&2
+            echo "video number, exposure, gain, and mode must be decimal integers" >&2
             exit 64
             ;;
     esac
 done
-if [ "$exposure_ms" -lt 1 ] || [ "$exposure_ms" -gt 480 ] ||
+case "$mode" in
+    0)
+        width=3664
+        height=2748
+        max_exposure_ms=1236
+        ;;
+    2)
+        width=1280
+        height=960
+        max_exposure_ms=480
+        ;;
+    *)
+        echo "MODE must be 0 or 2" >&2
+        exit 64
+        ;;
+esac
+if [ "$exposure_ms" -lt 1 ] || [ "$exposure_ms" -gt "$max_exposure_ms" ] ||
    [ "$gain" -gt 320 ]; then
-    echo "control range: EXPOSURE_MS=1..480, GAIN=0..320" >&2
+    echo "control range: MODE=$mode EXPOSURE_MS=1..$max_exposure_ms, GAIN=0..320" >&2
     exit 64
 fi
 if [ "$raw_output" = - ] || [ -e "$raw_output" ]; then
@@ -126,10 +143,12 @@ if [ -n "$flat_field" ]; then
         echo "flat-field calibration is invalid: $flat_field" >&2
         exit 65
     fi
-    if ! printf '%s\n' "$flat_field_metadata" | grep -q '"width": 1280,' ||
-       ! printf '%s\n' "$flat_field_metadata" | grep -q '"height": 960,' ||
+    if ! printf '%s\n' "$flat_field_metadata" |
+         grep -q "\"width\": $width," ||
+       ! printf '%s\n' "$flat_field_metadata" |
+         grep -q "\"height\": $height," ||
        ! printf '%s\n' "$flat_field_metadata" | grep -q '"phase": "grbg",'; then
-        echo "flat-field calibration must be 1280x960 GRBG for V4L2" >&2
+        echo "flat-field calibration must be ${width}x${height} GRBG for mode $mode" >&2
         exit 65
     fi
     if ! printf '%s\n' "$flat_field_metadata" |
@@ -182,11 +201,13 @@ start_reader() {
     if [ -n "$timestamps" ]; then
         "$reader" capture --frames 0 --raw-first "$raw_output" \
             --bayer - --timestamps "$timestamps" \
+            --mode "$mode" \
             --exposure-ms "$exposure_ms" --gain "$gain" \
             >"$reader_output" &
     else
         "$reader" capture --frames 0 --raw-first "$raw_output" \
-            --bayer - --exposure-ms "$exposure_ms" --gain "$gain" \
+            --bayer - --mode "$mode" \
+            --exposure-ms "$exposure_ms" --gain "$gain" \
             >"$reader_output" &
     fi
     reader_pid=$!
@@ -203,7 +224,7 @@ else
     start_reader "$stream_dir/bayer.fifo"
 fi
 ffmpeg -hide_banner -loglevel warning -f rawvideo \
-    -pixel_format bayer_grbg8 -video_size 1280x960 -framerate 2 \
+    -pixel_format bayer_grbg8 -video_size "${width}x${height}" -framerate 2 \
     -i "$stream_dir/bayer.fifo" -vf format=yuyv422 -f v4l2 "$device" &
 writer_pid=$!
 
@@ -226,7 +247,7 @@ if [ "$attempt" -ge 50 ]; then
     exit 1
 fi
 
-echo "camera ready at $device; first unmodified device frame: $raw_output" >&2
+echo "camera ready at $device; mode $mode ${width}x${height}; first unmodified device frame: $raw_output" >&2
 if [ -n "$flat_field" ]; then
     echo "flat-field correction active: $flat_field" >&2
 fi

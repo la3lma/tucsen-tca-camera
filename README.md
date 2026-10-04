@@ -316,10 +316,19 @@ sudo apt install ffmpeg v4l-utils v4l2loopback-dkms
 scripts/tca-v4l2 --serve first-device-frame.raw
 ```
 
-This creates `/dev/video42` by default, converts the mode-2 Bayer stream to YUYV, and
-removes only the loopback device it created when stopped. The adapter refuses
-to alter an existing loopback configuration. The custom camera protocol still
-runs in userspace; `v4l2loopback` is an optional, generic compatibility layer.
+This creates `/dev/video42` by default, converts the 1280x960 mode-2 Bayer
+stream to YUYV, and removes only the loopback device it created when stopped.
+The adapter refuses to alter an existing loopback configuration. The custom
+camera protocol still runs in userspace; `v4l2loopback` is an optional, generic
+compatibility layer. The optional final argument selects mode 0 for a complete
+3664x2748 application stream; mode 2 remains the default:
+
+```sh
+scripts/tca-v4l2 --serve capture/full-first-device.raw 42 250 0 0
+```
+
+Full-resolution YUYV frames are 20,137,344 bytes each, so applications and
+storage must tolerate the larger buffers and lower physical-camera cadence.
 To apply a matching calibration before demosaic and YUYV conversion:
 
 ```sh
@@ -329,6 +338,8 @@ TCA_FLAT_FIELD=capture/10x-mode2.tca-flat \
 
 The V4L2 helper validates geometry, phase, exposure, and camera gain before
 touching the camera, and retains the first unmodified device frame as before.
+A mode-0 corrected stream similarly requires a 3664x2748 map captured with
+the same exposure and gain.
 To preserve the reader's measured producer cadence while an ordinary V4L2
 application consumes the stream, add a new timestamp sidecar path:
 
@@ -361,13 +372,21 @@ sudo -v
 tools/run_linux_v4l2_acceptance.sh \
   --run-live-linux-v4l2-acceptance \
   "$PWD" capture/10x-mode2.tca-flat capture/evidence 42 250 0 60
+
+# Complete full-resolution application path; final argument selects mode 0.
+tools/run_linux_v4l2_acceptance.sh \
+  --run-live-linux-v4l2-acceptance \
+  "$PWD" capture/10x-mode0.tca-flat capture/evidence 42 250 0 6 0
 ```
 
 The live path records producer timestamps, an exact bounded YUYV consumer
 stream, per-frame digests, producer/consumer counts and cadence, device
 metadata, cleanup status, immediate reader reuse, and a SHA-256 manifest. A
 producer/consumer count delta is retained as bounded pipeline evidence and is
-not automatically mislabeled as a dropped-frame count.
+not automatically mislabeled as a dropped-frame count. The live harness
+defaults to mode 2; an optional final `0` selects mode 0 and applies its
+geometry, exposure range, byte counts, analyzer mode, and matching calibration
+contract throughout.
 
 The same bridge can be exercised without the camera before a physical run.
 This root-only, token-gated acceptance substitutes a deterministic reader,
@@ -380,11 +399,17 @@ transfer:
 tools/run_v4l2_bridge_synthetic_acceptance.sh
 sudo tools/run_v4l2_bridge_synthetic_acceptance.sh \
   --run-v4l2-bridge-synthetic-acceptance capture/v4l2-synthetic-evidence 44
+
+sudo tools/run_v4l2_bridge_synthetic_acceptance.sh \
+  --run-v4l2-bridge-synthetic-acceptance capture/v4l2-mode0-evidence 45 0
 ```
 
 The synthetic pass proves bridge lifecycle, correction, backpressure, and
 cleanup behavior on that Linux host. It does not replace the physical-camera
-application run or validate optical calibration.
+application run or validate optical calibration. The optional final mode
+argument lets the same contract validate both supported application
+geometries; mode 2 uses four normal plus eight slow frames, while mode 0 uses
+two normal plus three slow frames to bound evidence size.
 
 ## Protocol and safety
 
