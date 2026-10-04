@@ -6,6 +6,7 @@
 # Deliberately published, camera-authored display derivative referenced by the
 # public evidence ledger. Raw streams and ad-hoc recordings remain ignored.
 !site/evidence/videos/alpha8-live-preview.mp4
+!site/evidence/videos/alpha8-endurance-timelapse.mp4
 .DS_Store
 
 # Public-repository publication boundary. Raw reverse-engineering artifacts

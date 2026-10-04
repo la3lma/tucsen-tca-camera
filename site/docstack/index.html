@@ -406,7 +406,7 @@ Docstack</a></td>
 </tr>
 <tr>
 <td>Revision</td>
-<td>4.5, use cases expressed in Cockburn form and UML; delivered-frame
+<td>4.6, use cases expressed in Cockburn form and UML; delivered-frame
 cadence measured in both recovered modes; Linux V4L2 producer timing and
 bounded acceptance harness prepared; camera-free consumer
 detach/reattach, slow-consumer, bounded-memory, signal, and cleanup
@@ -414,14 +414,15 @@ behavior verified on the Pi at both 1280x960 preview and complete
 3664x2748 full resolution; exact post-merge main and downloaded alpha-8
 release archive physically regressed in both optical modes on Apple
 Silicon; exact alpha-8 live output consumed and recorded by an
-independent FFmpeg process over a plain pipe on macOS; uncorrected
-physical Linux transport acceptance independently runnable before
-optical calibration and protected by a recorded wall-clock consumer
-deadline; historical evidence placeholders and the decision ledger
-reconciled with current verified state; public alpha-8 packages the
-full-resolution application path and bounded Linux gate; public evidence
-rendered as HTML and guarded by a permanent full-history privacy
-policy</td>
+independent FFmpeg process over a plain pipe on macOS for 17,200
+distinct frames across 30 minutes with bounded memory and immediate
+camera reopen; uncorrected physical Linux transport acceptance
+independently runnable before optical calibration and protected by a
+recorded wall-clock consumer deadline; historical evidence placeholders
+and the decision ledger reconciled with current verified state; public
+alpha-8 packages the full-resolution application path and bounded Linux
+gate; public evidence rendered as HTML and guarded by a permanent
+full-history privacy policy</td>
 </tr>
 <tr>
 <td>Execution state</td>
@@ -511,10 +512,10 @@ macOS as the portability target and relay host</td>
 </tr>
 <tr>
 <td>Latest application proof</td>
-<td><a href="../evidence/alpha8-live-ffmpeg.html">Exact alpha-8 live
-FFmpeg consumption</a>: 60 distinct 1280x960 frames from the physical
-camera encoded as a 60-frame H.264 MP4 through a plain stdout pipe on
-Apple Silicon</td>
+<td><a href="../evidence/alpha8-macos-endurance.html">Exact alpha-8
+30-minute endurance</a>: 17,200 distinct 1280x960 frames from the
+physical camera consumed and encoded by independent FFmpeg over a plain
+stdout pipe with bounded memory and immediate camera reopen</td>
 </tr>
 </tbody>
 </table>
@@ -1995,12 +1996,13 @@ deferred</td>
 <td>Prove stability and fault recovery</td>
 <td>D80,D90</td>
 <td>Active, Linux-first</td>
-<td>Reopen, endurance, process-kill, host reboot, direct Apple Silicon
-capture, bounded ownership hand-back, USB-inert V4L2 lifecycle in both
-geometries, exact-post-merge and exact-release optical regressions,
-plain-pipe FFmpeg application consumption, and wall-clock-bounded
-application acceptance passed; uncorrected physical Linux transport and
-later corrected repeat plus Pi cable reconnect remain</td>
+<td>Reopen, 30-minute corrected-era endurance, process-kill, host
+reboot, direct Apple Silicon capture, bounded ownership hand-back,
+USB-inert V4L2 lifecycle in both geometries, exact-post-merge and
+exact-release optical regressions, plain-pipe FFmpeg application
+consumption, and wall-clock-bounded application acceptance passed;
+uncorrected physical Linux transport and later corrected repeat plus Pi
+cable reconnect remain</td>
 </tr>
 <tr>
 <td>D110</td>
@@ -3166,6 +3168,20 @@ produced a 60-frame 1280x960 H.264 recording. This closes
 direct-reader-to-ordinary-application consumption on macOS. It does not
 replace the still-open physical Linux V4L2 gate or claim a system camera
 extension; details and the playable proof clip are linked in E-079.</p>
+<p>The same exact downloaded alpha-8 archive subsequently ran 17,200
+mode-2 frames through independent FFmpeg for 1,809.739 seconds of
+measured producer time. All 17,200 frame hashes were distinct; producer
+cadence was 9.50358 fps; the resulting H.264 file decoded as exactly
+17,200 frames; and all supervised processes exited zero before the
+2,200-second deadline. Reader RSS stayed between 9,872 and 9,904 KiB.
+FFmpeg’s complete observed growth was 30,848 KiB and its
+post-five-minute growth was 12,304 KiB, both inside the existing
+65,536-KiB application-pipeline bound. A fresh process immediately
+reopened the camera and captured another exact-size unclipped frame.
+This closes the corrected-era 30-minute direct-reader endurance case on
+Apple Silicon, while the physical Linux V4L2 gate remains open. Details
+and a compact time-lapse across the complete run are linked in
+E-080.</p>
 </div>
 <div class="task-card" data-state="active">
 <!-- task: D110; depends: D100; state: active -->
@@ -3194,8 +3210,9 @@ Fixtures, and Operations</h3>
 <td>Active; public alpha-8 packages the reader, both Linux application
 geometries, calibrated-field tooling, measured output cadence, bounded
 live acceptance, rendered evidence including a third-party FFmpeg
-recording, permanent publication-boundary enforcement, and tested
-install/removal while residual physical validation continues</td>
+recording and 30-minute endurance proof, permanent publication-boundary
+enforcement, and tested install/removal while residual physical
+validation continues</td>
 </tr>
 <tr>
 <td>Actors</td>
@@ -4323,6 +4340,21 @@ analyzed first Bayer frame had no zero or saturated pixels</td>
 FFmpeg application proof</a></td>
 <td>VERIFIED THIRD-PARTY LIVE APPLICATION CONSUMPTION ON MACOS /
 AVFOUNDATION AND PHYSICAL LINUX V4L2 REMAIN OPEN</td>
+</tr>
+<tr>
+<td>E-080</td>
+<td>The downloaded exact alpha-8 reader delivered 17,200 distinct mode-2
+frames through a plain stdout pipe into independent FFmpeg over
+1,809.739 seconds at 9.50358 fps. Reader, FFmpeg, and bounded supervisor
+exited zero; FFmpeg decoded and encoded exactly 17,200 frames with no
+diagnostics; reader RSS stayed within a 32-KiB band; complete and
+post-five-minute FFmpeg growth were 30,848 and 12,304 KiB under the
+65,536-KiB bound; and a fresh process immediately reopened the camera
+and captured another exact-size unclipped frame</td>
+<td><a href="../evidence/alpha8-macos-endurance.html">Exact alpha-8
+30-minute live application endurance</a></td>
+<td>VERIFIED CORRECTED-ERA 30-MINUTE ENDURANCE + BOUNDED MEMORY +
+IMMEDIATE REOPEN ON MACOS / PHYSICAL LINUX V4L2 REMAINS OPEN</td>
 </tr>
 </tbody>
 </table>
