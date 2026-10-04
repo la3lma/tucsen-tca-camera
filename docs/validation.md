@@ -15,6 +15,27 @@ multi-request interpretation of frame assembly.
 - FFmpeg 7.1.3
 - physical USB identity: `0547:c003 Anchor Chips, Inc. 10MP CMOS Camera`
 
+## USB-inert exact-device enumeration — 2026-10-04
+
+The alpha-12 candidate adds `tca-camera list` as the safe first command after
+a cable move. It initializes libusb and reads the library's device list and
+cached descriptors, but contains no path that opens a device, claims an
+interface, or submits a control or bulk transfer. With the camera attached
+directly to Apple Silicon macOS, the command reported exactly one high-speed
+match:
+
+```text
+target=0547:c003
+camera=0 bus=8 address=24 speed=high
+camera-count=1
+NO DEVICE OPENED OR TRANSFER SUBMITTED.
+```
+
+The bus and address are enumeration-instance diagnostics rather than stable
+camera identifiers. The same command must report zero matches on the Pi before
+the physical cable move; capture remains the separate, explicitly mutating
+operation.
+
 The checkout's tracked worktree and index matched commit
 `607d1dcd2b678583e181fffc3fc923adb86c81dd` during the mode-2 capture,
 reopen, and endurance baselines below. Native `make test` passed first. Later

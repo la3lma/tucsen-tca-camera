@@ -99,6 +99,17 @@ The camera-specific implementation is entirely userspace code. On a headless
 Linux system, either run with appropriate USB permissions or install the
 optional rule in [`udev/99-tucsen-tca-camera.rules`](udev/99-tucsen-tca-camera.rules).
 
+Before capture, enumerate only the exact supported USB identity without
+opening the device, claiming its interface, or submitting any USB transfer:
+
+```sh
+tca-camera list
+```
+
+The command reports `camera-count=0` when the camera is absent. Each match is
+identified by bus, address, and negotiated USB speed, making this the safe
+first diagnostic after connecting or moving the cable.
+
 ## Install and remove
 
 Install the reader, FFmpeg and V4L2 helpers, frame and timing analyzers,
