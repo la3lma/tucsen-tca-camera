@@ -33,6 +33,8 @@ test: $(TARGET) $(FLAT_FIELD_TARGET)
 	python3 tests/test_white_balance.py scripts/tca-white-balance
 	python3 tests/test_flat_field.py $(FLAT_FIELD_TARGET)
 	python3 tests/test_flat_field_v4l2_static.py tools/run_flat_field_v4l2_preflight.sh
+	python3 tests/test_flat_field_capture_session.py \
+		tools/run_flat_field_capture_session.sh $(FLAT_FIELD_TARGET) scripts/tca-frame-stats
 	python3 tests/test_install.py .
 	python3 tests/test_pages_static.py .
 

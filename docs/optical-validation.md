@@ -11,7 +11,7 @@ It does not authorize new USB commands or firmware writes.
 - a clean, textured specimen for focus and a color reference with distinguishable
   red and blue regions for Bayer phase;
 - stable, diffuse illumination with manual intensity control;
-- Raspberry Pi or another tested Linux host with the public reader built;
+- Raspberry Pi Linux or Apple Silicon macOS with the public reader built;
 - FFmpeg and the repository's `scripts/tca-frame-stats` utility; and
 - enough free storage for preserved raw frames and JSON records.
 
@@ -96,6 +96,26 @@ After centering the lamp, condenser, field diaphragm, and camera relay, capture
 16–64 dark frames with illumination blocked and 16–64 blank-field frames at
 the final optical and camera settings. Use the full sensor without binning or
 ROI. Translate or defocus the blank between flat frames.
+
+The preferred capture path is the guided, inert-by-default session. It sends no
+USB transfer without the exact token, refuses an existing output directory,
+and pauses for each required physical state. Its defaults capture 16 blocked
+darks, four separately positioned four-frame flat batches, a fresh validation
+blank, and a real validation specimen at one locked setting. It then builds and
+inspects the map, applies it to both validation frames, renders before/after
+PNGs, records statistics, and hashes the bundle:
+
+```sh
+tools/run_flat_field_capture_session.sh \
+  --run-flat-field-capture-session \
+  --output capture/optical/10x-flat-session \
+  --exposure-ms 250 --gain 0 --phase grbg
+```
+
+The session's `mode2.tca-flat` is acceptable only if the blocked-dark and blank
+prompts were followed literally and the fresh blank improves quantitatively
+without erasing real specimen structure. `SESSION-INCOMPLETE.txt` marks an
+interrupted or failed bundle. The manual equivalent is:
 
 ```sh
 ./build/tca-flat-field calibrate --mode 2 --phase grbg \

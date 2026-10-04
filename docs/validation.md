@@ -374,3 +374,27 @@ Selected retained hashes are:
 b88eb92558bbda82e1ab8481db0413212a99bd694bd3f1e57aff118447dcee63  diagnostic proxy-dark calibration
 2bfafe86a522607882ff108f7a5c7b2353082cd0579afd2927903ea7eb2665d8  eight corrected physical frames
 ```
+
+## Guided physical calibration harness
+
+`tools/run_flat_field_capture_session.sh` now turns the remaining hands-on
+calibration into one fail-closed session. Without its exact execution token it
+returns zero after stating that no USB transfer or file/system change was made.
+Before live capture it validates all ranges and dependencies and refuses an
+existing output directory. The explicit path then locks one preview-mode
+exposure, gain, and Bayer phase while prompting in order for:
+
+1. physically blocked illumination;
+2. multiple translated or defocused flat-field batches;
+3. a fresh blank that was not held stationary during calibration; and
+4. a real specimen.
+
+It checks every raw and Bayer byte count, creates and inspects a settings-bound
+map, corrects the fresh blank and specimen, records statistics, renders four
+PNGs, and hashes every completed artifact. Any interrupted or failed session is
+marked `SESSION-INCOMPLETE.txt`. A USB-free dynamic test substitutes a fake
+camera while exercising the real flat-field builder and frame analyzer; it
+checks exact sizes, settings metadata, corrected pixel values, PNG production,
+manifest integrity, inert behavior, and pre-output validation. The full native
+suite passes on Apple Silicon; physical dark/flat execution remains the next
+operator-assisted gate.

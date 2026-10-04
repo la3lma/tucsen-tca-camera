@@ -233,6 +233,27 @@ exposure, and gain used for imaging. Average 16–64 frames where practical;
 translate or defocus the blank field between flat frames so specimen features
 do not become part of the map.
 
+The repository includes an inert-by-default guided session for the physical
+part of that procedure. It refuses an existing output directory, locks one
+exposure/gain/phase tuple, prompts separately for blocked darks, repositioned
+flat batches, a fresh validation blank, and a real specimen, then builds the
+map, corrects both validation frames, renders before/after PNGs, records
+statistics, and hashes the complete bundle. With no token it sends no USB
+transfer and changes no file:
+
+```sh
+tools/run_flat_field_capture_session.sh
+
+tools/run_flat_field_capture_session.sh \
+  --run-flat-field-capture-session \
+  --output capture/10x-flat-session \
+  --exposure-ms 250 --gain 0 --phase grbg
+```
+
+Do not press Enter at the dark prompt until illumination is physically blocked.
+Do not use the specimen scene itself as a flat. The default four flat batches
+make the required translation/defocus step explicit between groups of frames.
+
 For example, after capturing 32-frame mode-2 streams as `darks.bayer` and
 `flats.bayer`, create and inspect a calibration:
 
