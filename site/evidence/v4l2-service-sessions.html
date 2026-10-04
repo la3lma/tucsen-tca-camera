@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Restart-safe system-managed V4L2 service sessions — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="restart-safe-system-managed-v4l2-service-sessions">Restart-safe
+system-managed V4L2 service sessions</h1>
+<p>Date: 2026-10-04</p>
+<p>Issue <a
+href="https://github.com/la3lma/tucsen-tca-camera/issues/44">#44</a> and
+<a href="https://github.com/la3lma/tucsen-tca-camera/pull/45">PR
+#45</a>, merged as public main
+<code>4c3b2ad98d713e404b40a28c14918d91b3662024</code>, close the
+operational gap between a safe system-owned loopback and repeated
+unattended starts. The earlier bridge correctly refused to overwrite its
+raw/timestamp evidence, but that required a service manager to invent
+new paths every time.</p>
+<h2 id="session-contract">Session contract</h2>
+<p>The new <code>tca-v4l2-session</code> helper:</p>
+<ul>
+<li>accepts only <code>--serve-existing</code>, never the bridge-owned
+lifecycle;</li>
+<li>requires an existing writable output root;</li>
+<li>atomically creates a private mode-0700 directory for every
+start;</li>
+<li>records UTC start time, bridge path, video number, exposure, gain,
+mode, flat-field state, and exact evidence paths;</li>
+<li>reserves a unique <code>first-device.raw</code> and
+<code>reader-timestamps.csv</code>; and</li>
+<li>replaces itself with <code>tca-v4l2 --serve-existing</code>,
+preserving the bridge’s signal and exit semantics.</li>
+</ul>
+<p>The wrapper contains no <code>sudo</code>, <code>modprobe</code>,
+ownership change, USB transfer, or loopback cleanup. A disabled systemd
+user-unit example is packaged only under the documentation tree. It uses
+<code>Restart=no</code>; installation cannot enable or start it.</p>
+<h2 id="exact-main-verification">Exact-main verification</h2>
+<p>Hosted Ubuntu/macOS CI <a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37225269501">run
+37225269501</a> passed. Complete Apple Silicon and Raspberry Pi AArch64
+suites passed on exact merged main. The Pi integrations then used the
+USB-inert synthetic reader, real FFmpeg, real <code>v4l2loopback</code>,
+and ordinary <code>v4l2-ctl</code> consumers through the new session
+wrapper:</p>
+<table>
+<thead>
+<tr>
+<th>Result</th>
+<th style="text-align: right;">Preview mode 2</th>
+<th style="text-align: right;">Full-resolution mode 0</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Geometry</td>
+<td style="text-align: right;">1280x960</td>
+<td style="text-align: right;">3664x2748</td>
+</tr>
+<tr>
+<td>Managed normal + delayed frames</td>
+<td style="text-align: right;">4 + 8</td>
+<td style="text-align: right;">2 + 3</td>
+</tr>
+<tr>
+<td>Service-session consumer frames</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr>
+<td>Warm-baseline RSS growth</td>
+<td style="text-align: right;">0 KiB</td>
+<td style="text-align: right;">9,824 KiB</td>
+</tr>
+<tr>
+<td>Private session allocation</td>
+<td style="text-align: right;">Pass</td>
+<td style="text-align: right;">Pass</td>
+</tr>
+<tr>
+<td>Pre-created device survived bridge TERM</td>
+<td style="text-align: right;">Pass</td>
+<td style="text-align: right;">Pass</td>
+</tr>
+<tr>
+<td>Pre-created module survived bridge TERM</td>
+<td style="text-align: right;">Pass</td>
+<td style="text-align: right;">Pass</td>
+</tr>
+<tr>
+<td>Harness-owned final cleanup</td>
+<td style="text-align: right;">Pass</td>
+<td style="text-align: right;">Pass</td>
+</tr>
+<tr>
+<td>USB transfers</td>
+<td style="text-align: right;">None</td>
+<td style="text-align: right;">None</td>
+</tr>
+</tbody>
+</table>
+<p>The exact-main preview manifest-file SHA-256 is
+<code>0caeeac066168a06f9c800fef782a2c640e66b7e415e1b2108a200ebd8705755</code>.
+The exact-main full-resolution manifest-file SHA-256 is
+<code>63d125ae2bef71db487f4ce9b3a982c19413bc0c878834aae4d5943961e8b146</code>.
+Each manifest contains the hashes of all generated integration
+artifacts. Final checks found neither test video node nor a loaded
+loopback module.</p>
+<h2 id="package-and-service-manager-verification">Package and
+service-manager verification</h2>
+<p>The reproducible exact-main AArch64 package has internal version
+<code>0.2.0~alpha13-1</code> and SHA-256:</p>
+<pre class="text"><code>1befeec59685d5bc3cc27362bb22b2ff819cba9999ff0bc86f07d859eefc56d1  tucsen-tca-camera_0.2.0~alpha13-1_arm64.deb</code></pre>
+<p>It installs all eight userspace programs plus the systemd examples
+under <code>/usr/share/doc/tucsen-tca-camera/examples/systemd/</code>.
+The package upgraded the camera-free Pi cleanly; <code>dpkg -V</code>
+reports no changes, the CLI reports alpha 13,
+<code>tca-camera list</code> reports zero and opens no device, and the
+installed session diagnostic resolves its installed sibling bridge while
+sending no USB transfer or making a system change. The unit passes
+<code>systemd-analyze --user verify</code>. No service unit is
+installed, enabled, or active.</p>
+<h2 id="scope">Scope</h2>
+<p>This proves restart-safe evidence allocation, service-manager syntax,
+application delivery, system-owned loopback survival, and final
+ownership boundaries without a camera. It advances Linux operational
+readiness but does not substitute for direct-camera Pi V4L2 delivery,
+cable reconnect, true dark/blank-field calibration, known-target
+color/Bayer validation, or owner acceptance.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>
