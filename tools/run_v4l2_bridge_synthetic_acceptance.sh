@@ -174,7 +174,7 @@ tree_rss_kib()
 
 commit=$(git -C "$project_dir" rev-parse HEAD)
 {
-    printf 'profile=tca-v4l2-synthetic-lifecycle-v2\n'
+    printf 'profile=tca-v4l2-synthetic-lifecycle-v3\n'
     printf 'usb_transfer=none\n'
     printf 'project_commit=%s\n' "$commit"
     printf 'video_device=%s\n' "$device"
@@ -227,7 +227,7 @@ done
     exit 1
 }
 
-rss_baseline=$(tree_rss_kib "$bridge_pid")
+rss_cold=$(tree_rss_kib "$bridge_pid")
 ps -eo pid=,ppid=,rss=,stat=,comm=,args= >"$output_dir/processes-ready.txt"
 timeout "$consumer_timeout" v4l2-ctl -d "$device" --stream-mmap=3 \
     --stream-count="$normal_frames" \
@@ -240,6 +240,9 @@ kill -0 "$bridge_pid"
 
 sleep 1
 kill -0 "$bridge_pid"
+rss_baseline=$(tree_rss_kib "$bridge_pid")
+ps -eo pid=,ppid=,rss=,stat=,comm=,args= \
+    >"$output_dir/processes-warm-baseline.txt"
 timeout "$consumer_timeout" v4l2-ctl -d "$device" --stream-mmap=3 \
     --stream-count="$slow_frames" \
     --stream-sleep=count=1,sleep=350,mode=1 \
@@ -298,6 +301,7 @@ slow_digests=$(grep -c '^[0-9]' "$output_dir/slow.framemd5")
     printf 'slow_consumer_frames=%s\n' "$slow_digests"
     printf 'consumer_detach_reattach=pass\n'
     printf 'bridge_alive_after_slow_consumer=pass\n'
+    printf 'bridge_tree_rss_cold_kib=%s\n' "$rss_cold"
     printf 'bridge_tree_rss_baseline_kib=%s\n' "$rss_baseline"
     printf 'bridge_tree_rss_slow_kib=%s\n' "$rss_slow"
     printf 'bridge_tree_rss_growth_kib=%s\n' "$rss_growth"
