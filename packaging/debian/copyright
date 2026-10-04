@@ -1,0 +1,9 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: tucsen-tca-camera
+Source: https://github.com/la3lma/tucsen-tca-camera
+
+Files: *
+Copyright: 2026 Bjørn Remseth
+License: Apache-2.0
+ The complete Apache License 2.0 text is installed as
+ /usr/share/doc/tucsen-tca-camera/LICENSE.

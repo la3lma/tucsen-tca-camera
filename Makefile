@@ -4,6 +4,8 @@ PKG_CONFIG ?= pkg-config
 LIBUSB_PKG_CONFIG_PATH ?=
 PREFIX ?= /usr/local
 DESTDIR ?=
+DEB_OUTPUT_DIR ?= dist
+PACKAGE_VERSION ?= $(shell sed -n '1p' packaging/debian/version)
 
 TARGET = build/tca-camera
 FLAT_FIELD_TARGET = build/tca-flat-field
@@ -46,11 +48,12 @@ test: $(TARGET) $(FLAT_FIELD_TARGET)
 	python3 tests/test_v4l2_bridge_synthetic_acceptance_static.py \
 		tools/run_v4l2_bridge_synthetic_acceptance.sh
 	python3 tests/test_install.py .
+	python3 tests/test_debian_package.py .
 	python3 tests/test_publication_policy.py .
 	python3 tests/test_pages_static.py .
 
 .PHONY: install
-install: $(TARGET)
+install: $(TARGET) $(FLAT_FIELD_TARGET)
 	install -d "$(DESTDIR)$(PREFIX)/bin"
 	install -m 0755 $(TARGET) "$(DESTDIR)$(PREFIX)/bin/tca-camera"
 	install -m 0755 scripts/tca-v4l2 "$(DESTDIR)$(PREFIX)/bin/tca-v4l2"
@@ -59,6 +62,10 @@ install: $(TARGET)
 	install -m 0755 scripts/tca-timing-stats "$(DESTDIR)$(PREFIX)/bin/tca-timing-stats"
 	install -m 0755 scripts/tca-white-balance "$(DESTDIR)$(PREFIX)/bin/tca-white-balance"
 	install -m 0755 $(FLAT_FIELD_TARGET) "$(DESTDIR)$(PREFIX)/bin/tca-flat-field"
+
+.PHONY: deb
+deb: all
+	TCA_PACKAGE_VERSION="$(PACKAGE_VERSION)" tools/build_deb.sh "$(DEB_OUTPUT_DIR)"
 
 .PHONY: uninstall
 uninstall:
