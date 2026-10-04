@@ -406,14 +406,16 @@ Docstack</a></td>
 </tr>
 <tr>
 <td>Revision</td>
-<td>3.9, use cases expressed in Cockburn form and UML; delivered-frame
+<td>4.0, use cases expressed in Cockburn form and UML; delivered-frame
 cadence measured in both recovered modes; Linux V4L2 producer timing and
 bounded acceptance harness prepared; camera-free consumer
 detach/reattach, slow-consumer, bounded-memory, signal, and cleanup
 behavior verified on the Pi at both 1280x960 preview and complete
 3664x2748 full resolution; exact post-merge main physically regressed in
-both optical modes on Apple Silicon; public evidence rendered as HTML
-and guarded by a permanent full-history privacy policy</td>
+both optical modes on Apple Silicon; uncorrected physical Linux
+transport acceptance independently runnable before optical calibration;
+public evidence rendered as HTML and guarded by a permanent full-history
+privacy policy</td>
 </tr>
 <tr>
 <td>Execution state</td>
@@ -456,13 +458,20 @@ deterministic TERM, and device/module cleanup. Exact
 unclipped optical frames on Apple Silicon in both modes at 250 ms/gain
 0. Public main <code>8319696</code> publishes those images and
 statistics and adds a tested, scoped native-libusb discovery override
-for mixed Intel/ARM Homebrew hosts. Exact Apple Silicon, Pi AArch64,
-Ubuntu, and macOS suites pass. Public evidence is rendered as navigable
-HTML and protected by a full-history ban on raw disassembly, vendor
-binaries, firmware, traces, and private work. Final known-target
+for mixed Intel/ARM Homebrew hosts. Public main <code>caea706</code>
+separates the physical Linux transport/application gate from optical
+calibration: <code>-</code> requests an explicitly uncorrected run,
+while a map retains strict geometry, Bayer-phase, exposure, and gain
+validation. The exact candidate passed Apple Silicon and Pi AArch64
+suites and failed closed on the Pi’s expected zero-camera preflight
+without creating evidence or loopback state. Exact Apple Silicon, Pi
+AArch64, Ubuntu, and macOS suites pass. Public evidence is rendered as
+navigable HTML and protected by a full-history ban on raw disassembly,
+vendor binaries, firmware, traces, and private work. Final known-target
 Bayer/color calibration, true blocked-light dark and blank-field flat
-execution, and execution of the live-camera Linux V4L2 gate with
-consumer-side timing remain open. AVFoundation remains deferred.</td>
+execution, execution of the uncorrected live-camera Linux V4L2 gate, and
+its later map-backed corrected repeat remain open. AVFoundation remains
+deferred.</td>
 </tr>
 <tr>
 <td>Acceptance authority</td>
@@ -1965,8 +1974,9 @@ over the native cable; system-camera surface deferred</td>
 <td>Active, Linux-first</td>
 <td>Reopen, endurance, process-kill, host reboot, direct Apple Silicon
 capture, bounded ownership hand-back, USB-inert V4L2 lifecycle in both
-geometries, and exact-post-merge optical regression passed; physical
-corrected-consumer and Pi cable reconnect runs remain</td>
+geometries, and exact-post-merge optical regression passed; uncorrected
+physical Linux transport and later corrected repeat plus Pi cable
+reconnect remain</td>
 </tr>
 <tr>
 <td>D110</td>
@@ -1975,8 +1985,9 @@ corrected-consumer and Pi cable reconnect runs remain</td>
 <td>Active; alpha-7 released and independently verified</td>
 <td>Public GitHub repository, Apache-2.0 license, udev/V4L2 operations,
 CI, two modes, bounded initial recovery, optical and calibration
-procedures, measured output cadence, clickable full-resolution evidence,
-scoped native-libusb discovery, permanent publication boundary, tested
+procedures, independently runnable uncorrected Linux application gate,
+measured output cadence, clickable full-resolution evidence, scoped
+native-libusb discovery, permanent publication boundary, tested
 install/removal, validation record, and report links</td>
 </tr>
 <tr>
@@ -3070,19 +3081,28 @@ post-release commit <code>a60ecac</code> preserves the reader’s flushed
 monotonic timestamp sidecar through the optional V4L2 bridge while the
 application records separate consumer timing and counts. Exact Apple
 Silicon and Raspberry Pi AArch64 suites plus Ubuntu/macOS CI pass
-without camera access. A physical corrected run and its
-producer-versus-consumer comparison remain required. The
-<code>470b3d9</code> acceptance harness composes those exact steps and
-passes its static/inert checks on Apple Silicon, Raspberry Pi AArch64,
-Ubuntu, and macOS. Public main <code>72964bb</code> also exercises the
-real bridge on the Pi with a USB-inert reader at both supported
-geometries. Preview delivered four normal plus eight delayed frames with
-zero warm-baseline RSS growth. Full resolution exposed 3664x2748 YUYV,
-delivered two normal plus three delayed frames across detach/reattach,
-and grew 29,504 KiB from its warmed baseline under the unchanged
-65,536-KiB bound. Both modes passed exact byte counts and frame digests,
-deterministic TERM, and scoped device/module cleanup. The physical
-corrected run and immediate hardware-reader reopen remain required.</p>
+without camera access. A physical run and its producer-versus-consumer
+comparison remain required. The <code>470b3d9</code> acceptance harness
+composes those exact steps and passes its static/inert checks on Apple
+Silicon, Raspberry Pi AArch64, Ubuntu, and macOS. Public main
+<code>72964bb</code> also exercises the real bridge on the Pi with a
+USB-inert reader at both supported geometries. Preview delivered four
+normal plus eight delayed frames with zero warm-baseline RSS growth.
+Full resolution exposed 3664x2748 YUYV, delivered two normal plus three
+delayed frames across detach/reattach, and grew 29,504 KiB from its
+warmed baseline under the unchanged 65,536-KiB bound. Both modes passed
+exact byte counts and frame digests, deterministic TERM, and scoped
+device/module cleanup. Public main <code>caea706</code> now lets this
+physical gate run with <code>-</code> as an explicitly uncorrected
+transport/application test, independently of hands-on optical
+calibration. A map path retains strict geometry, Bayer-phase, exposure,
+and gain checks. The exact candidate passed complete Apple Silicon and
+Raspberry Pi AArch64 suites; on the Pi, its token-gated zero-camera
+preflight failed closed with status 69, created no partial evidence
+directory, and touched neither bridge nor loopback state. The physical
+uncorrected run and immediate hardware-reader reopen remain required
+first; a later matching-map repeat remains required before claiming
+corrected physical delivery.</p>
 <p>Exact public post-merge main <code>72964bb</code> was also rebuilt
 and physically regressed against the directly attached optical system on
 Apple Silicon. At 250 ms/gain 0 it delivered three distinct 1280x960
@@ -3222,6 +3242,17 @@ select native libusb even when an older Intel Homebrew tree is earlier
 on the host path. See <a
 href="../evidence/current-main-macos-optical-regression.html">current-main
 Apple Silicon optical regression</a>.</p>
+<p>Public main <code>caea706</code> removes optical calibration as a
+prerequisite for the first physical Linux application test. The live
+harness records an explicit <code>uncorrected</code> calibration mode
+when passed <code>-</code>, while preserving the strict map-backed path
+and its settings checks. Exact Apple Silicon and Raspberry Pi AArch64
+suites passed, and a token-gated Pi preflight stopped at the expected
+zero-camera condition without creating evidence or loopback state. The
+standard Debian <code>time</code> package is now included in the
+documented Linux dependencies. See <a
+href="../evidence/linux-v4l2-uncorrected-acceptance-preparation.html">uncorrected
+physical Linux V4L2 acceptance preparation</a>.</p>
 <p>The current <a
 href="../evidence/release-acceptance-audit.html">release acceptance
 audit</a> marks the Linux reader/API, preview endurance, application
@@ -4118,6 +4149,21 @@ Apple Silicon optical regression</a></td>
 <td>VERIFIED PHYSICAL CROSS-PLATFORM REGRESSION + FULL OPTICAL RASTER /
 LINUX CABLE RUN OPEN</td>
 </tr>
+<tr>
+<td>E-075</td>
+<td>Public main <code>caea706</code> lets the bounded live Linux V4L2
+harness run an explicitly uncorrected USB-to-application gate before
+optical calibration while preserving the strict map-backed corrected
+path. The exact candidate passed complete Apple Silicon and Raspberry Pi
+AArch64 suites; a token-gated Pi preflight passed selector/dependency
+validation, then failed closed at the expected zero-camera check with
+status 69, creating no partial evidence or loopback state</td>
+<td><a
+href="../evidence/linux-v4l2-uncorrected-acceptance-preparation.html">Uncorrected
+physical Linux V4L2 acceptance preparation</a></td>
+<td>VERIFIED GATE DECOUPLING + CROSS-PLATFORM PORTABILITY / PHYSICAL
+CABLE RUN OPEN</td>
+</tr>
 </tbody>
 </table>
 <h2 data-number="5.7" id="risk-register"><span
@@ -4235,17 +4281,19 @@ evidence.</label></li>
 </ul>
 <blockquote>
 <p><strong>Current recommendation:</strong> keep the evidence-backed
-userspace protocol fixed. On the present Mac-mounted optical bench, run
-the public guided flat-field session and follow each prompt literally:
-block illumination for darks, translate or defocus between flat batches,
-then reserve a fresh blank and real specimen for validation. The helper
-locks exposure/gain/phase, builds a settings-bound map, and retains
-raw/corrected frames and hashes together. At the next convenient cable
-move, run the staged live Linux V4L2 acceptance so an ordinary
-application consumes the corrected camera stream and consumer-side
-cadence/drop behavior is recorded. Known-target color/focus work remains
-the D60 exit gate; firmware discovery and AVFoundation remain non-gating
-fallbacks.</p>
+userspace protocol fixed. At the next convenient cable move, run the
+staged live Linux V4L2 acceptance first with <code>-</code> so an
+ordinary application consumes the uncorrected camera stream and
+producer/consumer cadence, cleanup, and immediate reopen are recorded
+independently of calibration. Then, on the optical bench, run the public
+guided flat-field session and follow each prompt literally: block
+illumination for darks, translate or defocus between flat batches, and
+reserve a fresh blank and real specimen for validation. The helper locks
+exposure/gain/phase, builds a settings-bound map, and retains
+raw/corrected frames and hashes together. Repeat the Linux V4L2
+acceptance with that map before claiming corrected physical delivery.
+Known-target color/focus work remains the D60 exit gate; firmware
+discovery and AVFoundation remain non-gating fallbacks.</p>
 </blockquote>
 </main>
 <script src="app.js"></script>
