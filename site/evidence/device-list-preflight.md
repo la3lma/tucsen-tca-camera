@@ -4,7 +4,9 @@ Date: 2026-10-04
 
 Issue [#35](https://github.com/la3lma/tucsen-tca-camera/issues/35)
 tracks a safe first diagnostic for every cable move. Candidate commit
-`109d4d1854dd6b597a521f02964de070362991a5` adds
+`109d4d1854dd6b597a521f02964de070362991a5`, merged through
+[PR #36](https://github.com/la3lma/tucsen-tca-camera/pull/36) as public main
+`b7263221f92dac695928f1e86f8392c4868b20c3`, adds
 `tca-camera list`, which enumerates only the exact supported USB identity
 `0547:c003` and reports its bus, address, and negotiated USB speed.
 
@@ -23,9 +25,9 @@ multiple cameras for capture.
 
 ## Apple Silicon exact-device result
 
-The candidate passed the complete Apple Silicon suite with a scoped native
-ARM64 libusb. With the camera connected directly to the workstation, the new
-command returned:
+The candidate and exact merged main passed the complete Apple Silicon suite
+with a scoped native ARM64 libusb. With the camera connected directly to the
+workstation, the new command returned:
 
 ```text
 target=0547:c003
@@ -40,10 +42,11 @@ instance only and are not stable camera serial numbers.
 
 ## Raspberry Pi AArch64 result
 
-A fresh shallow checkout of the exact candidate on `rpios-17` built and passed
-the complete suite, including the Linux-only reproducible Debian-package test.
-The extracted package reader executed both `--version` and `list`. With the
-camera still attached to the Mac, the candidate Pi binary returned:
+A fresh shallow checkout of the candidate and then exact merged main on
+`rpios-17` each built and passed the complete suite, including the Linux-only
+reproducible Debian-package test. The extracted package reader executed both
+`--version` and `list`. With the camera still attached to the Mac, the merged
+Pi binary returned:
 
 ```text
 tca-camera 0.2.0-alpha.12
