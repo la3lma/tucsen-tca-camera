@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reproducible Debian package and native AArch64 installation — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1
+id="reproducible-debian-package-and-native-aarch64-installation">Reproducible
+Debian package and native AArch64 installation</h1>
+<p>Date: 2026-10-04</p>
+<p>Public main commit
+<code>30c31e2286127059f7917ca1afccf75703413b55</code>, merged through <a
+href="https://github.com/la3lma/tucsen-tca-camera/pull/27">PR #27</a>,
+adds an architecture-native Debian binary-package path for the
+Linux-first reader. This closes the gap between a tested staged
+<code>make install</code> and a package that a Raspberry Pi OS, Debian,
+or Ubuntu user can inspect, install, verify, and remove through the
+normal package database.</p>
+<h2 id="package-boundary">Package boundary</h2>
+<p><code>make deb</code> invokes a rootless builder. It compiles the
+existing public userspace programs, stages them under
+<code>/usr/bin</code>, adds the exact <code>0547:c003</code> udev rule
+under <code>/usr/lib/udev/rules.d</code>, installs the public protocol,
+validation, optical, license, notice, changelog, and README documents,
+and emits one native <code>.deb</code> under the ignored
+<code>dist/</code> directory.</p>
+<p>The binary package:</p>
+<ul>
+<li>contains the seven existing independently developed programs;</li>
+<li>depends on <code>libc6</code>, <code>libusb-1.0-0</code>, and
+<code>python3</code>;</li>
+<li>recommends FFmpeg, V4L2 utilities, <code>v4l2loopback</code>, and
+their ordinary system helpers;</li>
+<li>installs no camera-specific kernel code;</li>
+<li>safely reloads udev rules after installation or removal, without
+resetting or opening any USB device;</li>
+<li>uses a pinned <code>SOURCE_DATE_EPOCH</code>, root-owned archive
+metadata, exact-model permission matching, and collision refusal;
+and</li>
+<li>includes a dynamic Linux test that builds twice, requires
+byte-identical packages, inspects control/data archives, extracts all
+files, executes both installed-helper diagnostics, and verifies
+overwrite refusal.</li>
+</ul>
+<p>The builder and both diagnostics explicitly finish with
+<code>NO USB TRANSFER SENT</code>.</p>
+<h2 id="exact-main-raspberry-pi-proof">Exact-main Raspberry Pi
+proof</h2>
+<p>The exact merged main commit built and passed the complete suite on
+AArch64 host <code>rpios-17</code>. No <code>0547:c003</code> camera was
+attached. The Linux-only package test built two temporary packages from
+the same source/toolchain and required identical SHA-256 digests before
+inspecting their contents and executing the extracted
+<code>tca-v4l2 --diagnose-install</code> and
+<code>tca-ffmpeg --diagnose-install</code> paths.</p>
+<p>A separately retained exact-main package reported:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Package</td>
+<td><code>tucsen-tca-camera</code></td>
+</tr>
+<tr>
+<td>Version</td>
+<td><code>0.2.0~alpha10-1</code></td>
+</tr>
+<tr>
+<td>Architecture</td>
+<td><code>arm64</code></td>
+</tr>
+<tr>
+<td>Size</td>
+<td>51,056 bytes</td>
+</tr>
+<tr>
+<td>SHA-256</td>
+<td><code>269eb45f5c5bc6988bc9a59b73247a48f1c389fb1035121b78b0a22a7a9efdd2</code></td>
+</tr>
+</tbody>
+</table>
+<p>The same digest was produced before and after the PR squash merge,
+demonstrating that the fixed build inputs do not depend on the Git
+commit identifier. The exact-main archive was installed with
+<code>dpkg -i</code>, which reported <code>install ok installed</code>.
+<code>dpkg -V tucsen-tca-camera</code> returned no modified files. Both
+installed diagnostics resolved <code>/usr/bin/tca-camera</code> plus
+their required sibling tools and ended with
+<code>NO USB TRANSFER SENT</code>.</p>
+<p>Hosted Ubuntu and macOS CI passed on exact main in <a
+href="https://github.com/la3lma/tucsen-tca-camera/actions/runs/37216640301">run
+37216640301</a>. The macOS lane verifies the rest of the portable suite
+and explicitly skips the Linux-only <code>dpkg-deb</code> test; the
+Ubuntu and Raspberry Pi lanes execute it.</p>
+<h2 id="scope-and-remaining-gate">Scope and remaining gate</h2>
+<p>The native package is now installed on <code>rpios-17</code>, so the
+Pi is prepared for the direct-cable Linux acceptance run when the camera
+is moved from the Mac. This evidence proves package construction,
+contents, installation, integrity, helper discovery, and udev
+deployment. It does not claim camera enumeration, frame transfer, or
+V4L2 application consumption from the installed package; the bounded
+physical Linux gate remains open.</p>
+<p>No vendor binary, disassembly, firmware, packet capture, raw camera
+frame, or credential is included in the public repository or
+package.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

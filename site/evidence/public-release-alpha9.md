@@ -1,4 +1,4 @@
-# Public prerelease `v0.2.0-alpha.9`
+# Public prerelease v0.2.0-alpha.9
 
 Date: 2026-10-04
 
