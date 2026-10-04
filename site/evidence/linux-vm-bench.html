@@ -76,6 +76,28 @@ the guest. The corresponding live capture is
 <code>/tmp/virtualhere-20260929T140811Z.pcapng</code> and contained 14
 preflight packets before client attachment. See the <a
 href="virtualhere-trace-bench.html">fallback evidence</a>.</p>
+<h2 id="utm-shortcut-retry">2026-10-04 UTM shortcut retry</h2>
+<p>The Linux bench was retried after the userspace reader, complete
+optical frame assembly, and V4L2 acceptance harness were available.
+Ubuntu booted normally at <code>192.168.64.4</code>, but neither
+<code>utmctl usb connect</code> by <code>0547:c003</code> nor by the
+reported host location produced guest enumeration. macOS continued to
+show the camera active, configured at high speed, and idle. The VM was
+stopped cleanly.</p>
+<p>Exact public main
+<code>d39e7971eb62c23dcac13e5c16d5cc964a6564d7</code> then reopened the
+camera directly on macOS and captured one complete 1280x960 frame at
+requested 250 ms/gain 0. The reader exited
+<code>frames=1 status=ok</code>; the Bayer frame hash is
+<code>020819d6e72cb9b272ed124d9e41d49d6c2999c39b5f70c886cac95a5857268d</code>,
+with zero zero-valued and zero saturated pixels. The raw record, Bayer
+frame, statistics, display derivative, summary, and manifest are
+retained privately under the report project’s
+<code>work/utm-shortcut-attempt-20261004/</code> directory.</p>
+<p>This reconfirms that UTM is not a substitute for the pending direct
+Linux cable run on this host/UTM build. Do not retry the same attachment
+paths unless the USB implementation changes or new evidence identifies a
+specific fix.</p>
 
   </main>
   <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>

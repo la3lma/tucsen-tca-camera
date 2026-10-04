@@ -406,7 +406,7 @@ Docstack</a></td>
 </tr>
 <tr>
 <td>Revision</td>
-<td>4.8, use cases expressed in Cockburn form and UML; delivered-frame
+<td>4.9, use cases expressed in Cockburn form and UML; delivered-frame
 cadence measured in both recovered modes; Linux V4L2 producer timing and
 bounded acceptance harness prepared; camera-free consumer
 detach/reattach, slow-consumer, bounded-memory, signal, and cleanup
@@ -418,14 +418,16 @@ independent FFmpeg process over a plain pipe on macOS for 17,200
 distinct frames across 30 minutes with bounded memory and immediate
 camera reopen; installed V4L2 helper discovery corrected and verified in
 a fresh staged AArch64 install; current ToupTek SDK and USB-updater
-surfaces statically rechecked without executing vendor code; uncorrected
-physical Linux transport acceptance independently runnable before
-optical calibration and protected by a recorded wall-clock consumer
-deadline; historical evidence placeholders and the decision ledger
-reconciled with current verified state; public alpha-8 packages the
-full-resolution application path and bounded Linux gate; public evidence
-rendered as HTML and guarded by a permanent full-history privacy
-policy</td>
+surfaces statically rechecked without executing vendor code; the UTM
+Linux shortcut was rechecked, remained unable to enumerate the host
+camera, and was followed by an exact-main macOS capture proving clean
+ownership hand-back; uncorrected physical Linux transport acceptance
+independently runnable before optical calibration and protected by a
+recorded wall-clock consumer deadline; historical evidence placeholders
+and the decision ledger reconciled with current verified state; public
+alpha-8 packages the full-resolution application path and bounded Linux
+gate; public evidence rendered as HTML and guarded by a permanent
+full-history privacy policy</td>
 </tr>
 <tr>
 <td>Execution state</td>
@@ -4413,6 +4415,22 @@ discovery</a> and <a
 href="../evidence/existing-linux-driver-candidates.html">existing Linux
 candidates</a></td>
 <td>VERIFIED STATIC NEGATIVE / NON-GATING</td>
+</tr>
+<tr>
+<td>E-083</td>
+<td>The project-local ARM64 Ubuntu UTM bench still could not enumerate
+the Mac-attached camera through current UTM USB redirection by VID/PID
+or host location. The guest was stopped cleanly; exact public main
+<code>d39e797</code> then reopened the camera directly on macOS and
+captured one complete 1280x960 frame at 250 ms/gain 0 with exact byte
+counts, zero black/saturated pixels, and Bayer SHA-256
+<code>020819d6e72cb9b272ed124d9e41d49d6c2999c39b5f70c886cac95a5857268d</code>.
+This closes the unchanged VM shortcut and leaves the prepared direct-Pi
+cable run as the physical Linux gate</td>
+<td><a href="../evidence/linux-vm-bench.html">Project-local Linux VM
+bench</a></td>
+<td>VERIFIED NEGATIVE PASSTHROUGH + MACOS HAND-BACK / DIRECT LINUX CABLE
+RUN OPEN</td>
 </tr>
 </tbody>
 </table>
