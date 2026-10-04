@@ -369,6 +369,23 @@ metadata, cleanup status, immediate reader reuse, and a SHA-256 manifest. A
 producer/consumer count delta is retained as bounded pipeline evidence and is
 not automatically mislabeled as a dropped-frame count.
 
+The same bridge can be exercised without the camera before a physical run.
+This root-only, token-gated acceptance substitutes a deterministic reader,
+applies a synthetic flat-field map, attaches and detaches two ordinary V4L2
+consumers, deliberately slows the second consumer, checks bounded bridge-tree
+RSS, and verifies device/module cleanup. It never imports libusb or sends a USB
+transfer:
+
+```sh
+tools/run_v4l2_bridge_synthetic_acceptance.sh
+sudo tools/run_v4l2_bridge_synthetic_acceptance.sh \
+  --run-v4l2-bridge-synthetic-acceptance capture/v4l2-synthetic-evidence 44
+```
+
+The synthetic pass proves bridge lifecycle, correction, backpressure, and
+cleanup behavior on that Linux host. It does not replace the physical-camera
+application run or validate optical calibration.
+
 ## Protocol and safety
 
 The recovered wire behavior, frame layout, evidence boundary, and known

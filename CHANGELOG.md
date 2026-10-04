@@ -8,6 +8,9 @@
 - Add an inert-by-default Linux V4L2 acceptance harness that composes a valid
   flat-field map, producer timing, bounded application consumption, frame
   digests, cleanup, immediate reopen, and a complete evidence manifest.
+- Add a USB-inert synthetic-reader acceptance for the real V4L2 bridge,
+  including application detach/reattach, deliberately slow consumption,
+  bounded process-tree RSS, timestamp analysis, and exact loopback cleanup.
 
 ## 0.2.0-alpha.7 — 2026-10-04
 
