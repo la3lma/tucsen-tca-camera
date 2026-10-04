@@ -466,3 +466,25 @@ time mapping. The timing result does not independently prove the true sensor
 integration time, and the 1-ms preview run includes a small number of longer
 intervals. It does establish realistic application-facing cadence for both
 recovered modes without inventing timestamps inside the headerless Bayer data.
+
+## Post-V4L2-merge Apple Silicon optical regression
+
+The exact public commit `72964bb608102fa82232a8de966189219ec4309c` was
+rebuilt and physically exercised after the full-resolution V4L2 change was
+merged. At 250 ms and gain 0, three 1280x960 frames arrived at 9.51334 fps and
+two complete 3664x2748 frames arrived at 2.75318 fps. Every command exited
+zero, every byte count and timestamp-row count was exact, all five frame hashes
+were distinct, and neither first frame contained zero or saturated pixels.
+
+Lossless provisional-GRBG renders showed the same coherent dust field in both
+modes. Full resolution covered the entire sensor raster, visibly carried more
+scene detail, and had neither a half-frame black boundary nor an edge strip.
+Public display derivatives, hashes, detailed statistics, and the bounded scope
+of the result are in the [rendered evidence
+record](../site/evidence/current-main-macos-optical-regression.html).
+
+The build also exposed an independent host configuration problem: the default
+`/usr/local/bin/pkg-config` selected Intel-only libusb on an ARM64 host. The
+Makefile now accepts a scoped `LIBUSB_PKG_CONFIG_PATH` override and tests its
+use, while the README documents the dual-Homebrew recovery path. Physical
+Linux V4L2 application acceptance remains open and requires moving the cable.

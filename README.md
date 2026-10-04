@@ -81,6 +81,20 @@ make
 make test
 ```
 
+On Apple Silicon, an older Intel Homebrew tree under `/usr/local` can cause
+`pkg-config` to select an `x86_64` libusb while the compiler produces an
+`arm64` reader. If the linker reports that architecture mismatch, install or
+locate a native libusb and point this build only at its package metadata:
+
+```sh
+make clean all test \
+  LIBUSB_PKG_CONFIG_PATH=/path/to/native/lib/pkgconfig
+```
+
+A standard native Homebrew installation normally uses
+`/opt/homebrew/opt/libusb/lib/pkgconfig`. This override does not modify the
+shell's global package search path or either Homebrew installation.
+
 The camera-specific implementation is entirely userspace code. On a headless
 Linux system, either run with appropriate USB permissions or install the
 optional rule in [`udev/99-tucsen-tca-camera.rules`](udev/99-tucsen-tca-camera.rules).
