@@ -2,7 +2,8 @@
 
 Date: 2026-10-04
 
-Candidate commit `5670678` removes an unnecessary dependency between physical
+Candidate commit `5670678`, merged as public main `caea706`, removes an
+unnecessary dependency between physical
 Linux application transport acceptance and the separate hands-on optical
 dark/flat calibration. The camera cable can now move to Linux and prove the
 ordinary-application path immediately, while corrected physical delivery
