@@ -16,12 +16,13 @@
   <main class="evidence-record">
 <h1 id="release-acceptance-audit">Release acceptance audit</h1>
 <p>Date: 2026-10-04</p>
-<p>Scope: public Linux-first prerelease <code>v0.2.0-alpha.7</code> plus
-post-release producer timing, physical-acceptance preparation,
-camera-free V4L2 lifecycle, and the two-mode V4L2 application candidate
-<code>a93f538</code>, including optically validated record-boundary
-assembly, gain, motion, white-balance, calibrated-field tooling, and
-measured direct-reader cadence.</p>
+<p>Scope: public Linux-first prerelease <code>v0.2.0-alpha.7</code>
+through public main <code>0ff17a6</code>, including post-release
+producer timing, physical-acceptance preparation, two-mode camera-free
+V4L2 lifecycle, exact-post-merge physical Apple Silicon regression,
+optically validated record-boundary assembly, gain, motion,
+white-balance, calibrated-field tooling, measured direct-reader cadence,
+and mutually linked public evidence, Docstack, and report.</p>
 <p>This is a readiness audit, not owner acceptance. It distinguishes a
 useful Linux alpha from completion of every item in the Docstack
 Definition of Done.</p>
@@ -44,10 +45,11 @@ Definition of Done.</p>
 <td>1. Still acquisition</td>
 <td>Pass for spatial capture; color calibration partial</td>
 <td>Correct record assembly produces coherent 1280x960 and complete
-3664x2748 Bayer rasters. Three consecutive full-resolution frames have
-distinct hashes and no left strip. Multi-resolution PNGs are verified. A
-10x configuration produced unclipped preview and full-resolution stills
-at 250 ms/gain 0 after a bounded sweep. Final Bayer phase and
+3664x2748 Bayer rasters. Exact post-merge public main physically
+produced three distinct preview and two distinct complete
+full-resolution frames at 250 ms/gain 0; the analyzed first frames were
+unclipped and the published full-resolution image has neither the
+historic half-black boundary nor an edge strip. Final Bayer phase and
 known-target color response remain open.</td>
 </tr>
 <tr>
@@ -56,9 +58,9 @@ known-target color response remain open.</td>
 physical Linux application retest partial</td>
 <td>A corrected 16-frame run produced 16 distinct coherent frames and an
 H.264 proof clip. Earlier 14,400-frame testing establishes USB/process
-endurance but used the superseded multi-request image assembly.
-Candidate <code>a93f538</code> passed camera-free V4L2 detach/reattach
-and delayed consumers at both 1280x960 and 3664x2748 with bounded
+endurance but used the superseded multi-request image assembly. Public
+main <code>72964bb</code> includes camera-free V4L2 detach/reattach and
+delayed-consumer passes at both 1280x960 and 3664x2748 with bounded
 warm-pipeline RSS, but the post-fix physical Linux consumer cadence/drop
 comparison remains open.</td>
 </tr>
@@ -87,7 +89,7 @@ no arbitrary USB request surface. Ubuntu and macOS CI pass.</td>
 <td>Pass for software lifecycle at preview and full resolution; physical
 corrected run open</td>
 <td>FFmpeg creates coherent stills and H.264 from the corrected macOS
-reader. Candidate <code>a93f538</code> exercised the real Linux V4L2
+reader. Public main <code>72964bb</code> exercised the real Linux V4L2
 bridge with a USB-inert reader at 1280x960 and 3664x2748: exact
 application byte counts, consumer detach/reattach, delayed consumption,
 bounded post-warm-up RSS, deterministic TERM status, and complete
@@ -135,9 +137,11 @@ request, or kernel camera driver is exposed.</td>
 <td>NFR-02 portability</td>
 <td>Pass for the direct reader API</td>
 <td>The core builds and tests on AArch64 Linux and Apple Silicon macOS.
-The exact-tag Apple Silicon binary captured the physical camera directly
-in both supported modes with exact frame sizes and exit zero, then
-reopened preview in a fresh process. Byte layout and packing are
+Exact post-V4L2-merge public main captured the physical camera directly
+in both supported modes with exact frame sizes, changing coherent
+optical content, measured cadence, and exit zero. Public main
+<code>8319696</code> adds a tested, build-scoped native-libusb package
+path for mixed Intel/ARM Homebrew hosts. Byte layout and packing are
 explicit. An AVFoundation surface remains deferred.</td>
 </tr>
 <tr>
@@ -175,12 +179,12 @@ gate.</td>
 <td>Exact tag <code>v0.2.0-alpha.7</code> is published from commit
 <code>72f6e63</code>. Independent main/tag Ubuntu and macOS CI passed;
 the exact commit passed the complete Raspberry Pi AArch64 suite; and the
-downloaded tag archive passed the suite outside a Git checkout.
-Post-release commits <code>a60ecac</code> and <code>470b3d9</code> pass
-Apple Silicon, Raspberry Pi AArch64, Ubuntu, and macOS suites. Candidate
-<code>a93f538</code> adds exact-commit Pi suite and manifested
-preview/full-resolution camera-free lifecycle runs plus successful
-Ubuntu/macOS CI.</td>
+downloaded tag archive passed outside a Git checkout. Public main
+<code>72964bb</code> adds exact-commit Pi and manifested
+preview/full-resolution V4L2 lifecycle runs; <code>8319696</code>
+publishes the post-merge physical Mac evidence and scoped libusb
+discovery; <code>0ff17a6</code> publishes Docstack revision 3.9 and the
+16-page report. Their hosted CI and Pages deployments pass.</td>
 </tr>
 <tr>
 <td>NFR-08 legal hygiene</td>
@@ -209,6 +213,16 @@ and</li>
 <li>review and accept each row above against the final release commit
 and hash.</li>
 </ol>
+<h2 id="publication-verification">Publication verification</h2>
+<p>Public main <code>0ff17a6</code> deploys the rendered E-074 record,
+clickable 1280x960 and 3664x2748 images, Docstack revision 3.9, and the
+16-page PDF report. The report downloaded independently from the project
+Pages site and Journal of Bjorn is byte-identical to the locally
+verified PDF:</p>
+<pre class="text"><code>f0b51d726294d20b836f6f6b797ce598ef9e18360ea807ee2ea103c5d24e628e  microscope-window-sensor.pdf</code></pre>
+<p>The public full-resolution JPEG likewise matches its retained
+derivative:</p>
+<pre class="text"><code>49c4d0403e69af2906f341598d8f0070eea1edea7e511246633fdd9ff9043e64  current-main-mode0-optical.jpg</code></pre>
 
   </main>
   <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
