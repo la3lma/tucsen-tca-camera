@@ -14,10 +14,10 @@ Linux alpha from completion of every item in the Docstack Definition of Done.
 |---|---|---|
 | 1. Still acquisition | Pass for spatial capture; color calibration partial | Correct record assembly produces coherent 1280x960 and complete 3664x2748 Bayer rasters. Three consecutive full-resolution frames have distinct hashes and no left strip. Multi-resolution PNGs are verified. A 10x configuration produced unclipped preview and full-resolution stills at 250 ms/gain 0 after a bounded sweep. Final Bayer phase and known-target color response remain open. |
 | 2. Streaming | Pass for userspace stream; Linux application retest partial | A corrected 16-frame run produced 16 distinct coherent frames and an H.264 proof clip. Earlier 14,400-frame testing establishes USB/process endurance but used the superseded multi-request image assembly. Post-fix Linux V4L2 should be retested. |
-| 3. Operation | Partial | Cold start, mode 0/mode 2 selection, start/stop lifecycle, exposure, and analog gain are bounded. A 100-ms optical sweep verified monotonic gain 0..320, and one stale pre-control record is now discarded before frame zero. Neutral-background white-balance estimation is verified; automatic exposure and adaptive color correction remain open. |
+| 3. Operation | Partial | Cold start, mode 0/mode 2 selection, start/stop lifecycle, exposure, and analog gain are bounded. A 100-ms optical sweep verified monotonic gain 0..320, and one stale pre-control record is now discarded before frame zero. Neutral-background white-balance estimation is verified. New flat-field maps bind exposure/gain and the V4L2 path fails before camera or loopback mutation on mismatch; true blocked-light dark and blank-field calibration, automatic exposure, and adaptive color correction remain open. |
 | 4. Reader API | Pass | Portable C17 userspace core and CLI provide deterministic raw/Bayer capture, structured diagnostics, bounded controls, dry-run output, and no arbitrary USB request surface. Ubuntu and macOS CI pass. |
-| 5. Application path | Partial | FFmpeg creates coherent stills and H.264 from the corrected macOS reader. The existing Linux V4L2 adapter consumes reader stdout and requires no structural change, but its earlier live proof predates the assembly correction. AVFoundation remains deferred. |
-| 6. Evidence and recovery | Pass for reconnect; ongoing for calibration | Protocol notes, hashes, safety boundaries, tests, process-kill recovery, repeated reopen, endurance, host reboot, ownership hand-back, physical cable reconnect, and microscope-mounted capture are recorded. |
+| 5. Application path | Partial | FFmpeg creates coherent stills and H.264 from the corrected macOS reader. The existing Linux V4L2 adapter consumes reader stdout; a synthetic corrected-stream preflight delivered six frames through a temporary loopback to a separate consumer, but the live-camera proof still predates the assembly correction. AVFoundation remains deferred. |
+| 6. Evidence and recovery | Pass for reconnect; ongoing for calibration | Protocol notes, hashes, safety boundaries, tests, process-kill recovery, repeated reopen, endurance, host reboot, ownership hand-back, physical cable reconnect, microscope-mounted capture, and a clearly labeled physical-size self-flat diagnostic are recorded. The diagnostic proves correction plumbing while explicitly rejecting its scene-erasing output as optical calibration. |
 
 ## Non-functional requirements
 
@@ -37,9 +37,11 @@ Linux alpha from completion of every item in the Docstack Definition of Done.
 The present release is a useful userspace alpha, but D120 remains open. The
 minimum remaining acceptance path is:
 
-1. validate Bayer phase/color against a known target;
-2. retest the corrected stream through Linux V4L2 and record measured timing;
-3. validate a manual focus curve and choose calibrated exposure/gain defaults;
-4. retain the recorded Linux-first deferral for AVFoundation, or reopen the
+1. capture a same-settings blocked-light dark and translated/defocused blank
+   flat, then verify a fresh blank and specimen through the settings-bound map;
+2. validate Bayer phase/color against a known target;
+3. retest the corrected stream through Linux V4L2 and record measured timing;
+4. validate a manual focus curve and choose calibrated exposure/gain defaults;
+5. retain the recorded Linux-first deferral for AVFoundation, or reopen the
    application-surface portion of D90 if the owner changes scope; and
-5. review and accept each row above against the final release commit and hash.
+6. review and accept each row above against the final release commit and hash.

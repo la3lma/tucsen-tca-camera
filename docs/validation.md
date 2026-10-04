@@ -44,6 +44,16 @@ the destructive, root-only loopback portion explicitly with:
 sudo tools/run_flat_field_v4l2_preflight.sh --run-flat-field-v4l2-preflight
 ```
 
+The map format now binds calibration provenance to the camera controls. Public
+commit `6eb68a7` stores the calibration exposure and normalized camera gain in
+previously reserved `TCAFF01` header bytes. Old maps remain readable and can be
+applied directly, but inspect with `null` settings and are deliberately refused
+by `tca-v4l2`. A repeated Pi preflight recorded a 100-ms/gain-20 map and again
+delivered all six corrected frames through `/dev/video43`. A deliberate
+101-ms/gain-20 request exited 65 before creating a raw file or device node,
+loading `v4l2loopback`, or opening the camera. Native tests on the Mac and Pi,
+plus hosted Ubuntu/macOS CI, pass the change.
+
 ## Capture and reopen checks
 
 One invocation captured 30 frames with 400-ms exposure and normalized gain 20
@@ -336,3 +346,31 @@ settling record, completed in 2.03 seconds. The frames were encoded as a
 The first corrected frame had mean 83.30, median 91, p99 125, eight saturated
 pixels out of 1,228,800, and no zero pixels. This setting is a useful starting
 point for the present microscope, not a calibrated default for other lighting.
+
+## Physical-size flat-field pipeline diagnostic
+
+With the camera still mounted on the microscope and directly connected to the
+Apple Silicon workstation, the public reader captured 24 exact preview frames
+at 250-ms exposure and gain 0: 29,491,200 Bayer bytes, with
+`frames=24 status=ok`. The first 16 frames were intentionally used as a
+self-flat and the final eight as inputs. A separate 16-frame run at 1-ms/gain
+0, with illumination still on, served only as a low-exposure proxy for a dark.
+It had mean 10.684 and is explicitly not a blocked-light dark reference.
+
+Applying the full-size map corrected all eight frames. In the first frame, the
+ratio between the brightest and darkest equal-area cells of a 3x3 intensity
+grid fell from 1.336910 to 1.001023. The near-uniform result is the expected
+failure mode of a self-flat: it divides away the specimen scene together with
+the illumination envelope. The run therefore validates exact physical frame
+plumbing and per-pixel correction, not optical calibration. A valid map still
+requires same-settings blocked-light darks and translated or defocused blank
+fields, followed by validation against a fresh blank and a real specimen.
+
+Selected retained hashes are:
+
+```text
+3717fdb97304b7de23370bd33033689986bbdbaeeaad3ab481b79672a4237f03  first untouched device record
+22226d313db179cb8a5fdd0353a6a028fd8e345a2204b9b259ce01435d285e96  24 physical Bayer frames
+b88eb92558bbda82e1ab8481db0413212a99bd694bd3f1e57aff118447dcee63  diagnostic proxy-dark calibration
+2bfafe86a522607882ff108f7a5c7b2353082cd0579afd2927903ea7eb2665d8  eight corrected physical frames
+```
