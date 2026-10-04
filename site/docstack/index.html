@@ -406,35 +406,39 @@ Docstack</a></td>
 </tr>
 <tr>
 <td>Revision</td>
-<td>5.2, the downloaded exact alpha-9 archive physically records and
-independently decodes a 30-frame microscope clip through the packaged
-helper, then immediately reopens the camera; annotated alpha-9 packages
-the verified one-command FFplay/H.264 helper and passes exact-main,
-exact-tag, Raspberry Pi AArch64, and downloaded-archive verification;
-use cases expressed in Cockburn form and UML; delivered-frame cadence
-measured in both recovered modes; Linux V4L2 producer timing and bounded
-acceptance harness prepared; camera-free consumer detach/reattach,
-slow-consumer, bounded-memory, signal, and cleanup behavior verified on
-the Pi at both 1280x960 preview and complete 3664x2748 full resolution;
-exact post-merge main and downloaded alpha-8 release archive physically
-regressed in both optical modes on Apple Silicon; exact alpha-8 live
-output consumed and recorded by an independent FFmpeg process over a
-plain pipe on macOS for 17,200 distinct frames across 30 minutes with
-bounded memory and immediate camera reopen; installed V4L2 helper
-discovery corrected and verified in a fresh staged AArch64 install; a
-packaged cross-platform FFplay/H.264 helper physically recorded an
-exact-frame microscope clip with measured producer timing and immediate
-reopen, then passed the complete Pi AArch64 suite; current ToupTek SDK
-and USB-updater surfaces statically rechecked without executing vendor
-code; the UTM Linux shortcut was rechecked, remained unable to enumerate
-the host camera, and was followed by an exact-main macOS capture proving
-clean ownership hand-back; uncorrected physical Linux transport
-acceptance independently runnable before optical calibration and
-protected by a recorded wall-clock consumer deadline; historical
-evidence placeholders and the decision ledger reconciled with current
-verified state; public alpha-8 packages the full-resolution application
-path and bounded Linux gate; public evidence rendered as HTML and
-guarded by a permanent full-history privacy policy</td>
+<td>5.3, exact merged main builds a reproducible architecture-native
+Debian package, passes native Raspberry Pi AArch64 package inspection,
+installs through dpkg with clean integrity, and leaves the Pi prepared
+for its direct-camera Linux run; the downloaded exact alpha-9 archive
+physically records and independently decodes a 30-frame microscope clip
+through the packaged helper, then immediately reopens the camera;
+annotated alpha-9 packages the verified one-command FFplay/H.264 helper
+and passes exact-main, exact-tag, Raspberry Pi AArch64, and
+downloaded-archive verification; use cases expressed in Cockburn form
+and UML; delivered-frame cadence measured in both recovered modes; Linux
+V4L2 producer timing and bounded acceptance harness prepared;
+camera-free consumer detach/reattach, slow-consumer, bounded-memory,
+signal, and cleanup behavior verified on the Pi at both 1280x960 preview
+and complete 3664x2748 full resolution; exact post-merge main and
+downloaded alpha-8 release archive physically regressed in both optical
+modes on Apple Silicon; exact alpha-8 live output consumed and recorded
+by an independent FFmpeg process over a plain pipe on macOS for 17,200
+distinct frames across 30 minutes with bounded memory and immediate
+camera reopen; installed V4L2 helper discovery corrected and verified in
+a fresh staged AArch64 install; a packaged cross-platform FFplay/H.264
+helper physically recorded an exact-frame microscope clip with measured
+producer timing and immediate reopen, then passed the complete Pi
+AArch64 suite; current ToupTek SDK and USB-updater surfaces statically
+rechecked without executing vendor code; the UTM Linux shortcut was
+rechecked, remained unable to enumerate the host camera, and was
+followed by an exact-main macOS capture proving clean ownership
+hand-back; uncorrected physical Linux transport acceptance independently
+runnable before optical calibration and protected by a recorded
+wall-clock consumer deadline; historical evidence placeholders and the
+decision ledger reconciled with current verified state; public alpha-8
+packages the full-resolution application path and bounded Linux gate;
+public evidence rendered as HTML and guarded by a permanent full-history
+privacy policy</td>
 </tr>
 <tr>
 <td>Execution state</td>
@@ -495,12 +499,17 @@ short preview retained its startup cadence transient. Exact Apple
 Silicon, Pi AArch64, Ubuntu, and macOS suites pass. Public main
 <code>e163250</code> fixes installed V4L2 helper discovery and passes a
 fresh staged AArch64 installation diagnostic without camera access.
-Public evidence is rendered as navigable HTML and protected by a
-full-history ban on raw disassembly, vendor binaries, firmware, traces,
-and private work. Final known-target Bayer/color calibration, true
-blocked-light dark and blank-field flat execution, execution of the
-uncorrected live-camera Linux V4L2 gate, and its later map-backed
-corrected repeat remain open. AVFoundation remains deferred.</td>
+Public main <code>30c31e2</code> adds rootless reproducible Debian
+packaging; the exact-main ARM64 package has SHA-256
+<code>269eb45f5c5bc6988bc9a59b73247a48f1c389fb1035121b78b0a22a7a9efdd2</code>,
+is installed on <code>rpios-17</code>, passes <code>dpkg -V</code>, and
+resolves both USB-inert installed-helper diagnostics. Public evidence is
+rendered as navigable HTML and protected by a full-history ban on raw
+disassembly, vendor binaries, firmware, traces, and private work. Final
+known-target Bayer/color calibration, true blocked-light dark and
+blank-field flat execution, execution of the uncorrected live-camera
+Linux V4L2 gate, and its later map-backed corrected repeat remain open.
+AVFoundation remains deferred.</td>
 </tr>
 <tr>
 <td>Acceptance authority</td>
@@ -2022,15 +2031,17 @@ cable reconnect remain</td>
 <td>D110</td>
 <td>Package source and operations</td>
 <td>D100</td>
-<td>Active; alpha-9 released and independently verified</td>
+<td>Active; alpha-9 released and independently verified; exact-main
+ARM64 Debian package built and installed</td>
 <td>Public GitHub repository, Apache-2.0 license, one-command
 FFplay/H.264 helper, udev/V4L2 operations, CI, two modes, bounded
 initial recovery, optical and calibration procedures, independently
 runnable uncorrected Linux application gate, recorded consumer deadline,
 measured output cadence, clickable full-resolution evidence, scoped
 native-libusb discovery, permanent publication boundary, tested
-install/removal plus native AArch64 installed-helper discovery,
-validation record, and report links</td>
+install/removal, reproducible native Debian packaging, exact-model udev
+deployment, plus native AArch64 installed-helper discovery, validation
+record, and report links</td>
 </tr>
 <tr>
 <td>D120</td>
@@ -3230,13 +3241,15 @@ Fixtures, and Operations</h3>
 <tbody>
 <tr>
 <td>State</td>
-<td>Active; public alpha-9 packages the reader, one-command FFplay/H.264
-helper, both Linux application geometries, calibrated-field tooling,
-measured output cadence, bounded live acceptance, rendered evidence
-including a third-party FFmpeg recording and 30-minute endurance proof,
-permanent publication-boundary enforcement, and tested install/removal
-with corrected installed-helper discovery while residual physical
-validation continues</td>
+<td>Active; exact merged main additionally builds, inspects, and
+installs a reproducible native ARM64 Debian package on the Pi; public
+alpha-9 packages the reader, one-command FFplay/H.264 helper, both Linux
+application geometries, calibrated-field tooling, measured output
+cadence, bounded live acceptance, rendered evidence including a
+third-party FFmpeg recording and 30-minute endurance proof, permanent
+publication-boundary enforcement, and tested install/removal with
+corrected installed-helper discovery while residual physical validation
+continues</td>
 </tr>
 <tr>
 <td>Actors</td>
@@ -3428,6 +3441,19 @@ exact-release process immediately reopened the camera and captured
 another complete unclipped Bayer frame. Raw, timestamp, video, reopen,
 and manifest artifacts remain private; the derived checks and hashes are
 published in the same alpha-9 evidence record.</p>
+<p>Public main <code>30c31e2</code> additionally supplies a rootless,
+reproducible Debian binary-package builder. Exact merged main passed the
+complete Raspberry Pi AArch64 suite, including two-build byte
+reproducibility, package metadata and contents inspection, extracted
+installed-helper diagnostics, and overwrite refusal. Its 51,056-byte
+ARM64 development package has SHA-256
+<code>269eb45f5c5bc6988bc9a59b73247a48f1c389fb1035121b78b0a22a7a9efdd2</code>.
+The exact-main archive is installed on <code>rpios-17</code>;
+<code>dpkg -V</code> is clean, both installed diagnostics report
+<code>NO USB TRANSFER SENT</code>, and no camera was attached during the
+package proof. See the <a
+href="../evidence/debian-package-installation.html">Debian package and
+native AArch64 installation evidence</a>.</p>
 <p>The current <a
 href="../evidence/release-acceptance-audit.html">release acceptance
 audit</a> marks the Linux reader/API, preview endurance, application
@@ -4517,6 +4543,24 @@ saturated pixels</td>
 release</a></td>
 <td>VERIFIED EXACT-RELEASE PHYSICAL HELPER + DISTINCT DECODE + IMMEDIATE
 REOPEN / DIRECT LINUX V4L2 CABLE RUN OPEN</td>
+</tr>
+<tr>
+<td>E-087</td>
+<td>Public main <code>30c31e2</code> builds a rootless, reproducible
+architecture-native Debian package with the seven userspace programs,
+exact <code>0547:c003</code> udev rule, public documentation, safe
+rule-reload hooks, and no camera-specific kernel code. Exact merged main
+passed the complete Pi AArch64 suite; two-build byte identity, package
+inspection, extracted diagnostics, and collision refusal pass. The
+51,056-byte ARM64 archive has SHA-256
+<code>269eb45f5c5bc6988bc9a59b73247a48f1c389fb1035121b78b0a22a7a9efdd2</code>,
+is installed on <code>rpios-17</code>, passes <code>dpkg -V</code>, and
+resolves both USB-inert installed-helper diagnostics while no camera is
+attached</td>
+<td><a href="../evidence/debian-package-installation.html">Debian
+package and native AArch64 installation</a></td>
+<td>VERIFIED REPRODUCIBLE NATIVE PACKAGE + SYSTEM INSTALL / PHYSICAL
+CAMERA V4L2 RUN OPEN</td>
 </tr>
 </tbody>
 </table>
