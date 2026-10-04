@@ -94,10 +94,12 @@ bridge with a USB-inert reader at 1280x960 and 3664x2748: exact
 application byte counts, consumer detach/reattach, delayed consumption,
 bounded post-warm-up RSS, deterministic TERM status, and complete
 loopback cleanup passed. Public main <code>caea706</code> lets the
-bounded live-camera harness record an explicitly uncorrected
+live-camera harness record an explicitly uncorrected
 transport/application pass before optical calibration, without weakening
-the stricter map-backed path. The earlier physical proof predates the
-assembly correction. AVFoundation remains deferred.</td>
+the stricter map-backed path; <code>a2dbc06</code> adds a recorded
+wall-clock consumer deadline and preserves partial evidence on failure.
+The earlier physical proof predates the assembly correction.
+AVFoundation remains deferred.</td>
 </tr>
 <tr>
 <td>6. Evidence and recovery</td>

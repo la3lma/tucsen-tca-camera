@@ -406,15 +406,16 @@ Docstack</a></td>
 </tr>
 <tr>
 <td>Revision</td>
-<td>4.0, use cases expressed in Cockburn form and UML; delivered-frame
+<td>4.1, use cases expressed in Cockburn form and UML; delivered-frame
 cadence measured in both recovered modes; Linux V4L2 producer timing and
 bounded acceptance harness prepared; camera-free consumer
 detach/reattach, slow-consumer, bounded-memory, signal, and cleanup
 behavior verified on the Pi at both 1280x960 preview and complete
 3664x2748 full resolution; exact post-merge main physically regressed in
 both optical modes on Apple Silicon; uncorrected physical Linux
-transport acceptance independently runnable before optical calibration;
-public evidence rendered as HTML and guarded by a permanent full-history
+transport acceptance independently runnable before optical calibration
+and protected by a recorded wall-clock consumer deadline; public
+evidence rendered as HTML and guarded by a permanent full-history
 privacy policy</td>
 </tr>
 <tr>
@@ -464,7 +465,11 @@ calibration: <code>-</code> requests an explicitly uncorrected run,
 while a map retains strict geometry, Bayer-phase, exposure, and gain
 validation. The exact candidate passed Apple Silicon and Pi AArch64
 suites and failed closed on the Pi’s expected zero-camera preflight
-without creating evidence or loopback state. Exact Apple Silicon, Pi
+without creating evidence or loopback state. Public main
+<code>a2dbc06</code> adds a mode/settings-derived FFmpeg deadline,
+records consumer exit status, and hashes partial evidence after failure;
+exact Apple Silicon and Pi suites pass, and a Pi probe returned the
+expected timeout status 124 after 1.00 seconds. Exact Apple Silicon, Pi
 AArch64, Ubuntu, and macOS suites pass. Public evidence is rendered as
 navigable HTML and protected by a full-history ban on raw disassembly,
 vendor binaries, firmware, traces, and private work. Final known-target
@@ -1974,9 +1979,9 @@ over the native cable; system-camera surface deferred</td>
 <td>Active, Linux-first</td>
 <td>Reopen, endurance, process-kill, host reboot, direct Apple Silicon
 capture, bounded ownership hand-back, USB-inert V4L2 lifecycle in both
-geometries, and exact-post-merge optical regression passed; uncorrected
-physical Linux transport and later corrected repeat plus Pi cable
-reconnect remain</td>
+geometries, exact-post-merge optical regression, and wall-clock-bounded
+application acceptance passed; uncorrected physical Linux transport and
+later corrected repeat plus Pi cable reconnect remain</td>
 </tr>
 <tr>
 <td>D110</td>
@@ -3103,6 +3108,16 @@ directory, and touched neither bridge nor loopback state. The physical
 uncorrected run and immediate hardware-reader reopen remain required
 first; a later matching-map repeat remains required before claiming
 corrected physical delivery.</p>
+<p>Public main <code>a2dbc06</code> closes the last unbounded part of
+that staged run. The ordinary FFmpeg consumer now executes under a
+recorded deadline derived from requested exposure and frame count, with
+generous fixed and per-frame margin. Its exit status is retained. A
+timeout or other failure triggers the same bridge-cleanup trap and
+produces a manifest for the partial evidence instead of hanging
+indefinitely. The exact candidate passed complete Apple Silicon and
+Raspberry Pi AArch64 suites; on the Pi, GNU <code>timeout</code>
+terminated a 30-second sleeper after 1.00 seconds with the expected
+status 124.</p>
 <p>Exact public post-merge main <code>72964bb</code> was also rebuilt
 and physically regressed against the directly attached optical system on
 Apple Silicon. At 250 ms/gain 0 it delivered three distinct 1280x960
@@ -3253,6 +3268,14 @@ standard Debian <code>time</code> package is now included in the
 documented Linux dependencies. See <a
 href="../evidence/linux-v4l2-uncorrected-acceptance-preparation.html">uncorrected
 physical Linux V4L2 acceptance preparation</a>.</p>
+<p>Public main <code>a2dbc06</code> further makes the ordinary
+application side wall-clock-bounded, records its deadline and exit
+status in evidence profile v4, and preserves a manifest-hashed partial
+session after timeout or failure. The exact candidate passed complete
+Apple Silicon and Raspberry Pi AArch64 suites, and a direct Pi timeout
+probe returned status 124 after 1.00 seconds. This hardens the physical
+run without changing the distinction between uncorrected transport
+acceptance and later map-backed corrected delivery.</p>
 <p>The current <a
 href="../evidence/release-acceptance-audit.html">release acceptance
 audit</a> marks the Linux reader/API, preview endurance, application
@@ -4162,6 +4185,21 @@ status 69, creating no partial evidence or loopback state</td>
 href="../evidence/linux-v4l2-uncorrected-acceptance-preparation.html">Uncorrected
 physical Linux V4L2 acceptance preparation</a></td>
 <td>VERIFIED GATE DECOUPLING + CROSS-PLATFORM PORTABILITY / PHYSICAL
+CABLE RUN OPEN</td>
+</tr>
+<tr>
+<td>E-076</td>
+<td>Public main <code>a2dbc06</code> adds a recorded
+mode/settings-derived wall-clock deadline and consumer exit status to
+evidence profile v4. Timeout or other failure terminates the ordinary
+application, runs bridge cleanup, and hashes partial evidence. The exact
+candidate passed complete Apple Silicon and Raspberry Pi AArch64 suites;
+GNU <code>timeout</code> on the Pi stopped a 30-second sleeper after
+1.00 seconds with status 124</td>
+<td><a
+href="../evidence/linux-v4l2-uncorrected-acceptance-preparation.html">Uncorrected
+physical Linux V4L2 acceptance preparation</a></td>
+<td>VERIFIED BOUNDED FAILURE PATH + PI TIMEOUT SEMANTICS / PHYSICAL
 CABLE RUN OPEN</td>
 </tr>
 </tbody>
