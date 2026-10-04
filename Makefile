@@ -1,20 +1,22 @@
 CC ?= cc
 CFLAGS ?= -O2
 PKG_CONFIG ?= pkg-config
+LIBUSB_PKG_CONFIG_PATH ?=
 PREFIX ?= /usr/local
 DESTDIR ?=
 
 TARGET = build/tca-camera
 FLAT_FIELD_TARGET = build/tca-flat-field
-LIBUSB_CFLAGS := $(shell $(PKG_CONFIG) --cflags libusb-1.0 2>/dev/null)
-LIBUSB_LIBS := $(shell $(PKG_CONFIG) --libs libusb-1.0 2>/dev/null)
+LIBUSB_PKG_CONFIG_ENV = $(if $(strip $(LIBUSB_PKG_CONFIG_PATH)),env PKG_CONFIG_PATH="$(LIBUSB_PKG_CONFIG_PATH)",)
+LIBUSB_CFLAGS := $(shell $(LIBUSB_PKG_CONFIG_ENV) $(PKG_CONFIG) --cflags libusb-1.0 2>/dev/null)
+LIBUSB_LIBS := $(shell $(LIBUSB_PKG_CONFIG_ENV) $(PKG_CONFIG) --libs libusb-1.0 2>/dev/null)
 
 .PHONY: all
 all: $(TARGET) $(FLAT_FIELD_TARGET)
 
 $(TARGET): src/tca_camera.c
 	@mkdir -p build
-	@$(PKG_CONFIG) --exists libusb-1.0 || { \
+	@$(LIBUSB_PKG_CONFIG_ENV) $(PKG_CONFIG) --exists libusb-1.0 || { \
 		echo "libusb-1.0 development files were not found (pkg-config)"; \
 		exit 1; \
 	}
@@ -28,6 +30,7 @@ $(FLAT_FIELD_TARGET): src/tca_flat_field.c
 .PHONY: test
 test: $(TARGET) $(FLAT_FIELD_TARGET)
 	python3 tests/test_static.py $(TARGET) src/tca_camera.c
+	python3 tests/test_makefile_pkg_config.py .
 	python3 tests/test_v4l2_static.py scripts/tca-v4l2
 	python3 tests/test_frame_stats.py scripts/tca-frame-stats
 	python3 tests/test_timing_stats.py scripts/tca-timing-stats
