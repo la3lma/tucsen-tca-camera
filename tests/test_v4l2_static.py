@@ -39,6 +39,21 @@ def main() -> None:
     assert '"$script_dir/tca-camera"' in source
     assert '"$script_dir/tca-flat-field"' in source
     assert "--diagnose-install" in source
+    assert "--serve-existing" in source
+    assert "loopback_ownership=system" in source
+    assert "loopback_ownership=bridge" in source
+    assert "TCA Camera 0547:c003" in source
+    assert "/sys/class/video4linux/video${video_number}/name" in source
+    assert "pre-created loopback must be a writable character device" in source
+    assert "pre-created loopback has unexpected label" in source
+    assert "v4l2loopback module is not loaded for pre-created device" in source
+    assert "pre-created device is not a virtual V4L2 node" in source
+    assert 'CDPATH= cd -P -- "/sys/class/video4linux/video${video_number}"' in source
+    assert "the pre-created loopback device will remain" in source
+    assert 'grep -qx capture "/sys/class/video4linux/video${video_number}/state"' in source
+    assert '"/sys/class/video4linux/video${video_number}/format"' in source
+    assert "reader exited unexpectedly during unbounded V4L2 service" in source
+    assert "v4l2-ctl -d \"$device\" --all" not in source
     assert "TCA_FLAT_FIELD" in source
     assert "TCA_TIMESTAMPS" in source
     assert '--timestamps "$timestamps"' in source
@@ -51,6 +66,10 @@ def main() -> None:
     assert "MODE must be 0 or 2" in source
     assert "width=3664" in source
     assert "height=2748" in source
+    assert "nominal_fps=3" in source
+    assert "nominal_fps=10" in source
+    assert "-loglevel warning -re -f rawvideo" in source
+    assert '-framerate "$nominal_fps"' in source
     assert "max_exposure_ms=1236" in source
     assert '"$flat_field_tool" apply --calibration "$flat_field"' in source
     assert "raw-bayer.fifo" in source
@@ -86,6 +105,14 @@ def main() -> None:
         )
         assert invalid_mode0_exposure.returncode == 64
         assert "MODE=0 EXPOSURE_MS=1..1236" in invalid_mode0_exposure.stderr
+        assert not raw.exists()
+        invalid_operation = subprocess.run(
+            ["sh", str(script), "--serve-something", str(raw)],
+            capture_output=True,
+            text=True,
+        )
+        assert invalid_operation.returncode == 64
+        assert "NO USB TRANSFER SENT" in invalid_operation.stderr
         assert not raw.exists()
         timestamp_conflict = subprocess.run(
             ["sh", str(script), "--serve", str(raw), "42", "100", "20"],

@@ -139,6 +139,28 @@ programs, while an installed `tca-v4l2` automatically uses the programs beside
 it in `PREFIX/bin`. `TCA_CAMERA_READER` and `TCA_FLAT_FIELD_TOOL` remain
 explicit overrides for development and testing.
 
+By default, `tca-v4l2 --serve` creates, labels, owns, and removes one temporary
+`v4l2loopback` device. For a loopback device managed by the operating system or
+an administrator, use the explicit `--serve-existing` operation instead. The
+existing node must be a writable character device whose sysfs label is exactly
+`TCA Camera 0547:c003`; the `v4l2loopback` module must already be loaded and
+the node must resolve to the virtual V4L2 sysfs tree. Validation does not open
+the node. In this mode the bridge never runs `modprobe`, changes device
+ownership, removes the node, or unloads the module:
+
+```sh
+sudo modprobe v4l2loopback video_nr=42 \
+  card_label="TCA Camera 0547:c003" exclusive_caps=1 max_buffers=4
+tca-v4l2 --serve-existing capture/first-device.raw 42 100 20 2
+```
+
+Stopping the bridge leaves that pre-created device available for a service
+manager or administrator to reuse or remove. The bridge rate-limits conversion
+to the supported mode's nominal ceiling (10 fps preview, 3 fps full
+resolution), preventing an unpaced producer from exhausting a small loopback
+buffer before an application attaches; a slower physical stream remains
+source-paced.
+
 Remove exactly those seven installed programs:
 
 ```sh

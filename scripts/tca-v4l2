@@ -3,13 +3,16 @@
 set -eu
 
 TOKEN=--serve
+EXISTING_TOKEN=--serve-existing
 DIAGNOSE_TOKEN=--diagnose-install
 
 usage() {
     echo "usage: $0 $TOKEN RAW_FIRST [VIDEO_NUMBER] [EXPOSURE_MS] [GAIN] [MODE]" >&2
+    echo "       $0 $EXISTING_TOKEN RAW_FIRST [VIDEO_NUMBER] [EXPOSURE_MS] [GAIN] [MODE]" >&2
     echo "       $0 $DIAGNOSE_TOKEN" >&2
     echo "       MODE 2 exposes 1280x960 (default); MODE 0 exposes 3664x2748" >&2
     echo "       optional TCA_TIMESTAMPS writes the reader's monotonic CSV sidecar" >&2
+    echo "       $EXISTING_TOKEN requires a pre-created loopback labelled 'TCA Camera 0547:c003'" >&2
 }
 
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
@@ -53,11 +56,22 @@ if [ "$#" -eq 0 ]; then
     echo "NO USB TRANSFER SENT." >&2
     exit 0
 fi
-if [ "$#" -lt 2 ] || [ "$#" -gt 6 ] || [ "$1" != "$TOKEN" ]; then
+if [ "$#" -lt 2 ] || [ "$#" -gt 6 ]; then
     usage
     echo "NO USB TRANSFER SENT." >&2
     exit 64
 fi
+
+operation=$1
+case "$operation" in
+    "$TOKEN") manage_loopback=1 ;;
+    "$EXISTING_TOKEN") manage_loopback=0 ;;
+    *)
+        usage
+        echo "NO USB TRANSFER SENT." >&2
+        exit 64
+        ;;
+esac
 
 raw_output=$2
 video_number=${3:-42}
@@ -127,11 +141,13 @@ case "$mode" in
         width=3664
         height=2748
         max_exposure_ms=1236
+        nominal_fps=3
         ;;
     2)
         width=1280
         height=960
         max_exposure_ms=480
+        nominal_fps=10
         ;;
     *)
         echo "MODE must be 0 or 2" >&2
@@ -194,39 +210,76 @@ if [ -n "$flat_field" ]; then
         exit 65
     fi
 fi
-for command in ffmpeg mkfifo mktemp sudo v4l2-ctl; do
+for command in ffmpeg mkfifo mktemp; do
     if ! command -v "$command" >/dev/null 2>&1; then
         echo "missing command: $command" >&2
         exit 69
     fi
 done
-if [ ! -x /usr/sbin/modprobe ]; then
-    echo "missing /usr/sbin/modprobe" >&2
-    exit 69
-fi
-if grep -q '^v4l2loopback ' /proc/modules 2>/dev/null; then
-    echo "v4l2loopback is already loaded; refusing to alter an existing setup" >&2
-    exit 73
-fi
-if [ -e "$device" ]; then
-    echo "device already exists: $device" >&2
-    exit 73
-fi
+if [ "$manage_loopback" -eq 1 ]; then
+    command -v sudo >/dev/null 2>&1 || {
+        echo "missing command: sudo" >&2
+        exit 69
+    }
+    if [ ! -x /usr/sbin/modprobe ]; then
+        echo "missing /usr/sbin/modprobe" >&2
+        exit 69
+    fi
+    if grep -q '^v4l2loopback ' /proc/modules 2>/dev/null; then
+        echo "v4l2loopback is already loaded; refusing to alter an existing setup" >&2
+        exit 73
+    fi
+    if [ -e "$device" ]; then
+        echo "device already exists: $device" >&2
+        exit 73
+    fi
 
-sudo /usr/sbin/modprobe v4l2loopback video_nr="$video_number" \
-    card_label="TCA Camera 0547:c003" exclusive_caps=1 max_buffers=4
-loaded=1
+    sudo /usr/sbin/modprobe v4l2loopback video_nr="$video_number" \
+        card_label="TCA Camera 0547:c003" exclusive_caps=1 max_buffers=4
+    loaded=1
 
-attempt=0
-while [ ! -e "$device" ] && [ "$attempt" -lt 50 ]; do
-    sleep 0.1
-    attempt=$((attempt + 1))
-done
-if [ ! -e "$device" ]; then
-    echo "loopback device did not appear: $device" >&2
-    exit 1
+    attempt=0
+    while [ ! -e "$device" ] && [ "$attempt" -lt 50 ]; do
+        sleep 0.1
+        attempt=$((attempt + 1))
+    done
+    if [ ! -e "$device" ]; then
+        echo "loopback device did not appear: $device" >&2
+        exit 1
+    fi
+    sudo chown "$(id -u):$(id -g)" "$device"
+    loopback_ownership=bridge
+else
+    label_file=/sys/class/video4linux/video${video_number}/name
+    if [ ! -c "$device" ] || [ ! -w "$device" ]; then
+        echo "pre-created loopback must be a writable character device: $device" >&2
+        exit 69
+    fi
+    if [ ! -r "$label_file" ]; then
+        echo "missing pre-created loopback label: $label_file" >&2
+        exit 69
+    fi
+    IFS= read -r loopback_label <"$label_file" || loopback_label=
+    if [ "$loopback_label" != "TCA Camera 0547:c003" ]; then
+        echo "pre-created loopback has unexpected label: $loopback_label" >&2
+        exit 73
+    fi
+    if ! grep -q '^v4l2loopback ' /proc/modules 2>/dev/null; then
+        echo "v4l2loopback module is not loaded for pre-created device" >&2
+        exit 69
+    fi
+    if ! loopback_sysfs=$(
+        CDPATH= cd -P -- "/sys/class/video4linux/video${video_number}" && pwd
+    ); then
+        echo "cannot resolve pre-created loopback sysfs node" >&2
+        exit 69
+    fi
+    if [ "$loopback_sysfs" != "/sys/devices/virtual/video4linux/video${video_number}" ]; then
+        echo "pre-created device is not a virtual V4L2 node: $device" >&2
+        exit 73
+    fi
+    loopback_ownership=system
 fi
-sudo chown "$(id -u):$(id -g)" "$device"
 
 stream_dir=$(mktemp -d "${TMPDIR:-/tmp}/tca-v4l2-live.XXXXXX")
 mkfifo "$stream_dir/bayer.fifo"
@@ -258,14 +311,18 @@ if [ -n "$flat_field" ]; then
 else
     start_reader "$stream_dir/bayer.fifo"
 fi
-ffmpeg -hide_banner -loglevel warning -f rawvideo \
-    -pixel_format bayer_grbg8 -video_size "${width}x${height}" -framerate 2 \
+ffmpeg -hide_banner -loglevel warning -re -f rawvideo \
+    -pixel_format bayer_grbg8 -video_size "${width}x${height}" \
+    -framerate "$nominal_fps" \
     -i "$stream_dir/bayer.fifo" -vf format=yuyv422 -f v4l2 "$device" &
 writer_pid=$!
 
 attempt=0
 while [ "$attempt" -lt 50 ]; do
-    if v4l2-ctl -d "$device" --all 2>/dev/null | grep -q 'Video Capture'; then
+    if grep -qx capture "/sys/class/video4linux/video${video_number}/state" \
+           2>/dev/null &&
+       grep -q "^YUYV:${width}x${height}@" \
+           "/sys/class/video4linux/video${video_number}/format" 2>/dev/null; then
         break
     fi
     if ! kill -0 "$reader_pid" 2>/dev/null ||
@@ -282,14 +339,18 @@ if [ "$attempt" -ge 50 ]; then
     exit 1
 fi
 
-echo "camera ready at $device; mode $mode ${width}x${height}; first unmodified device frame: $raw_output" >&2
+echo "camera ready at $device; mode $mode ${width}x${height} nominal ${nominal_fps}fps; loopback ownership $loopback_ownership; first unmodified device frame: $raw_output" >&2
 if [ -n "$flat_field" ]; then
     echo "flat-field correction active: $flat_field" >&2
 fi
 if [ -n "$timestamps" ]; then
     echo "reader timestamp sidecar active: $timestamps" >&2
 fi
-echo "press Ctrl-C to stop and remove the temporary loopback device" >&2
+if [ "$loopback_ownership" = bridge ]; then
+    echo "press Ctrl-C to stop and remove the temporary loopback device" >&2
+else
+    echo "press Ctrl-C to stop; the pre-created loopback device will remain" >&2
+fi
 set +e
 wait "$reader_pid"
 reader_status=$?
@@ -302,3 +363,5 @@ if [ "$reader_status" -ne 0 ]; then
     echo "reader exited with status $reader_status" >&2
     exit "$reader_status"
 fi
+echo "reader exited unexpectedly during unbounded V4L2 service" >&2
+exit 1

@@ -100,6 +100,16 @@ record](https://la3lma.github.io/tucsen-tca-camera/evidence/v4l2-bridge-syntheti
 This validates bridge backpressure and lifecycle behavior without USB access;
 the corrected physical-camera consumer run remains open.
 
+The later alpha-12 candidate adds an explicit system-managed lifecycle. Exact
+candidate `c9a7e6e` passed the same camera-free Raspberry Pi integration in
+both geometries using both a bridge-owned temporary device and a pre-created
+exact-labelled device. The pre-created node and module survived deterministic
+bridge TERM and were removed only by the surrounding root-owned harness.
+During development, the full-resolution path exposed a repeatable readiness
+race caused by opening and closing the capture side before the real consumer;
+the retained correction uses non-opening sysfs state/format checks. See the
+[system-managed V4L2 evidence](https://la3lma.github.io/tucsen-tca-camera/evidence/precreated-v4l2-device.html).
+
 ## Full-resolution V4L2 application path — 2026-10-04
 
 Candidate commit `a93f538` retains the preview bridge and adds explicit mode-0
