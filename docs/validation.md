@@ -100,8 +100,8 @@ record](https://la3lma.github.io/tucsen-tca-camera/evidence/v4l2-bridge-syntheti
 This validates bridge backpressure and lifecycle behavior without USB access;
 the corrected physical-camera consumer run remains open.
 
-The later alpha-12 candidate adds an explicit system-managed lifecycle. Exact
-candidate `c9a7e6e` passed the same camera-free Raspberry Pi integration in
+The later alpha-12 source adds an explicit system-managed lifecycle. Exact
+public main `8d254b7` passed the same camera-free Raspberry Pi integration in
 both geometries using both a bridge-owned temporary device and a pre-created
 exact-labelled device. The pre-created node and module survived deterministic
 bridge TERM and were removed only by the surrounding root-owned harness.
