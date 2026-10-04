@@ -406,7 +406,7 @@ Docstack</a></td>
 </tr>
 <tr>
 <td>Revision</td>
-<td>4.6, use cases expressed in Cockburn form and UML; delivered-frame
+<td>4.7, use cases expressed in Cockburn form and UML; delivered-frame
 cadence measured in both recovered modes; Linux V4L2 producer timing and
 bounded acceptance harness prepared; camera-free consumer
 detach/reattach, slow-consumer, bounded-memory, signal, and cleanup
@@ -416,13 +416,14 @@ release archive physically regressed in both optical modes on Apple
 Silicon; exact alpha-8 live output consumed and recorded by an
 independent FFmpeg process over a plain pipe on macOS for 17,200
 distinct frames across 30 minutes with bounded memory and immediate
-camera reopen; uncorrected physical Linux transport acceptance
-independently runnable before optical calibration and protected by a
-recorded wall-clock consumer deadline; historical evidence placeholders
-and the decision ledger reconciled with current verified state; public
-alpha-8 packages the full-resolution application path and bounded Linux
-gate; public evidence rendered as HTML and guarded by a permanent
-full-history privacy policy</td>
+camera reopen; installed V4L2 helper discovery corrected and verified in
+a fresh staged AArch64 install; uncorrected physical Linux transport
+acceptance independently runnable before optical calibration and
+protected by a recorded wall-clock consumer deadline; historical
+evidence placeholders and the decision ledger reconciled with current
+verified state; public alpha-8 packages the full-resolution application
+path and bounded Linux gate; public evidence rendered as HTML and
+guarded by a permanent full-history privacy policy</td>
 </tr>
 <tr>
 <td>Execution state</td>
@@ -480,13 +481,15 @@ archive then physically captured ten distinct stable preview frames at
 9.50216 fps and two distinct complete full-resolution frames at 2.75115
 fps on Apple Silicon; exact bytes/timestamps passed and a separate valid
 short preview retained its startup cadence transient. Exact Apple
-Silicon, Pi AArch64, Ubuntu, and macOS suites pass. Public evidence is
-rendered as navigable HTML and protected by a full-history ban on raw
-disassembly, vendor binaries, firmware, traces, and private work. Final
-known-target Bayer/color calibration, true blocked-light dark and
-blank-field flat execution, execution of the uncorrected live-camera
-Linux V4L2 gate, and its later map-backed corrected repeat remain open.
-AVFoundation remains deferred.</td>
+Silicon, Pi AArch64, Ubuntu, and macOS suites pass. Public main
+<code>e163250</code> fixes installed V4L2 helper discovery and passes a
+fresh staged AArch64 installation diagnostic without camera access.
+Public evidence is rendered as navigable HTML and protected by a
+full-history ban on raw disassembly, vendor binaries, firmware, traces,
+and private work. Final known-target Bayer/color calibration, true
+blocked-light dark and blank-field flat execution, execution of the
+uncorrected live-camera Linux V4L2 gate, and its later map-backed
+corrected repeat remain open. AVFoundation remains deferred.</td>
 </tr>
 <tr>
 <td>Acceptance authority</td>
@@ -2014,8 +2017,8 @@ CI, two modes, bounded initial recovery, optical and calibration
 procedures, independently runnable uncorrected Linux application gate,
 recorded consumer deadline, measured output cadence, clickable
 full-resolution evidence, scoped native-libusb discovery, permanent
-publication boundary, tested install/removal, validation record, and
-report links</td>
+publication boundary, tested install/removal plus native AArch64
+installed-helper discovery, validation record, and report links</td>
 </tr>
 <tr>
 <td>D120</td>
@@ -3211,8 +3214,8 @@ Fixtures, and Operations</h3>
 geometries, calibrated-field tooling, measured output cadence, bounded
 live acceptance, rendered evidence including a third-party FFmpeg
 recording and 30-minute endurance proof, permanent publication-boundary
-enforcement, and tested install/removal while residual physical
-validation continues</td>
+enforcement, and tested install/removal with corrected installed-helper
+discovery while residual physical validation continues</td>
 </tr>
 <tr>
 <td>Actors</td>
@@ -3270,6 +3273,19 @@ staged installation and exact-file removal of the reader, V4L2 helper,
 and frame analyzer. The test requires an unrelated sentinel in the same
 directory to survive. It passes on Apple Silicon, the Pi, Ubuntu CI, and
 macOS CI without modifying the live Pi installation.</p>
+<p>Public main <code>e163250</code> closes a later packaging defect: the
+installed <code>tca-v4l2</code> script had retained source-tree paths
+under <code>PREFIX/build</code> even though <code>make install</code>
+places its helpers beside it in <code>PREFIX/bin</code>. The bridge now
+prefers sibling installed executables, preserves explicit development
+overrides and source-tree builds, and exposes a USB-inert
+<code>--diagnose-install</code> command. A fresh exact-main clone on
+<code>rpios-17</code> passed the complete suite, staged all six
+programs, and resolved executable sibling copies of
+<code>tca-camera</code> and <code>tca-flat-field</code>; the diagnostic
+explicitly sent no USB transfer. E-081 records the retained hashes. This
+strengthens packaging reproducibility without claiming the still-open
+physical Linux camera run.</p>
 <p>These changes are sealed in annotated public prerelease <a
 href="https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.3"><code>v0.2.0-alpha.3</code></a>
 at exact commit <code>3c16d2a</code>. Independent main and tag CI runs
@@ -4355,6 +4371,22 @@ and captured another exact-size unclipped frame</td>
 30-minute live application endurance</a></td>
 <td>VERIFIED CORRECTED-ERA 30-MINUTE ENDURANCE + BOUNDED MEMORY +
 IMMEDIATE REOPEN ON MACOS / PHYSICAL LINUX V4L2 REMAINS OPEN</td>
+</tr>
+<tr>
+<td>E-081</td>
+<td>Public main <code>e163250</code> makes an installed
+<code>tca-v4l2</code> resolve sibling <code>tca-camera</code> and
+<code>tca-flat-field</code> executables in <code>PREFIX/bin</code>,
+retains explicit overrides and source-tree behavior, and adds a
+USB-inert installation diagnostic. A fresh exact-main clone on Raspberry
+Pi AArch64 passed the complete suite and a staged
+<code>/usr/local</code> install; the installed diagnostic resolved both
+executable siblings and reported <code>NO USB TRANSFER SENT</code> while
+no camera was attached</td>
+<td><a href="../evidence/installed-v4l2-layout.html">Installed V4L2
+helper discovery</a></td>
+<td>VERIFIED PACKAGED LINUX PATH + AARCH64 INSTALL / PHYSICAL CAMERA
+V4L2 RUN OPEN</td>
 </tr>
 </tbody>
 </table>
