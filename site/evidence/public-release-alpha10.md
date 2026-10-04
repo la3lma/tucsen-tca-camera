@@ -16,6 +16,13 @@ package `tucsen-tca-camera_0.2.0.alpha10-1_arm64.deb`; GitHub normalizes the
 Debian-version tilde in the build filename to a dot, while the package's
 internal version remains `0.2.0~alpha10-1`.
 
+**Superseded provenance note:** a later camera-free audit found that the
+package metadata was correct but the embedded `tca-camera --version` string
+still reported alpha 7. This does not change the package bytes or the carried
+reader behavior documented below, but it makes that CLI identity unsuitable
+for new evidence. Alpha 11 corrects and tests all version surfaces and now
+supersedes alpha 10 for the pending physical Linux run.
+
 The package installs the seven public userspace tools, exact `0547:c003` udev
 rule, and public documentation. It supplies no camera-specific kernel driver.
 Its maintainer hooks reload udev rules only and perform no USB open, reset, or
