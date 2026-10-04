@@ -205,6 +205,12 @@ Render it using the accepted phase at 3664x2748 and inspect the full field for
 orientation, clipping, dead rows/columns, repeated blocks, transport seams,
 unexpected edge strips, and focus consistency.
 
+The Linux application transport may be tested before a physical flat-field is
+available by passing `-` as the acceptance harness calibration argument. That
+run must be labeled uncorrected and cannot satisfy the flat-field acceptance
+criterion. Repeat the same gate with the accepted matching map after dark/flat
+calibration to verify the corrected application path.
+
 ## 7. Application-boundary check
 
 Run the existing V4L2 adapter with the optically exposed camera and view or

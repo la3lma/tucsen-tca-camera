@@ -13,7 +13,7 @@ DEFAULT_FRAMES=60
 
 usage()
 {
-    printf 'usage: %s %s RELEASE_ROOT CALIBRATION EVIDENCE_PARENT [VIDEO_NUMBER [EXPOSURE_MS [GAIN [FRAMES [MODE]]]]]\n' \
+    printf 'usage: %s %s RELEASE_ROOT CALIBRATION_OR_DASH EVIDENCE_PARENT [VIDEO_NUMBER [EXPOSURE_MS [GAIN [FRAMES [MODE]]]]]\n' \
         "$0" "$TOKEN"
 }
 
@@ -130,10 +130,15 @@ for executable in "$reader" "$analyzer" "$timing_analyzer" "$bridge" \
         exit 69
     }
 done
-[ -r "$calibration" ] || {
-    printf 'calibration is not readable: %s\n' "$calibration" >&2
-    exit 66
-}
+if [ "$calibration" = - ]; then
+    calibration_mode=uncorrected
+else
+    [ -r "$calibration" ] || {
+        printf 'calibration is not readable: %s\n' "$calibration" >&2
+        exit 66
+    }
+    calibration_mode=flat-field
+fi
 [ -d "$evidence_parent" ] || {
     printf 'evidence parent must already exist: %s\n' "$evidence_parent" >&2
     exit 66
@@ -197,9 +202,10 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 
 {
-    printf 'profile=tca-linux-v4l2-acceptance-v2\n'
+    printf 'profile=tca-linux-v4l2-acceptance-v3\n'
     printf 'target=0547:c003\n'
     printf 'release_commit=%s\n' "$release_commit"
+    printf 'calibration_mode=%s\n' "$calibration_mode"
     printf 'calibration=%s\n' "$calibration"
     printf 'video_device=%s\n' "$device"
     printf 'mode=%s\n' "$mode"
@@ -213,16 +219,31 @@ uname -a >"$run_dir/uname.txt"
 lsusb >"$run_dir/lsusb.txt"
 lsusb -t >"$run_dir/lsusb-tree.txt"
 git -C "$release_root" status --short >"$run_dir/release-status.txt"
-"$flat_field_tool" inspect --calibration "$calibration" \
-    >"$run_dir/calibration.json"
-sha256sum "$reader" "$analyzer" "$timing_analyzer" "$bridge" \
-    "$flat_field_tool" "$calibration" "$0" >"$run_dir/pinned-inputs.sha256"
+if [ "$calibration_mode" = flat-field ]; then
+    "$flat_field_tool" inspect --calibration "$calibration" \
+        >"$run_dir/calibration.json"
+    sha256sum "$reader" "$analyzer" "$timing_analyzer" "$bridge" \
+        "$flat_field_tool" "$calibration" "$0" \
+        >"$run_dir/pinned-inputs.sha256"
+else
+    printf '{"calibration_mode":"uncorrected"}\n' \
+        >"$run_dir/calibration.json"
+    sha256sum "$reader" "$analyzer" "$timing_analyzer" "$bridge" \
+        "$flat_field_tool" "$0" >"$run_dir/pinned-inputs.sha256"
+fi
 
 timestamps=$run_dir/reader-timestamps.csv
-TCA_FLAT_FIELD="$calibration" TCA_TIMESTAMPS="$timestamps" \
-    "$bridge" --serve "$run_dir/bridge-first-device.raw" "$video_number" \
-    "$exposure_ms" "$gain" "$mode" >"$run_dir/bridge.stdout.txt" \
-    2>"$run_dir/bridge.stderr.txt" &
+if [ "$calibration_mode" = flat-field ]; then
+    TCA_FLAT_FIELD="$calibration" TCA_TIMESTAMPS="$timestamps" \
+        "$bridge" --serve "$run_dir/bridge-first-device.raw" "$video_number" \
+        "$exposure_ms" "$gain" "$mode" >"$run_dir/bridge.stdout.txt" \
+        2>"$run_dir/bridge.stderr.txt" &
+else
+    TCA_TIMESTAMPS="$timestamps" \
+        "$bridge" --serve "$run_dir/bridge-first-device.raw" "$video_number" \
+        "$exposure_ms" "$gain" "$mode" >"$run_dir/bridge.stdout.txt" \
+        2>"$run_dir/bridge.stderr.txt" &
+fi
 bridge_pid=$!
 
 attempt=0
