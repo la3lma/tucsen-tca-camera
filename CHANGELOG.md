@@ -5,6 +5,9 @@
 - Allow the Linux V4L2 bridge to opt into the reader's monotonic timestamp CSV
   through `TCA_TIMESTAMPS`, preserving producer cadence evidence alongside a
   separately measured ordinary-application consumer run.
+- Add an inert-by-default Linux V4L2 acceptance harness that composes a valid
+  flat-field map, producer timing, bounded application consumption, frame
+  digests, cleanup, immediate reopen, and a complete evidence manifest.
 
 ## 0.2.0-alpha.7 — 2026-10-04
 

@@ -348,6 +348,27 @@ counts and timestamps should be recorded separately by the application under
 test, since the reader sidecar measures producer delivery rather than display
 or recording cadence.
 
+For the bounded final Linux application check, use the inert-by-default
+acceptance harness. Running it without arguments only prints its contract. A
+live run requires the exact token, a clean built worktree, a valid matching
+calibration, exactly one attached camera, an existing evidence parent, and
+pre-primed sudo credentials:
+
+```sh
+tools/run_linux_v4l2_acceptance.sh
+
+sudo -v
+tools/run_linux_v4l2_acceptance.sh \
+  --run-live-linux-v4l2-acceptance \
+  "$PWD" capture/10x-mode2.tca-flat capture/evidence 42 250 0 60
+```
+
+The live path records producer timestamps, an exact bounded YUYV consumer
+stream, per-frame digests, producer/consumer counts and cadence, device
+metadata, cleanup status, immediate reader reuse, and a SHA-256 manifest. A
+producer/consumer count delta is retained as bounded pipeline evidence and is
+not automatically mislabeled as a dropped-frame count.
+
 ## Protocol and safety
 
 The recovered wire behavior, frame layout, evidence boundary, and known
