@@ -1,6 +1,6 @@
 # Existing Linux driver candidates after protocol recovery
 
-Search date: 2026-10-03
+Search dates: 2026-10-03 and 2026-10-04
 
 ## New local evidence used to narrow the search
 
@@ -69,20 +69,29 @@ an MU1000.  The exact device identity remains Tucsen TCA-10.0N/IS1000
 matching INF.  ToupTek's official download centre was therefore checked using
 the product ID rather than the AmScope enclosure label.
 
-Two official SDK packages were downloaded project-locally and inspected
+Primary source: <https://www.touptekphotonics.com/download/?category=SDK>.
+
+Three official SDK packages were downloaded project-locally and inspected
 without executing their native libraries:
 
 | Package | SDK version | SHA-256 | Explicit Windows USB pairs | `0547:c003` |
 |---|---:|---|---:|---|
+| Latest `toupcamsdk.20260818.zip` (official page displays Sep. 11, 2026) | `60.32327.20260818` | `3f177938023686321e7ab9de8ecc431d0ab061f5f1b72122525fc2598c47b446` | 1,839 | absent |
 | Current stable `toupcamsdk.20260519.zip` | `60.31488.20260519` | `3c2326923b8f1b908f210a1309d8f40e9bb80bc401a1a255aa468d954ff24433` | 1,768 | absent |
 | Official legacy `toupcamsdk.20250120.zip` | `57.27567.20250120` | `c54f428abd0ecd213ffa2b0d387e64569781b457e2c311e61322b78b9e86b46e` | 1,600 | absent |
 
-Both explicit INF tables include related ToupTek IDs such as `0547:6801`,
+All three explicit INF tables include related ToupTek IDs such as `0547:6801`,
 `0547:6010`, and `0547:c010`, which shows that the negative result is not a
-failure to find vendor `0547`.  Neither package contains the strings `C003`,
+failure to find vendor `0547`. None of the packages contains the strings `C003`,
 `IS1000`, `TCA-10`, or `MU1000` in the inspected native Linux/macOS libraries.
 The latter string search is supporting evidence only; the explicit INF device
 tables are the stronger compatibility boundary.
+
+The latest table adds 71 pairs and removes none relative to the stable table.
+Every addition is vendor `0547`, with product IDs `167B` through `16C1`, yet
+`0547:c003` remains absent. The official page also displays a generic
+`USBCameraSdkUpdate` entry, but all stable/latest/legacy variants are marked
+unavailable and have no download URL or exact-model claim.
 
 The Linux udev file grants access to every USB device with vendor `0547` (and
 `04b4`).  That vendor-wide permission rule is not a supported-device list and
@@ -91,8 +100,8 @@ shipped `toupcam.py` states that it is a thin `ctypes` wrapper around the
 proprietary `toupcam.dll`, `libtoupcam.so`, or `libtoupcam.dylib`.  It contains
 no independent Python USB transport to transplant into this project.
 
-Consequently the current or official legacy ToupCam SDK is not a demonstrated
-drop-in backend for this camera.  It is still useful inspiration at two safe
+Consequently none of these latest, stable, or legacy ToupCam SDK packages is a
+demonstrated drop-in backend for this camera. It is still useful inspiration at two safe
 layers: its public C/Python API demonstrates a mature callback, frame-metadata,
 ROI, exposure, and gain surface; and the related open Linux
 `gspca_touptek` source demonstrates V4L2/GSPCA packaging and overlapping sensor

@@ -17,7 +17,7 @@
 <h1
 id="existing-linux-driver-candidates-after-protocol-recovery">Existing
 Linux driver candidates after protocol recovery</h1>
-<p>Search date: 2026-10-03</p>
+<p>Search dates: 2026-10-03 and 2026-10-04</p>
 <h2 id="new-local-evidence-used-to-narrow-the-search">New local evidence
 used to narrow the search</h2>
 <p>The candidate search was repeated after obtaining a complete,
@@ -87,7 +87,10 @@ Tucsen TCA-10.0N/IS1000 <code>0547:c003</code>, as established by the
 official Tucsen matrix and the recovered matching INF. ToupTek’s
 official download centre was therefore checked using the product ID
 rather than the AmScope enclosure label.</p>
-<p>Two official SDK packages were downloaded project-locally and
+<p>Primary source: <a
+href="https://www.touptekphotonics.com/download/?category=SDK"
+class="uri">https://www.touptekphotonics.com/download/?category=SDK</a>.</p>
+<p>Three official SDK packages were downloaded project-locally and
 inspected without executing their native libraries:</p>
 <table>
 <colgroup>
@@ -108,6 +111,14 @@ inspected without executing their native libraries:</p>
 </thead>
 <tbody>
 <tr>
+<td>Latest <code>toupcamsdk.20260818.zip</code> (official page displays
+Sep. 11, 2026)</td>
+<td style="text-align: right;"><code>60.32327.20260818</code></td>
+<td><code>3f177938023686321e7ab9de8ecc431d0ab061f5f1b72122525fc2598c47b446</code></td>
+<td style="text-align: right;">1,839</td>
+<td>absent</td>
+</tr>
+<tr>
 <td>Current stable <code>toupcamsdk.20260519.zip</code></td>
 <td style="text-align: right;"><code>60.31488.20260519</code></td>
 <td><code>3c2326923b8f1b908f210a1309d8f40e9bb80bc401a1a255aa468d954ff24433</code></td>
@@ -123,14 +134,21 @@ inspected without executing their native libraries:</p>
 </tr>
 </tbody>
 </table>
-<p>Both explicit INF tables include related ToupTek IDs such as
+<p>All three explicit INF tables include related ToupTek IDs such as
 <code>0547:6801</code>, <code>0547:6010</code>, and
 <code>0547:c010</code>, which shows that the negative result is not a
-failure to find vendor <code>0547</code>. Neither package contains the
-strings <code>C003</code>, <code>IS1000</code>, <code>TCA-10</code>, or
-<code>MU1000</code> in the inspected native Linux/macOS libraries. The
-latter string search is supporting evidence only; the explicit INF
+failure to find vendor <code>0547</code>. None of the packages contains
+the strings <code>C003</code>, <code>IS1000</code>, <code>TCA-10</code>,
+or <code>MU1000</code> in the inspected native Linux/macOS libraries.
+The latter string search is supporting evidence only; the explicit INF
 device tables are the stronger compatibility boundary.</p>
+<p>The latest table adds 71 pairs and removes none relative to the
+stable table. Every addition is vendor <code>0547</code>, with product
+IDs <code>167B</code> through <code>16C1</code>, yet
+<code>0547:c003</code> remains absent. The official page also displays a
+generic <code>USBCameraSdkUpdate</code> entry, but all
+stable/latest/legacy variants are marked unavailable and have no
+download URL or exact-model claim.</p>
 <p>The Linux udev file grants access to every USB device with vendor
 <code>0547</code> (and <code>04b4</code>). That vendor-wide permission
 rule is not a supported-device list and must not be read as a claim that
@@ -139,16 +157,17 @@ states that it is a thin <code>ctypes</code> wrapper around the
 proprietary <code>toupcam.dll</code>, <code>libtoupcam.so</code>, or
 <code>libtoupcam.dylib</code>. It contains no independent Python USB
 transport to transplant into this project.</p>
-<p>Consequently the current or official legacy ToupCam SDK is not a
-demonstrated drop-in backend for this camera. It is still useful
-inspiration at two safe layers: its public C/Python API demonstrates a
-mature callback, frame-metadata, ROI, exposure, and gain surface; and
-the related open Linux <code>gspca_touptek</code> source demonstrates
-V4L2/GSPCA packaging and overlapping sensor register vocabulary. Neither
-source should replace the trace-proven C003 transport. A substantially
-older SDK that explicitly lists <code>0547:c003</code> would be a new
-candidate, but only its documented enumeration path should be tested
-before any capture or control operation.</p>
+<p>Consequently none of these latest, stable, or legacy ToupCam SDK
+packages is a demonstrated drop-in backend for this camera. It is still
+useful inspiration at two safe layers: its public C/Python API
+demonstrates a mature callback, frame-metadata, ROI, exposure, and gain
+surface; and the related open Linux <code>gspca_touptek</code> source
+demonstrates V4L2/GSPCA packaging and overlapping sensor register
+vocabulary. Neither source should replace the trace-proven C003
+transport. A substantially older SDK that explicitly lists
+<code>0547:c003</code> would be a new candidate, but only its documented
+enumeration path should be tested before any capture or control
+operation.</p>
 <h3 id="current-tucsen-linux-sdk-configuration">Current Tucsen Linux SDK
 configuration</h3>
 <p>Tucsen’s official download page advertises a Linux SDK, but access is
