@@ -46,7 +46,9 @@ def main() -> None:
     assert "/sys/class/video4linux/video${video_number}/name" in source
     assert "pre-created loopback must be a writable character device" in source
     assert "pre-created loopback has unexpected label" in source
-    assert "pre-created device is not a v4l2loopback node" in source
+    assert "v4l2loopback module is not loaded for pre-created device" in source
+    assert "pre-created device is not a virtual V4L2 node" in source
+    assert 'CDPATH= cd -P -- "/sys/class/video4linux/video${video_number}"' in source
     assert "the pre-created loopback device will remain" in source
     assert "TCA_FLAT_FIELD" in source
     assert "TCA_TIMESTAMPS" in source

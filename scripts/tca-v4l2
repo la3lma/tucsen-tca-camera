@@ -264,9 +264,18 @@ else
         echo "pre-created loopback has unexpected label: $loopback_label" >&2
         exit 73
     fi
-    if ! v4l2-ctl -d "$device" -D 2>/dev/null |
-         grep -q "Driver name.*v4l2 loopback"; then
-        echo "pre-created device is not a v4l2loopback node: $device" >&2
+    if ! grep -q '^v4l2loopback ' /proc/modules 2>/dev/null; then
+        echo "v4l2loopback module is not loaded for pre-created device" >&2
+        exit 69
+    fi
+    if ! loopback_sysfs=$(
+        CDPATH= cd -P -- "/sys/class/video4linux/video${video_number}" && pwd
+    ); then
+        echo "cannot resolve pre-created loopback sysfs node" >&2
+        exit 69
+    fi
+    if [ "$loopback_sysfs" != "/sys/devices/virtual/video4linux/video${video_number}" ]; then
+        echo "pre-created device is not a virtual V4L2 node: $device" >&2
         exit 73
     fi
     loopback_ownership=system

@@ -143,9 +143,10 @@ By default, `tca-v4l2 --serve` creates, labels, owns, and removes one temporary
 `v4l2loopback` device. For a loopback device managed by the operating system or
 an administrator, use the explicit `--serve-existing` operation instead. The
 existing node must be a writable character device whose sysfs label is exactly
-`TCA Camera 0547:c003` and whose V4L2 driver is `v4l2 loopback`. In this mode
-the bridge never runs `modprobe`, changes device ownership, removes the node,
-or unloads the module:
+`TCA Camera 0547:c003`; the `v4l2loopback` module must already be loaded and
+the node must resolve to the virtual V4L2 sysfs tree. Validation does not open
+the node. In this mode the bridge never runs `modprobe`, changes device
+ownership, removes the node, or unloads the module:
 
 ```sh
 sudo modprobe v4l2loopback video_nr=42 \
