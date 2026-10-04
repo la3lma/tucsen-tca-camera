@@ -161,7 +161,55 @@ resolution), preventing an unpaced producer from exhausting a small loopback
 buffer before an application attaches; a slower physical stream remains
 source-paced.
 
-Remove exactly those seven installed programs:
+#### Persistent user service
+
+`tca-v4l2-session` makes repeated starts safe for a service manager without
+changing the bridge or USB protocol. It atomically allocates a private session
+directory below an existing output root, records the selected controls, owns
+the unique raw-frame and timestamp paths, and then replaces itself with
+`tca-v4l2 --serve-existing`:
+
+```sh
+mkdir -p "$HOME/.local/state/tucsen-tca-camera/sessions"
+tca-v4l2-session --serve-existing \
+  "$HOME/.local/state/tucsen-tca-camera/sessions" 42 100 20 2
+```
+
+Every start therefore preserves its own `session.txt`, `first-device.raw`, and
+`reader-timestamps.csv`. The wrapper accepts only a pre-created loopback and
+never runs `sudo` or `modprobe`, changes device ownership, removes a node, or
+automatically restarts a failed camera session. `TCA_FLAT_FIELD` is passed
+through to the bridge; `TCA_TIMESTAMPS` is intentionally reserved because the
+wrapper supplies the unique sidecar path.
+
+The source tree includes a deliberately disabled systemd *user* service and
+settings example under [`packaging/systemd`](packaging/systemd). Debian
+packages place them under
+`/usr/share/doc/tucsen-tca-camera/examples/systemd/`; they are documentation,
+not active units. To test the example explicitly after the exact-labelled
+loopback and permissions are configured:
+
+```sh
+install -Dm0644 \
+  /usr/share/doc/tucsen-tca-camera/examples/systemd/tca-v4l2.service.example \
+  "$HOME/.config/systemd/user/tca-v4l2.service"
+install -Dm0644 \
+  /usr/share/doc/tucsen-tca-camera/examples/systemd/v4l2.env.example \
+  "$HOME/.config/tucsen-tca-camera/v4l2.env"
+systemctl --user daemon-reload
+systemctl --user start tca-v4l2.service
+systemctl --user status tca-v4l2.service
+```
+
+Test a manual start and stop before choosing `systemctl --user enable`. A
+headless host still needs an administrator-selected group or ACL for both the
+USB device and loopback node; the packaged udev rule grants the active local
+seat access and intentionally does not invent a site group. Boot-time user
+services also require the administrator to opt into user lingering. The
+example uses `Restart=no` so a protocol or device failure is retained for
+inspection instead of immediately reopening the camera.
+
+Remove exactly those eight installed programs:
 
 ```sh
 sudo make uninstall PREFIX=/usr/local
@@ -189,7 +237,7 @@ make deb
 
 The package is written under `dist/`, refuses to overwrite an existing file,
 and is reproducible for the same source, toolchain, and
-`SOURCE_DATE_EPOCH`. It installs the seven programs under `/usr/bin`, the
+`SOURCE_DATE_EPOCH`. It installs the eight programs under `/usr/bin`, the
 exact `0547:c003` udev rule, public documentation, and package metadata. The
 build itself does not install anything, open the camera, or load a kernel
 module. Installation and removal ask udev to reload its rules when `udevadm`

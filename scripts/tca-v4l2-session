@@ -1,0 +1,134 @@
+#!/bin/sh
+
+# Allocate one private evidence directory, then delegate to the explicit
+# system-managed V4L2 bridge. This wrapper never owns or changes the loopback.
+
+set -eu
+
+SERVE_TOKEN=--serve-existing
+DIAGNOSE_TOKEN=--diagnose-install
+
+usage()
+{
+    echo "usage: $0 $SERVE_TOKEN OUTPUT_ROOT [VIDEO_NUMBER] [EXPOSURE_MS] [GAIN] [MODE]" >&2
+    echo "       $0 $DIAGNOSE_TOKEN" >&2
+    echo "       creates a new private session below OUTPUT_ROOT on every start" >&2
+}
+
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+project_dir=$(CDPATH= cd -- "$script_dir/.." && pwd)
+if [ -n "${TCA_V4L2_BRIDGE:-}" ]; then
+    bridge=$TCA_V4L2_BRIDGE
+elif [ -x "$script_dir/tca-v4l2" ]; then
+    bridge=$script_dir/tca-v4l2
+else
+    bridge=$project_dir/scripts/tca-v4l2
+fi
+
+if [ "$#" -eq 1 ] && [ "$1" = "$DIAGNOSE_TOKEN" ]; then
+    bridge_executable=0
+    [ -x "$bridge" ] && bridge_executable=1
+    printf 'session_wrapper=%s\n' "$0"
+    printf 'bridge=%s executable=%s\n' "$bridge" "$bridge_executable"
+    printf 'policy=pre-created-loopback-only\n'
+    printf 'NO USB TRANSFER SENT. NO SYSTEM CHANGE MADE.\n'
+    exit 0
+fi
+
+if [ "$#" -eq 0 ]; then
+    usage
+    echo "NO USB TRANSFER SENT. NO SYSTEM CHANGE MADE." >&2
+    exit 0
+fi
+if [ "$#" -lt 2 ] || [ "$#" -gt 6 ] || [ "$1" != "$SERVE_TOKEN" ]; then
+    usage
+    echo "NO USB TRANSFER SENT. NO SYSTEM CHANGE MADE." >&2
+    exit 64
+fi
+
+output_root=$2
+video_number=${3:-42}
+exposure_ms=${4:-400}
+gain=${5:-20}
+mode=${6:-2}
+
+for value in "$video_number" "$exposure_ms" "$gain" "$mode"; do
+    case "$value" in
+        ''|*[!0-9]*)
+            echo "video number, exposure, gain, and mode must be decimal integers" >&2
+            exit 64
+            ;;
+    esac
+done
+case "$mode" in
+    0) max_exposure_ms=1236 ;;
+    2) max_exposure_ms=480 ;;
+    *)
+        echo "MODE must be 0 or 2" >&2
+        exit 64
+        ;;
+esac
+if [ "$exposure_ms" -lt 1 ] || [ "$exposure_ms" -gt "$max_exposure_ms" ] ||
+   [ "$gain" -gt 320 ]; then
+    echo "control range: MODE=$mode EXPOSURE_MS=1..$max_exposure_ms, GAIN=0..320" >&2
+    exit 64
+fi
+if [ -n "${TCA_TIMESTAMPS:-}" ]; then
+    echo "TCA_TIMESTAMPS is managed by this session wrapper; leave it unset" >&2
+    exit 64
+fi
+if [ ! -x "$bridge" ]; then
+    echo "missing executable V4L2 bridge: $bridge" >&2
+    exit 69
+fi
+if [ "$output_root" = - ] || [ ! -d "$output_root" ]; then
+    echo "OUTPUT_ROOT must be an existing directory: $output_root" >&2
+    exit 66
+fi
+if [ ! -w "$output_root" ]; then
+    echo "OUTPUT_ROOT is not writable: $output_root" >&2
+    exit 69
+fi
+output_root=$(CDPATH= cd -P -- "$output_root" && pwd)
+
+umask 077
+started_utc=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+session_stamp=$(date -u '+%Y%m%dT%H%M%SZ')
+attempt=0
+while [ "$attempt" -lt 100 ]; do
+    suffix=
+    [ "$attempt" -eq 0 ] || suffix=-$attempt
+    session_dir=$output_root/session-$session_stamp-$$$suffix
+    if mkdir -m 0700 -- "$session_dir" 2>/dev/null; then
+        break
+    fi
+    attempt=$((attempt + 1))
+done
+if [ "$attempt" -ge 100 ]; then
+    echo "could not allocate a unique session below: $output_root" >&2
+    exit 73
+fi
+
+raw_output=$session_dir/first-device.raw
+timestamps=$session_dir/reader-timestamps.csv
+flat_field=disabled
+[ -z "${TCA_FLAT_FIELD:-}" ] || flat_field=enabled
+{
+    printf 'profile=tca-v4l2-service-session-v1\n'
+    printf 'started_utc=%s\n' "$started_utc"
+    printf 'bridge=%s\n' "$bridge"
+    printf 'loopback_ownership=system\n'
+    printf 'video_number=%s\n' "$video_number"
+    printf 'exposure_ms=%s\n' "$exposure_ms"
+    printf 'gain=%s\n' "$gain"
+    printf 'mode=%s\n' "$mode"
+    printf 'flat_field=%s\n' "$flat_field"
+    printf 'raw_first=%s\n' "$raw_output"
+    printf 'timestamps=%s\n' "$timestamps"
+} >"$session_dir/session.txt"
+
+export TCA_TIMESTAMPS=$timestamps
+printf 'session_dir=%s\n' "$session_dir" >&2
+printf 'policy=pre-created-loopback-only\n' >&2
+exec "$bridge" "$SERVE_TOKEN" "$raw_output" \
+    "$video_number" "$exposure_ms" "$gain" "$mode"
