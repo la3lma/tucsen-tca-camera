@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add `tca-ffmpeg`, a cross-platform one-command live FFplay viewer and bounded
+  H.264 recording helper that retains the untouched device record and measured
+  producer timestamps without duplicating any USB protocol.
 - Make an installed `tca-v4l2` resolve the sibling `tca-camera` and
   `tca-flat-field` executables in `PREFIX/bin`, retain explicit development
   overrides, and add a USB-inert `--diagnose-install` check plus staged-install
