@@ -406,7 +406,7 @@ Docstack</a></td>
 </tr>
 <tr>
 <td>Revision</td>
-<td>4.2, use cases expressed in Cockburn form and UML; delivered-frame
+<td>4.3, use cases expressed in Cockburn form and UML; delivered-frame
 cadence measured in both recovered modes; Linux V4L2 producer timing and
 bounded acceptance harness prepared; camera-free consumer
 detach/reattach, slow-consumer, bounded-memory, signal, and cleanup
@@ -416,8 +416,9 @@ both optical modes on Apple Silicon; uncorrected physical Linux
 transport acceptance independently runnable before optical calibration
 and protected by a recorded wall-clock consumer deadline; historical
 evidence placeholders and the decision ledger reconciled with current
-verified state; public evidence rendered as HTML and guarded by a
-permanent full-history privacy policy</td>
+verified state; public alpha-8 packages the full-resolution application
+path and bounded Linux gate; public evidence rendered as HTML and
+guarded by a permanent full-history privacy policy</td>
 </tr>
 <tr>
 <td>Execution state</td>
@@ -1988,13 +1989,14 @@ later corrected repeat plus Pi cable reconnect remain</td>
 <td>D110</td>
 <td>Package source and operations</td>
 <td>D100</td>
-<td>Active; alpha-7 released and independently verified</td>
+<td>Active; alpha-8 released and independently verified</td>
 <td>Public GitHub repository, Apache-2.0 license, udev/V4L2 operations,
 CI, two modes, bounded initial recovery, optical and calibration
 procedures, independently runnable uncorrected Linux application gate,
-measured output cadence, clickable full-resolution evidence, scoped
-native-libusb discovery, permanent publication boundary, tested
-install/removal, validation record, and report links</td>
+recorded consumer deadline, measured output cadence, clickable
+full-resolution evidence, scoped native-libusb discovery, permanent
+publication boundary, tested install/removal, validation record, and
+report links</td>
 </tr>
 <tr>
 <td>D120</td>
@@ -3153,10 +3155,11 @@ Fixtures, and Operations</h3>
 <tbody>
 <tr>
 <td>State</td>
-<td>Active; public alpha-7 packages the reader, calibrated-field
-tooling, measured output cadence, rendered evidence, permanent
-publication-boundary enforcement, and tested install/removal while
-residual physical validation continues</td>
+<td>Active; public alpha-8 packages the reader, both Linux application
+geometries, calibrated-field tooling, measured output cadence, bounded
+live acceptance, rendered evidence, permanent publication-boundary
+enforcement, and tested install/removal while residual physical
+validation continues</td>
 </tr>
 <tr>
 <td>Actors</td>
@@ -3277,6 +3280,19 @@ Apple Silicon and Raspberry Pi AArch64 suites, and a direct Pi timeout
 probe returned status 124 after 1.00 seconds. This hardens the physical
 run without changing the distinction between uncorrected transport
 acceptance and later map-backed corrected delivery.</p>
+<p>The annotated public prerelease <a
+href="https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.8"><code>v0.2.0-alpha.8</code></a>
+resolves to exact commit <code>2dd0b39</code>. The exact commit passed
+complete Raspberry Pi AArch64 and GitHub Ubuntu/macOS suites; the tag
+triggered a separate passing Ubuntu/macOS CI run. Its downloaded public
+source archive passed the complete suite outside a Git checkout on Apple
+Silicon using the documented scoped native-libusb discovery override.
+Alpha 8 packages complete preview and full-resolution V4L2 application
+paths, producer/consumer evidence, the independently runnable
+uncorrected physical gate, deterministic consumer deadline/cleanup,
+post-merge optical regression, and Docstack 4.2. See the <a
+href="../evidence/public-release-alpha8.html">alpha-8 release
+evidence</a>.</p>
 <p>The current <a
 href="../evidence/release-acceptance-audit.html">release acceptance
 audit</a> marks the Linux reader/API, preview endurance, application
@@ -4219,6 +4235,19 @@ href="../evidence/linux-v4l2-uncorrected-acceptance-preparation.html">Uncorrecte
 physical Linux V4L2 acceptance preparation</a></td>
 <td>VERIFIED BOUNDED FAILURE PATH + PI TIMEOUT SEMANTICS / PHYSICAL
 CABLE RUN OPEN</td>
+</tr>
+<tr>
+<td>E-077</td>
+<td>Annotated prerelease <code>v0.2.0-alpha.8</code> resolves to exact
+commit <code>2dd0b39</code>; the exact commit passes Raspberry Pi
+AArch64 and GitHub Ubuntu/macOS suites, tag CI passes independently, and
+the downloaded source archive with SHA-256
+<code>9772b437d2e5371857a257c11e0c3b4ff88de0ee9d64c754c8d4fcabb0e40d60</code>
+passes the complete Apple Silicon suite outside a Git checkout with the
+documented native-libusb override</td>
+<td><a href="../evidence/public-release-alpha8.html">Public alpha-8
+release</a></td>
+<td>VERIFIED PUBLIC RELEASE + PI + TAG CI + ARCHIVE</td>
 </tr>
 </tbody>
 </table>
