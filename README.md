@@ -326,7 +326,7 @@ and the calibration alongside any corrected derivative.
 Install the distribution-maintained generic loopback module:
 
 ```sh
-sudo apt install ffmpeg v4l-utils v4l2loopback-dkms
+sudo apt install ffmpeg time v4l-utils v4l2loopback-dkms
 scripts/tca-v4l2 --serve first-device-frame.raw
 ```
 

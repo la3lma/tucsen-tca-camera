@@ -488,3 +488,22 @@ The build also exposed an independent host configuration problem: the default
 Makefile now accepts a scoped `LIBUSB_PKG_CONFIG_PATH` override and tests its
 use, while the README documents the dual-Homebrew recovery path. Physical
 Linux V4L2 application acceptance remains open and requires moving the cable.
+
+## Uncorrected physical Linux acceptance preparation
+
+Candidate commit `5670678` removes an unnecessary dependency between two
+separate gates. The live Linux V4L2 harness now accepts `-` instead of a map to
+run an explicitly uncorrected USB-to-application test, while a supplied map
+retains the existing strict geometry, Bayer-phase, exposure, and gain checks.
+Both paths record `calibration_mode`, producer and consumer timing, bounded
+YUYV output, frame digests, cleanup, immediate reader reopen, and a manifest.
+An uncorrected pass cannot satisfy optical flat-field acceptance.
+
+The exact candidate passed the complete Apple Silicon and Raspberry Pi AArch64
+suites. On the Pi, installing the standard Debian `time` package closed a
+previously latent consumer-timing dependency. A token-gated invocation with
+the uncorrected `-` argument then advanced through dependency checks and failed
+closed on the expected zero-camera condition with status 69. The count of
+acceptance evidence directories remained zero before and after, so no bridge,
+loopback device, or partial evidence session was created. See the [rendered
+preparation record](../site/evidence/linux-v4l2-uncorrected-acceptance-preparation.html).
