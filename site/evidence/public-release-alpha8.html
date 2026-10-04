@@ -60,13 +60,85 @@ The tag and release contain no raw disassembly, decompiler export,
 Ghidra project, vendor binary, firmware, packet capture, VM disk, or
 private-work artifact.</li>
 </ul>
-<h2 id="physical-evidence-included">Physical evidence included</h2>
-<p>Exact post-V4L2-merge public main physically captured three distinct
-coherent 1280x960 frames at 9.51334 frames/s and two distinct complete
-3664x2748 frames at 2.75318 frames/s on Apple Silicon at requested 250
-ms/gain 0. Exact byte and timestamp counts passed, the analyzed first
-frames contained no zero or saturated pixels, and the complete raster
-had neither the historic half-black boundary nor an edge strip.</p>
+<h2 id="exact-tag-physical-regression">Exact-tag physical
+regression</h2>
+<p>After publication, the downloaded alpha-8 source archive’s native
+ARM64 reader was run directly against the Mac-attached physical
+microscope camera. Both modes used requested 250 ms/gain 0 and returned
+<code>status=ok</code> with exact device-record, Bayer-stream, and
+timestamp-row counts.</p>
+<table>
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Mode</th>
+<th style="text-align: right;">Geometry</th>
+<th style="text-align: right;">Frames</th>
+<th style="text-align: right;">Exact Bayer bytes</th>
+<th style="text-align: right;">Delivered cadence</th>
+<th style="text-align: right;">First-frame mean / p01 / p99</th>
+<th style="text-align: right;">Zero / saturated</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2 stable repeat</td>
+<td style="text-align: right;">1280x960</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">12,288,000</td>
+<td style="text-align: right;">9.50216 fps</td>
+<td style="text-align: right;">178.367 / 79 / 220</td>
+<td style="text-align: right;">0 / 0</td>
+</tr>
+<tr>
+<td>0</td>
+<td style="text-align: right;">3664x2748</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">20,137,344</td>
+<td style="text-align: right;">2.75115 fps</td>
+<td style="text-align: right;">169.465 / 58 / 220</td>
+<td style="text-align: right;">0 / 0</td>
+</tr>
+</tbody>
+</table>
+<p>Preview intervals were 104.778–105.432 ms with p50 105.296 ms; the
+full-resolution interval was 363.485 ms. All ten preview and both
+full-resolution hashes were distinct. The first-frame hashes were:</p>
+<pre class="text"><code>59ed9202d821b70db61267bc553e43ab0213b6969c2aa628a58a537c54066a26  mode 2
+a1e8ce87d3438129b0ac9fb29774bac489e0284b40446afffc027073ba3f2009  mode 0</code></pre>
+<p>The first short three-frame preview session was optically valid but
+had a 429.728-ms interval followed by 74.563 ms. The immediate ten-frame
+repeat was stable. This is retained as a start-of-session cadence
+transient; the physical Linux run must likewise preserve and report
+startup behavior rather than hide it.</p>
+<p>The following JPEGs are display derivatives of retained lossless
+renders. They use provisional GRBG and the earlier neutral-field
+multipliers, so their color is illustrative rather than a final
+phase/color calibration.</p>
+<p><a href="images/alpha8-mode2-optical.jpg"><img
+src="images/alpha8-mode2-optical.jpg"
+alt="Alpha-8 mode-2 optical frame" /></a></p>
+<p><em>Exact alpha-8 mode 2: 1280x960 preview.</em></p>
+<p><a href="images/alpha8-mode0-optical.jpg"><img
+src="images/alpha8-mode0-optical.jpg"
+alt="Alpha-8 mode-0 optical frame" /></a></p>
+<p><em>Exact alpha-8 mode 0: complete 3664x2748 full-resolution
+raster.</em></p>
+<p>Both renders show the same coherent dust field. Full resolution
+contains more scene detail and has neither the historic half-black
+boundary nor an edge strip. Published JPEG hashes are:</p>
+<pre class="text"><code>dc1276f8b6b980e0526f402d87e0b967766a107cdfccd8000fd51c82fd41b416  mode 2 JPEG
+28762dbd5b436404667168d6a50f8c000f2181cd393b877089a6d6ba4fbed541  mode 0 JPEG</code></pre>
+<p>This closes a physical regression of the exact public tag on Apple
+Silicon.</p>
 <p>Camera-free Raspberry Pi runs exercised the real V4L2 bridge at both
 application geometries with consumer detach/reattach, deliberate delayed
 consumption, bounded post-warm-up process-tree memory, exact output
