@@ -94,8 +94,8 @@ checkout on documented hardware:
 | Objective | Build a usable driver/reader, stream, control surface, and application bridge for the legacy microscope camera |
 | Canonical source | [camera-reader-docstack.md](camera-reader-docstack.md) |
 | Published website | [GitHub Pages Docstack](https://la3lma.github.io/tucsen-tca-camera/docstack/) |
-| Revision | 3.0, field-uniformity diagnosis and optical/flat-field correction plan added; exact alpha-6 Pi bench and post-switch optical/V4L2 harness prepared |
-| Execution state | D00–D50 are complete and D60 is substantially advanced. Optical autocorrelation showed that separate 524,288-byte requests restarted at new record origins, causing the earlier repeated regions and false seam. Mode 2 fits after a 512-byte prefix. Mode 0 is assembled from record N `[512,end)` plus the 192-byte continuation at record N+1 `[320,512)`. Three consecutive full-resolution frames have distinct hashes and no false left strip. At 100 ms, gain 0..320 is monotonic; gain 256 produced a bright frame with negligible clipping. One pre-control buffered record is consumed before frame zero. A 16-frame run yielded distinct frames, three still sizes, and a 640x480 H.264 proof clip. Neutral-background white balance independently produced approximately R/G/B `0.87/1.0/2.0` in both modes; alpha-6 preserves those ratios when normalizing into FFmpeg's multiplier range. After changing to 10x, a bounded sweep recovered unclipped preview and full-resolution stills at 250 ms/gain 0. Exact alpha-6 is now built and fully tested on the Pi. A synthetic producer/consumer preflight passed six exact 1280x960 YUYV frames through the generic V4L2 loopback and cleaned it up, and an inert one-shot camera harness is staged for the cable move. Final known-target Bayer/color calibration, measured timing, and execution of that post-fix live-camera V4L2 gate remain open. AVFoundation remains deferred. |
+| Revision | 3.1, user-space per-Bayer-plane dark/flat correction implemented and a corrected-stream V4L2 preflight verified on the Pi; physical optical calibration remains open |
+| Execution state | D00–D50 are complete and D60 is substantially advanced. Optical autocorrelation showed that separate 524,288-byte requests restarted at new record origins, causing the earlier repeated regions and false seam. Mode 2 fits after a 512-byte prefix. Mode 0 is assembled from record N `[512,end)` plus the 192-byte continuation at record N+1 `[320,512)`. Three consecutive full-resolution frames have distinct hashes and no false left strip. At 100 ms, gain 0..320 is monotonic; gain 256 produced a bright frame with negligible clipping. One pre-control buffered record is consumed before frame zero. A 16-frame run yielded distinct frames, three still sizes, and a 640x480 H.264 proof clip. Neutral-background white balance independently produced approximately R/G/B `0.87/1.0/2.0` in both modes; alpha-6 preserves those ratios when normalizing into FFmpeg's multiplier range. After changing to 10x, a bounded sweep recovered unclipped preview and full-resolution stills at 250 ms/gain 0. Public commit `1dc096b` now adds a portable per-pixel dark/flat corrector and optional corrected V4L2 path. On the Pi, six synthetic full preview frames were corrected to their expected value and consumed through a temporary loopback device; 60 frames filtered at approximately 225 frames/s. Final known-target Bayer/color calibration, real dark/flat capture, measured timing, and execution of the live-camera V4L2 gate remain open. AVFoundation remains deferred. |
 | Acceptance authority | Camera owner, or an explicitly delegated technical owner recorded in D120 |
 | Related report | [PDF report](https://la3lma.github.io/tucsen-tca-camera/report/microscope-window-sensor.pdf) |
 | Reader source | [GitHub repository and README](https://github.com/la3lma/tucsen-tca-camera#readme) |
@@ -828,7 +828,7 @@ The reader applies recovered row times to bounded exposure control.
 
 | Field | Contract |
 |---|---|
-| State | Active; coherent preview/full-resolution images, optical gain, and neutral-background white balance pass; exact alpha-6 Pi bench and one-shot Linux application harness are ready, while final known-target phase/color and live execution remain |
+| State | Active; coherent preview/full-resolution images, optical gain, neutral-background white balance, user-space flat-field implementation, and corrected-stream V4L2 preflight pass; physical flat calibration, final known-target phase/color, and live-camera V4L2 execution remain |
 | Actors | Protocol developer, imaging reviewer |
 | Goal | Turn bounded bulk reads into reproducible full still and preview images |
 | Preconditions | D50 sequences and exact expected bulk limits available |
@@ -858,13 +858,16 @@ balance is reproducible. The current 10x blank field is measurably asymmetric:
 equal regions range from mean luma 134.0 at bottom-left to 193.9 at top-middle.
 The [field-uniformity note](../evidence/field-illumination-correction.md) records
 a Köhler alignment and relay-isolation checklist plus a per-Bayer-plane
-dark/flat correction that can run before demosaic or V4L2 output. File/stdout conversion passes; the existing V4L2
-adapter awaits a live post-fix Linux retest. Exact alpha-6 already builds and
-passes its complete suite on the prepared Pi. A synthetic producer and separate
-consumer passed six exact 1280x960 YUYV frames through its loopback dependency,
-which was then removed, and an inert exact-commit harness is staged to capture
-both modes and have FFmpeg consume six camera frames through `/dev/video42`
-immediately after the physical cable move.
+dark/flat correction that can run before demosaic or V4L2 output. Public commit
+`1dc096b` implements that correction as a dependency-free C17 tool and an
+optional V4L2 bridge stage. Its complete suite passes on macOS and the Pi. A
+synthetic Pi preflight corrected six full 1280x960 GRBG frames, converted them
+to YUYV, had a separate application consume all six through the temporary
+loopback, and cleaned up; 60 corrected preview frames measured approximately
+225 frames/s. The [flat-field/V4L2 record](../evidence/flat-field-v4l2-preflight.md)
+separates that software proof from the still-open physical dark/flat capture.
+An inert exact-commit harness remains staged to capture both modes and have
+FFmpeg consume six camera frames through `/dev/video42` after the cable move.
 :::
 
 ::: {.task-card data-state="complete"}
@@ -1151,6 +1154,7 @@ Happy-day steps:
 | E-061 | After a change to 10x made the old settings nearly fully clipped, a gain-zero sweep found an unclipped 250-ms preview and complete full-resolution still; public alpha-6 at commit `0fded6e` emits ratio-preserving FFmpeg-safe white-balance gains | [Optical capture and 10x recovery](../evidence/first-optical-capture.md) | VERIFIED LIVE OPTICAL RECOVERY + RELEASE |
 | E-062 | Exact public alpha-6 builds and passes every test on `rpios-17`; a synthetic 1280x960 YUYV producer/consumer preflight passed six exact frames through the generic loopback and cleaned it up, and a static-tested inert harness is staged to verify both optical modes plus six ordinary V4L2-consumed camera frames after the cable move | [Pi alpha-6 optical preparation](../evidence/pi-alpha6-linux-optical-preparation.md) | GENERIC V4L2 VERIFIED + CAMERA HARNESS PREPARED / CAMERA MOVE OPEN |
 | E-063 | Equal 256x192 regions in the 10x blank-field preview range from mean luma 134.0 at bottom-left to 193.9 at top-middle, showing asymmetric field nonuniformity rather than simple radial falloff; an optical alignment/isolation checklist and calibrated per-Bayer-plane dark/flat correction are now specified | [Field illumination correction](../evidence/field-illumination-correction.md) | MEASURED DIAGNOSIS + CORRECTION PLAN |
+| E-064 | Public commit `1dc096b` implements per-pixel fixed-point dark subtraction and independent R/G1/G2/B flat gains before demosaic; on the Pi, six synthetic corrected 1280x960 frames traversed FFmpeg and a temporary V4L2 loopback to a separate consumer, cleanup passed, and 60-frame filter throughput measured about 225 fps | [User-space flat-field and V4L2 preflight](../evidence/flat-field-v4l2-preflight.md) | VERIFIED SOFTWARE + GENERIC APPLICATION BOUNDARY / PHYSICAL FLAT OPEN |
 
 ## Risk Register
 
