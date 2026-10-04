@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Public prerelease `v0.2.0-alpha.7` — Tucsen TCA evidence</title>
+  <link rel="stylesheet" href="../evidence/evidence.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../evidence/">Evidence index</a>
+    <a href="../docstack/#evidence-ledger">Docstack ledger</a>
+    <a href="../report/microscope-window-sensor.pdf">PDF report</a>
+    <a href="https://github.com/la3lma/tucsen-tca-camera">Source repository</a>
+  </header>
+  <main class="evidence-record">
+<h1 id="public-prerelease-v0.2.0-alpha.7">Public prerelease
+<code>v0.2.0-alpha.7</code></h1>
+<p>Date: 2026-10-04</p>
+<h2 id="result">Result</h2>
+<p>The annotated public tag <code>v0.2.0-alpha.7</code> resolves to
+commit <code>72f6e631a75dfe6aceebad30d98d84c17b30d9e8</code> and is
+published as a GitHub prerelease:</p>
+<p><a
+href="https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.7"
+class="uri">https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.7</a></p>
+<p>This release packages the settings-bound dark/flat corrector,
+optional corrected V4L2 path, inert guided physical-calibration session,
+monotonic per-frame timestamp output, timing analyzer, rendered public
+evidence, and permanent public/private publication-boundary enforcement.
+The implementation remains Apache-2.0 licensed and entirely in user
+space.</p>
+<h2 id="independent-verification">Independent verification</h2>
+<ul>
+<li>The exact commit passed GitHub CI on both Ubuntu and macOS before
+tagging: run <code>37198751084</code>.</li>
+<li>The tag itself passed a separate GitHub CI run on Ubuntu and macOS:
+run <code>37198791200</code>.</li>
+<li>A detached exact-commit worktree on Raspberry Pi AArch64
+(<code>rpios-17</code>, Linux 6.18.39+rpt-rpi-2712) passed
+<code>make clean all test</code>. This run was USB-inert and did not
+access the Mac-connected camera.</li>
+<li>The GitHub tag archive was downloaded inside the private report
+project, extracted outside a Git checkout, and passed
+<code>make clean all test</code> on Apple Silicon. Its SHA-256 is
+<code>921e248caf865cd9a8165475f4d220b70e4ac586da11d9179ca7e7aa5436b03f</code>.</li>
+<li>The release commit passed the full-history public publication audit.
+The tag and release contain no raw disassembly, decompiler export,
+Ghidra project, vendor binary, firmware, packet capture, VM disk, or
+private-work artifact.</li>
+</ul>
+<h2 id="measured-hardware-evidence-included">Measured hardware evidence
+included</h2>
+<p>Direct Apple Silicon capture delivered 17.3466 frames/s for 1280x960
+at a requested 1-ms exposure, 9.5057 frames/s for 1280x960 at 250 ms,
+and 2.7911 frames/s for 3664x2748 at 250 ms. All frames in the three
+bounded trials had distinct hashes. These are host-output cadence
+measurements, not proof of the camera’s sensor integration interval.</p>
+<h2 id="explicit-residual-gates">Explicit residual gates</h2>
+<p>This is a useful prerelease, not final acceptance. The remaining
+physical work is unchanged:</p>
+<ol type="1">
+<li>acquire true blocked-light dark and blank-field flat sets with the
+guided session at locked settings;</li>
+<li>confirm Bayer phase and color response with a known target;</li>
+<li>move the camera to Linux and measure corrected V4L2 consumer cadence
+and drops; and</li>
+<li>complete the physical cable disconnect/reconnect acceptance
+case.</li>
+</ol>
+<p>AVFoundation remains a non-blocking macOS application-surface
+deferral.</p>
+
+  </main>
+  <footer>Public evidence record for the AmScope/Tucsen 0547:c003 reader.</footer>
+</body>
+</html>

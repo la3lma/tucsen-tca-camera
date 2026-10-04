@@ -1952,7 +1952,7 @@ disconnect/reconnect remains</td>
 <td>D110</td>
 <td>Package source and operations</td>
 <td>D100</td>
-<td>Active; alpha-6 released, post-release main verified</td>
+<td>Active; alpha-7 released and independently verified</td>
 <td>Public GitHub repository, Apache-2.0 license, udev/V4L2 operations,
 CI, two modes, bounded initial recovery, optical and calibration
 procedures, measured output cadence, rendered evidence, permanent
@@ -3059,11 +3059,10 @@ Fixtures, and Operations</h3>
 <tbody>
 <tr>
 <td>State</td>
-<td>Active; public alpha-6 packages the reader, optical tooling, and
-tested install/removal; post-release main adds calibrated-field tooling,
-measured output cadence, rendered evidence, and permanent
-publication-boundary enforcement while residual physical validation
-continues</td>
+<td>Active; public alpha-7 packages the reader, calibrated-field
+tooling, measured output cadence, rendered evidence, permanent
+publication-boundary enforcement, and tested install/removal while
+residual physical validation continues</td>
 </tr>
 <tr>
 <td>Actors</td>
@@ -3127,6 +3126,18 @@ at exact commit <code>3c16d2a</code>. Independent main and tag CI runs
 pass on Ubuntu and macOS. A clean exact-tag Pi worktree passed all
 tests, then cold-captured and analyzed one exact-size physical frame
 with controls and exit zero.</p>
+<p>The current annotated prerelease <a
+href="https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.7"><code>v0.2.0-alpha.7</code></a>
+resolves to exact commit <code>72f6e63</code>. Independent main and tag
+CI pass on Ubuntu and macOS, an exact-commit Raspberry Pi AArch64
+worktree passes the complete suite, and the downloaded tag archive
+passes the complete suite outside a Git checkout. Alpha 7 packages
+settings-bound dark/flat correction, the optional corrected V4L2 path,
+guided physical calibration, monotonic frame timestamps,
+delivered-cadence analysis, rendered evidence, and permanent
+full-history publication-boundary enforcement. See the <a
+href="../evidence/public-release-alpha7.html">alpha-7 release
+evidence</a>.</p>
 <p>The current <a
 href="../evidence/release-acceptance-audit.html">release acceptance
 audit</a> marks the Linux reader/API, preview endurance, application
@@ -3940,6 +3951,17 @@ vendor binary, firmware, packet capture, or private-work artifact</td>
 <td><a href="../evidence/public-evidence-site-and-boundary.html">Public
 evidence site and permanent publication boundary</a></td>
 <td>VERIFIED LIVE SITE + CLEAN PUBLIC HISTORY</td>
+</tr>
+<tr>
+<td>E-069</td>
+<td>Annotated prerelease <code>v0.2.0-alpha.7</code> resolves to exact
+commit <code>72f6e63</code>; independent main and tag CI pass on
+Ubuntu/macOS, the exact commit passes the full Raspberry Pi AArch64
+suite, and the downloaded public tag archive passes the full suite
+outside a Git checkout</td>
+<td><a href="../evidence/public-release-alpha7.html">Public alpha-7
+release</a></td>
+<td>VERIFIED PUBLIC RELEASE + PI + ARCHIVE</td>
 </tr>
 </tbody>
 </table>

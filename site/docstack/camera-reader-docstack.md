@@ -722,7 +722,7 @@ neighbors.
 | D80 | Build Linux application bridge | D70 | Complete for alpha | Live physical-camera V4L2 device consumed by `v4l2-ctl` and FFmpeg, then cleanly removed |
 | D90 | Build macOS application bridge | D70 | Portable reader complete; AVFoundation deferred | Exact alpha-3 directly captured preview and full-resolution frames over the native cable; system-camera surface deferred |
 | D100 | Prove stability and fault recovery | D80,D90 | Active, Linux-first | Reopen, endurance, process-kill, host reboot, direct Apple Silicon capture, and bounded ownership hand-back passed; physical Pi cable disconnect/reconnect remains |
-| D110 | Package source and operations | D100 | Active; alpha-6 released, post-release main verified | Public GitHub repository, Apache-2.0 license, udev/V4L2 operations, CI, two modes, bounded initial recovery, optical and calibration procedures, measured output cadence, rendered evidence, permanent publication boundary, tested install/removal, validation record, and report links |
+| D110 | Package source and operations | D100 | Active; alpha-7 released and independently verified | Public GitHub repository, Apache-2.0 license, udev/V4L2 operations, CI, two modes, bounded initial recovery, optical and calibration procedures, measured output cadence, rendered evidence, permanent publication boundary, tested install/removal, validation record, and report links |
 | D120 | Accept release | D110 | Proposed | Owner acceptance against Definition of Done |
 
 ### Non-gating Research Lane — Updated Firmware Discovery
@@ -1204,7 +1204,7 @@ delivery begins remains fatal.
 
 | Field | Contract |
 |---|---|
-| State | Active; public alpha-6 packages the reader, optical tooling, and tested install/removal; post-release main adds calibrated-field tooling, measured output cadence, rendered evidence, and permanent publication-boundary enforcement while residual physical validation continues |
+| State | Active; public alpha-7 packages the reader, calibrated-field tooling, measured output cadence, rendered evidence, permanent publication-boundary enforcement, and tested install/removal while residual physical validation continues |
 | Actors | Release developer, support reviewer |
 | Goal | Make the accepted reader reproducible and supportable without redistributing vendor binaries |
 | Preconditions | D100 proof complete; licenses and dependency versions inventoried |
@@ -1242,6 +1242,17 @@ These changes are sealed in annotated public prerelease
 at exact commit `3c16d2a`. Independent main and tag CI runs pass on Ubuntu and
 macOS. A clean exact-tag Pi worktree passed all tests, then cold-captured and
 analyzed one exact-size physical frame with controls and exit zero.
+
+The current annotated prerelease
+[`v0.2.0-alpha.7`](https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.7)
+resolves to exact commit `72f6e63`. Independent main and tag CI pass on Ubuntu
+and macOS, an exact-commit Raspberry Pi AArch64 worktree passes the complete
+suite, and the downloaded tag archive passes the complete suite outside a Git
+checkout. Alpha 7 packages settings-bound dark/flat correction, the optional
+corrected V4L2 path, guided physical calibration, monotonic frame timestamps,
+delivered-cadence analysis, rendered evidence, and permanent full-history
+publication-boundary enforcement. See the
+[alpha-7 release evidence](../evidence/public-release-alpha7.html).
 
 The current [release acceptance audit](../evidence/release-acceptance-audit.html)
 marks the Linux reader/API, preview endurance, application bridge, direct-cable
@@ -1348,6 +1359,7 @@ Happy-day steps:
 | E-066 | Public commit `176ef90` provides an exact-token, inert-by-default guided session that locks settings, separates blocked-dark/repositioned-flat/fresh-blank/specimen phases, verifies raw/Bayer byte counts, marks partial sessions, builds/applies/inspects the map, renders four PNGs, and hashes the bundle; a USB-free dynamic test using the real corrector and analyzer passes on Apple Silicon and an exact public clone on Raspberry Pi AArch64 | [Guided physical flat-field capture session](../evidence/guided-flat-field-capture-session.html) | VERIFIED WORKFLOW + PORTABILITY / OPERATOR-ASSISTED OPTICAL RUN OPEN |
 | E-067 | Public commit `064cf31` records one monotonic timestamp after every accepted Bayer-frame write; direct-Mac physical runs delivered 17.3466 fps at 1280x960/requested 1 ms, 9.5057 fps at 1280x960/250 ms, and 2.7911 fps at 3664x2748/250 ms, with every frame hash distinct | [Apple Silicon measured delivered-frame cadence](../evidence/macos-measured-frame-cadence.html) | VERIFIED LIVE OUTPUT CADENCE / SENSOR INTEGRATION AND LINUX CONSUMER TIMING NOT CLAIMED |
 | E-068 | Public commit `064cf31` renders every evidence record as HTML, supplies evidence and photo indexes, checks all internal site targets, and adds a full-history CI denylist; a fresh current-tree and object-history audit found no raw disassembly, Ghidra state/export, vendor binary, firmware, packet capture, or private-work artifact | [Public evidence site and permanent publication boundary](../evidence/public-evidence-site-and-boundary.html) | VERIFIED LIVE SITE + CLEAN PUBLIC HISTORY |
+| E-069 | Annotated prerelease `v0.2.0-alpha.7` resolves to exact commit `72f6e63`; independent main and tag CI pass on Ubuntu/macOS, the exact commit passes the full Raspberry Pi AArch64 suite, and the downloaded public tag archive passes the full suite outside a Git checkout | [Public alpha-7 release](../evidence/public-release-alpha7.html) | VERIFIED PUBLIC RELEASE + PI + ARCHIVE |
 
 ## Risk Register
 
