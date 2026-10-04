@@ -1,0 +1,140 @@
+#!/usr/bin/env python3
+"""Estimate neutral-background white-balance gains from a Bayer8 frame."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import pathlib
+import statistics
+import sys
+
+
+MODES = {0: (3664, 2748), 2: (1280, 960)}
+PHASES = {
+    "rggb": (("r", "g1"), ("g2", "b")),
+    "grbg": (("g1", "r"), ("b", "g2")),
+    "gbrg": (("g1", "b"), ("r", "g2")),
+    "bggr": (("b", "g1"), ("g2", "r")),
+}
+
+
+def parse_roi(text: str) -> tuple[int, int, int, int]:
+    try:
+        values = tuple(int(part, 10) for part in text.split(","))
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("ROI must be X,Y,W,H") from error
+    if len(values) != 4 or any(value < 0 for value in values):
+        raise argparse.ArgumentTypeError("ROI must be four nonnegative integers")
+    if values[2] == 0 or values[3] == 0:
+        raise argparse.ArgumentTypeError("ROI width and height must be positive")
+    return values
+
+
+def dimensions(args: argparse.Namespace) -> tuple[int, int]:
+    if args.mode is not None:
+        if args.width is not None or args.height is not None:
+            raise SystemExit("use either --mode or --width/--height")
+        return MODES[args.mode]
+    if args.width is None or args.height is None:
+        raise SystemExit("provide --mode or both --width and --height")
+    if args.width <= 0 or args.height <= 0:
+        raise SystemExit("width and height must be positive")
+    return args.width, args.height
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("bayer", type=pathlib.Path)
+    parser.add_argument("--mode", type=int, choices=sorted(MODES))
+    parser.add_argument("--width", type=int)
+    parser.add_argument("--height", type=int)
+    parser.add_argument("--phase", choices=sorted(PHASES), default="grbg")
+    parser.add_argument("--roi", type=parse_roi)
+    parser.add_argument("--max-samples", type=int, default=200_000)
+    parser.add_argument("--ffmpeg", action="store_true",
+                        help="print only a colorchannelmixer filter")
+    args = parser.parse_args()
+    width, height = dimensions(args)
+    data = args.bayer.read_bytes()
+    expected = width * height
+    if len(data) != expected:
+        raise SystemExit(f"expected {expected} Bayer bytes, found {len(data)}")
+    if args.max_samples < 4:
+        raise SystemExit("--max-samples must be at least 4")
+
+    if args.roi is None:
+        x = width // 10
+        y = height // 10
+        roi_width = width - 2 * x
+        roi_height = height - 2 * y
+    else:
+        x, y, roi_width, roi_height = args.roi
+    if x + roi_width > width or y + roi_height > height:
+        raise SystemExit("ROI extends beyond the frame")
+
+    area = roi_width * roi_height
+    step = max(2, math.ceil(math.sqrt(area / args.max_samples)))
+    if step % 2:
+        step += 1
+    samples: dict[str, list[int]] = {
+        name: [] for name in ("r", "g1", "g2", "b")
+    }
+    phase = PHASES[args.phase]
+    view = memoryview(data)
+    for block_row in range(y, y + roi_height, step):
+        for block_column in range(x, x + roi_width, step):
+            for row in range(block_row, min(block_row + 2, y + roi_height)):
+                base = row * width
+                for column in range(
+                    block_column, min(block_column + 2, x + roi_width)
+                ):
+                    channel = phase[row & 1][column & 1]
+                    value = view[base + column]
+                    if 0 < value < 255:
+                        samples[channel].append(value)
+    if any(not values for values in samples.values()):
+        raise SystemExit("ROI did not provide samples for every Bayer channel")
+
+    medians = {
+        name: float(statistics.median(values))
+        for name, values in samples.items()
+    }
+    green = (medians["g1"] + medians["g2"]) / 2.0
+    gains = {
+        "red": green / medians["r"],
+        "green": 1.0,
+        "blue": green / medians["b"],
+    }
+    ffmpeg_filter = (
+        f"colorchannelmixer=rr={gains['red']:.6f}:"
+        f"gg={gains['green']:.6f}:bb={gains['blue']:.6f}"
+    )
+    if args.ffmpeg:
+        print(ffmpeg_filter)
+        return
+    result = {
+        "width": width,
+        "height": height,
+        "phase": args.phase,
+        "roi": {
+            "x": x,
+            "y": y,
+            "width": roi_width,
+            "height": roi_height,
+        },
+        "sample_step": step,
+        "sample_counts": {
+            name: len(values) for name, values in samples.items()
+        },
+        "medians": medians,
+        "gains": gains,
+        "ffmpeg_filter": ffmpeg_filter,
+    }
+    json.dump(result, sys.stdout, indent=2, sort_keys=True)
+    sys.stdout.write("\n")
+
+
+if __name__ == "__main__":
+    main()

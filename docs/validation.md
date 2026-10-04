@@ -195,7 +195,7 @@ process was still active. That run subsequently completed 100/100 frames and
 exited zero. Its first-frame hash is
 `b72ce36fe4dfccb2fa82f37de6a376a4bb072e59763be650051e300705a9fb54`.
 
-## Optical correction: one request is one complete record
+## Optical correction: one request is one complete physical record
 
 With the camera mounted on its microscope, the old reader produced repeated
 scene regions, a sharp horizontal seam, and an apparently black lower region.
@@ -203,10 +203,11 @@ The 1,228,800-byte output had 0.983 autocorrelation at an exact 524,288-byte
 lag. A diagnostic probe then requested the entire record with one libusb bulk
 call instead of several 524,288-byte calls.
 
-The probe established the corrected record layout:
+The probe established the first corrected record behavior:
 
 - mode 2: 1,229,312-byte record, 512-byte prefix, then 1,228,800 Bayer bytes;
-- mode 0: 10,068,992-byte record, 320-byte prefix, then 10,068,672 Bayer bytes;
+- mode 0: 10,068,992-byte physical records, with frame bytes crossing the
+  record boundary as refined below;
 - the first ten prefix bytes are `0x88`; and
 - neither record contains another transport marker.
 
@@ -218,9 +219,9 @@ but their reconstructed Bayer images are not spatially valid.
 
 Candidate alpha.4 source using one request per record then completed eight
 consecutive mode-2 frames and one mode-0 frame over a direct Apple Silicon
-connection. Both produced coherent microscope imagery without the former
-horizontal seam or repeated quadrants. The mode-0 rendering retains an
-unresolved 192-pixel-wide dark/purple strip at the left edge.
+connection. Both produced microscope imagery without the former horizontal
+seam or repeated quadrants. The alpha.4 mode-0 interpretation still placed a
+192-pixel continuation from the preceding frame at the left edge.
 
 ```text
 60d7ca28b68045a5e1fede848d5d78348b18bf3fca021e7b5d2590fbc0095028  eight mode-2 Bayer frames
@@ -233,6 +234,48 @@ stills. The proof clip contains eight frames with a chosen 4 fps playback time
 base; because raw Bayer carries no timestamps, that value is not a measured
 camera frame-rate specification. A known color target is still required before
 the provisional `bayer_grbg8` phase can be declared final.
+
+## Full-resolution record-boundary assembly
+
+A diagnostic mode-0 request of 10,069,504 bytes exposed a second ten-byte
+`0x88` marker at byte 10,068,992. This proves that 10,068,992 is the physical
+record interval. The same request showed that the visually clean raster begins
+at offset 512, while only 10,068,480 bytes remain in that record. The missing
+192 pixels are bytes 320–511 of the following record; bytes 512 onward in that
+following record begin the next frame.
+
+The reader now assembles each 3664×2748 frame as:
+
+```text
+record N   [512, 10068992)  = 10,068,480 bytes
+record N+1 [320, 512)       =        192 bytes
+total                         10,068,672 bytes
+```
+
+It retains record N+1 as the head of the following frame. A direct native-cable
+test captured three consecutive assembled mode-0 frames and a separate
+three-frame mode-2 regression sequence at 100 ms and gain 256. All six frame
+hashes were distinct, both commands exited zero, and the full-resolution PNG
+has no left strip:
+
+```text
+9ba66e3839516d540500790924f35f671abd0fe6455a7329e786e5115d5ede8d  mode-0 frame 1
+58fca6aa409e785d297851ace0f045af9224219f0695d254ca52640802bab58e  mode-0 frame 2
+88d31e27174d56e6b33d7423c42bcfd1a018d587190f6cbcb8df745ea748e8fc  mode-0 frame 3
+ee419b1405d4c84e308ff701482822fe208d9155decc90d02f71c627f815baab  mode-2 frame 1
+87c8de3d100797a6d8dee7f3709ec982627c965240d9bf50ed06cea283028785  mode-2 frame 2
+77b25eecdf3d051b50677236f9737e9f8c60b4735ec353e5a08088000640c26f  mode-2 frame 3
+```
+
+## Neutral-background white balance
+
+The blank illuminated slide was treated as neutral. Robust Bayer-plane medians
+from clean regions independently produced red/green/blue multipliers of
+`0.8788/1.0/1.9773` at 3664×2748 and `0.8624/1.0/2.0` at 1280×960. Applying
+those gains removed the tungsten/sensor yellow-green cast and made the chosen
+background neutral gray. This validates the `tca-white-balance` estimator and
+the use of the actual optical path as an in-situ reference; it does not replace
+a known color target for final Bayer-phase and colorimetric calibration.
 
 ## Optical exposure/gain response and brighter motion sequence
 

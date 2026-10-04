@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 0.2.0-alpha.5 — 2026-10-04
+
+- Assemble full-resolution frames across their physical record boundary. Each
+  mode-0 frame consists of 10,068,480 bytes after offset 512 in record N plus
+  a 192-byte continuation at offset 320 in record N+1. This removes the false
+  left strip while retaining every one of the 3664×2748 pixels.
+- Add `tca-white-balance`, a dependency-free neutral-background Bayer-channel
+  estimator that emits reproducible gains and an FFmpeg filter.
+- Verify three consecutive complete 3664×2748 frames and a three-frame
+  1280×960 regression sequence over the direct Apple Silicon connection.
+
 ## 0.2.0-alpha.4 — 2026-10-04
 
 - Correct frame acquisition to use one bulk request per complete device record.

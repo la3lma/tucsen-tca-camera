@@ -38,15 +38,14 @@ _Static_assert(TCA_MODE2_DEVICE_BYTES ==
                "mode 2 size must match the recovered next-packet formula");
 _Static_assert(TCA_MODE0_DEVICE_BYTES ==
                    TCA_NEXT_PACKET_BYTES(TCA_MODE0_WIDTH * TCA_MODE0_HEIGHT),
-               "mode 0 size must match the recovered next-packet formula");
+               "mode 0 record size must match the packet formula");
 _Static_assert(TCA_MODE2_DEVICE_BYTES -
                        TCA_MODE2_WIDTH * TCA_MODE2_HEIGHT ==
                    512u,
                "mode 2 record prefix must be 512 bytes");
-_Static_assert(TCA_MODE0_DEVICE_BYTES -
-                       TCA_MODE0_WIDTH * TCA_MODE0_HEIGHT ==
-                   320u,
-               "mode 0 record prefix must be 320 bytes");
+_Static_assert(TCA_MODE0_DEVICE_BYTES - 512u + 192u ==
+                   TCA_MODE0_WIDTH * TCA_MODE0_HEIGHT,
+               "mode 0 head plus next-record continuation must be one frame");
 
 struct init_step {
     uint8_t request;
@@ -61,14 +60,17 @@ struct mode_profile {
     unsigned width;
     unsigned height;
     size_t device_bytes;
+    size_t head_offset;
+    size_t continuation_offset;
+    size_t continuation_bytes;
     unsigned row_time_us;
 };
 
 static const struct mode_profile mode_profiles[] = {
     {0u, 0x00c0u, TCA_MODE0_WIDTH, TCA_MODE0_HEIGHT,
-     TCA_MODE0_DEVICE_BYTES, TCA_MODE0_ROW_TIME_US},
+     TCA_MODE0_DEVICE_BYTES, 512u, 320u, 192u, TCA_MODE0_ROW_TIME_US},
     {2u, 0x00c2u, TCA_MODE2_WIDTH, TCA_MODE2_HEIGHT,
-     TCA_MODE2_DEVICE_BYTES, TCA_MODE2_ROW_TIME_US},
+     TCA_MODE2_DEVICE_BYTES, 512u, 0u, 0u, TCA_MODE2_ROW_TIME_US},
 };
 
 static const struct init_step init_steps[] = {
@@ -82,7 +84,7 @@ static const struct init_step init_steps[] = {
 };
 
 static const char execution_token[] = "capture";
-static const char version[] = "0.2.0-alpha.4";
+static const char version[] = "0.2.0-alpha.5";
 static volatile sig_atomic_t stop_requested;
 
 static size_t pixel_bytes(const struct mode_profile *mode)
@@ -90,9 +92,9 @@ static size_t pixel_bytes(const struct mode_profile *mode)
     return (size_t)mode->width * (size_t)mode->height;
 }
 
-static size_t prefix_bytes(const struct mode_profile *mode)
+static size_t head_bytes(const struct mode_profile *mode)
 {
-    return mode->device_bytes - pixel_bytes(mode);
+    return mode->device_bytes - mode->head_offset;
 }
 
 static unsigned max_exposure_ms(const struct mode_profile *mode)
@@ -214,9 +216,11 @@ static void print_plan(FILE *output, const struct mode_profile *mode)
             "data-stage result is PIPE\n",
             mode->selector);
     fprintf(output,
-            "capture=endpoint-0x82 one request=%zu; validate ten-byte 0x88 "
-            "record marker and discard %zu-byte prefix\n",
-            mode->device_bytes, prefix_bytes(mode));
+            "capture=endpoint-0x82 record request=%zu; validate ten-byte "
+            "0x88 marker; frame=head[%zu..%zu) plus %zu bytes at offset %zu "
+            "in the next record\n",
+            mode->device_bytes, mode->head_offset, mode->device_bytes,
+            mode->continuation_bytes, mode->continuation_offset);
     fprintf(output,
             "raw-first=unmodified %zu-byte device frame; Bayer output "
             "contains the following %zu-byte raster\n",
@@ -323,7 +327,7 @@ static int validate_device_prefix(const struct mode_profile *mode,
 {
     size_t byte_index;
 
-    if (prefix_bytes(mode) < TCA_PREFIX_MARKER_BYTES) {
+    if (mode->head_offset < TCA_PREFIX_MARKER_BYTES) {
         return 0;
     }
     for (byte_index = 0; byte_index < TCA_PREFIX_MARKER_BYTES; ++byte_index) {
@@ -339,6 +343,7 @@ int main(int argc, char **argv)
     libusb_context *context = NULL;
     libusb_device_handle *handle = NULL;
     unsigned char *device_frame = NULL;
+    unsigned char *next_device_frame = NULL;
     unsigned char *pixels = NULL;
     FILE *raw_first = NULL;
     FILE *bayer = NULL;
@@ -356,6 +361,7 @@ int main(int argc, char **argv)
     int mode_set = 0;
     int frames_set = 0;
     int raw_written = 0;
+    int current_loaded = 0;
     int claimed = 0;
     int argument;
     int result;
@@ -454,8 +460,12 @@ int main(int argc, char **argv)
         goto done;
     }
     device_frame = malloc(mode->device_bytes);
+    if (mode->continuation_bytes > 0u) {
+        next_device_frame = malloc(mode->device_bytes);
+    }
     pixels = malloc(pixel_bytes(mode));
-    if (device_frame == NULL || pixels == NULL) {
+    if (device_frame == NULL || pixels == NULL ||
+        (mode->continuation_bytes > 0u && next_device_frame == NULL)) {
         perror("malloc");
         goto done;
     }
@@ -537,44 +547,82 @@ int main(int argc, char **argv)
 
     while (!stop_requested &&
            (requested_frames == 0u || frames < requested_frames)) {
-        size_t received = 0;
+        if (!current_loaded) {
+            size_t received = 0;
 
-        result = read_device_frame(handle, mode, device_frame, &received);
-        if (result != 0) {
-            if (!raw_written && received > 0u) {
-                if (fwrite(device_frame, 1, received, raw_first) != received ||
-                    fflush(raw_first) != 0) {
-                    perror("write partial raw-first");
+            result = read_device_frame(handle, mode, device_frame, &received);
+            if (result != 0) {
+                if (!raw_written && received > 0u) {
+                    if (fwrite(device_frame, 1, received, raw_first) !=
+                            received ||
+                        fflush(raw_first) != 0) {
+                        perror("write partial raw-first");
+                    }
+                    raw_written = 1;
                 }
-                raw_written = 1;
+                goto done;
             }
-            goto done;
-        }
-        if (!raw_written &&
-            fwrite(device_frame, 1, mode->device_bytes, raw_first) !=
-                mode->device_bytes) {
-            perror("write raw-first");
-            goto done;
-        }
-        if (!raw_written && fflush(raw_first) != 0) {
-            perror("flush raw-first");
-            goto done;
-        }
-        raw_written = 1;
-        if (!validate_device_prefix(mode, device_frame)) {
-            if (frames == 0u &&
-                initial_resyncs < TCA_INITIAL_RESYNC_LIMIT) {
-                ++initial_resyncs;
-                fprintf(stderr,
-                        "initial frame marker validation failed; "
-                        "discarding bounded warm-up frame %u/%u\n",
-                        initial_resyncs, TCA_INITIAL_RESYNC_LIMIT);
-                continue;
+            if (!raw_written &&
+                fwrite(device_frame, 1, mode->device_bytes, raw_first) !=
+                    mode->device_bytes) {
+                perror("write raw-first");
+                goto done;
             }
-            fputs("frame marker validation failed\n", stderr);
-            goto done;
+            if (!raw_written && fflush(raw_first) != 0) {
+                perror("flush raw-first");
+                goto done;
+            }
+            raw_written = 1;
+            if (!validate_device_prefix(mode, device_frame)) {
+                if (frames == 0u &&
+                    initial_resyncs < TCA_INITIAL_RESYNC_LIMIT) {
+                    ++initial_resyncs;
+                    fprintf(stderr,
+                            "initial frame marker validation failed; "
+                            "discarding bounded warm-up record %u/%u\n",
+                            initial_resyncs, TCA_INITIAL_RESYNC_LIMIT);
+                    continue;
+                }
+                fputs("record marker validation failed\n", stderr);
+                goto done;
+            }
+            current_loaded = 1;
         }
-        memcpy(pixels, device_frame + prefix_bytes(mode), pixel_bytes(mode));
+        memcpy(pixels, device_frame + mode->head_offset, head_bytes(mode));
+        if (mode->continuation_bytes > 0u) {
+            size_t received = 0;
+            unsigned char *swap;
+
+            result = read_device_frame(handle, mode, next_device_frame,
+                                       &received);
+            if (result != 0) {
+                goto done;
+            }
+            if (!validate_device_prefix(mode, next_device_frame)) {
+                if (frames == 0u &&
+                    initial_resyncs < TCA_INITIAL_RESYNC_LIMIT) {
+                    ++initial_resyncs;
+                    current_loaded = 0;
+                    fprintf(stderr,
+                            "initial continuation marker validation failed; "
+                            "discarding bounded warm-up pair %u/%u\n",
+                            initial_resyncs, TCA_INITIAL_RESYNC_LIMIT);
+                    continue;
+                }
+                fputs("continuation record marker validation failed\n",
+                      stderr);
+                goto done;
+            }
+            memcpy(pixels + head_bytes(mode),
+                   next_device_frame + mode->continuation_offset,
+                   mode->continuation_bytes);
+            swap = device_frame;
+            device_frame = next_device_frame;
+            next_device_frame = swap;
+            current_loaded = 1;
+        } else {
+            current_loaded = 0;
+        }
         if (fwrite(pixels, 1, pixel_bytes(mode), bayer) !=
             pixel_bytes(mode)) {
             perror("write Bayer stream");
@@ -607,6 +655,7 @@ done:
         libusb_exit(context);
     }
     free(pixels);
+    free(next_device_frame);
     free(device_frame);
     if (bayer != NULL && bayer != stdout && fclose(bayer) != 0) {
         status = EXIT_FAILURE;

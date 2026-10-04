@@ -10,7 +10,8 @@ import sys
 import tempfile
 
 
-PROGRAMS = ("tca-camera", "tca-v4l2", "tca-frame-stats")
+PROGRAMS = ("tca-camera", "tca-v4l2", "tca-frame-stats",
+            "tca-white-balance")
 
 
 def main() -> None:

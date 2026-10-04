@@ -75,6 +75,21 @@ Use an asymmetric target or slide label to determine horizontal/vertical
 orientation. Record rotation and mirroring separately from Bayer phase; do not
 silently bake orientation into transport decoding.
 
+### Neutral-background white balance
+
+If a blank slide region should be neutral, select a clean ROI and estimate
+channel gains without changing the preserved Bayer frame:
+
+```sh
+scripts/tca-white-balance capture/optical/preview.bayer --mode 2 \
+  --phase grbg --roi 448,48,576,240 \
+  > capture/optical/white-balance.json
+```
+
+Apply the emitted `ffmpeg_filter` after demosaicing. Record the ROI and gains.
+This in-situ correction includes the lamp and optical path, but a neutral field
+cannot by itself prove Bayer phase or establish colorimetric accuracy.
+
 ## 3. Exposure response
 
 Hold gain, illumination, focus, and specimen fixed. Capture a conservative
@@ -146,7 +161,7 @@ scripts/tca-frame-stats capture/optical/full.bayer \
 Require exact lengths of 10,068,992 device bytes and 10,068,672 Bayer bytes.
 Render it using the accepted phase at 3664x2748 and inspect the full field for
 orientation, clipping, dead rows/columns, repeated blocks, transport seams,
-the currently observed 192-pixel left strip, and focus consistency.
+unexpected edge strips, and focus consistency.
 
 ## 7. Application-boundary check
 
@@ -162,7 +177,7 @@ JSON statistics, stderr logs, commit/version information, and SHA-256 hashes.
 Record pass/fail for:
 
 1. preview and full-resolution byte counts and prefix validation;
-2. Bayer phase and image orientation;
+2. Bayer phase, image orientation, and neutral-background white balance;
 3. monotonic, bounded exposure and gain response;
 4. a reproducible focus-score maximum near visual focus;
 5. no visible transport seams or repeated/corrupt regions;

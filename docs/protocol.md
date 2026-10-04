@@ -47,31 +47,36 @@ because it is better suited to preview and the V4L2 adapter.
 
 ## Frame transport
 
-One device frame must be requested from endpoint `0x82` in one bulk API call.
+One device record must be requested from endpoint `0x82` in one bulk API call.
 Mode 2 requests 1,229,312 bytes and mode 0 requests 10,068,992 bytes. A request
 split into separate 524,288-byte calls does not continue the same record: each
 call restarts at a new record origin. Concatenating those calls therefore
 creates repeated image regions and a sharp false seam even though the byte
 count is correct.
 
-The beginning of each complete record is a transport prefix. Its first ten
-bytes are `0x88`; the remainder is currently opaque. The Bayer raster follows
-the entire prefix without further marker repair:
+The beginning of each record has ten `0x88` marker bytes. Preview frames fit
+wholly after a 512-byte prefix. Full-resolution frames cross a record boundary:
+record N holds the first 10,068,480 pixels after offset 512, and bytes 320–511
+of record N+1 hold the remaining 192 pixels. Bytes 512 onward in record N+1
+simultaneously begin the next frame, so the reader retains that record as its
+look-ahead buffer.
 
-| Mode | Complete record | Prefix | Bayer raster |
-|---:|---:|---:|---:|
-| 2 | 1,229,312 bytes | 512 bytes | 1,228,800 bytes (1280×960) |
-| 0 | 10,068,992 bytes | 320 bytes | 10,068,672 bytes (3664×2748) |
+| Mode | Record bytes | Frame assembly |
+|---:|---:|---|
+| 2 | 1,229,312 | record N `[512,1229312)` = 1,228,800 pixels |
+| 0 | 10,068,992 | record N `[512,10068992)` + record N+1 `[320,512)` = 10,068,672 pixels |
 
 The recovered capture routine expresses that rule exactly as
 `((width * height >> 9) + 1) << 9`: select the next 512-byte boundary,
 including one extra packet when the pixel count is already aligned. Applied to
-the 3664×2748 mode, this gives 10,068,992 device bytes. In the complete-record
-interpretation the formula's surplus is the leading prefix: 512 bytes in mode
-2 and 320 bytes in mode 0. Optical captures confirmed that discarding those
-prefixes produces coherent full frames. The reader preserves the untouched
-first device record separately, validates its leading marker, and emits the
-following image bytes.
+the 3664×2748 mode, this gives 10,068,992 device bytes. Initially treating the
+formula's 320-byte surplus as a simple mode-0 prefix put the previous frame's
+192-pixel continuation at the left of the next frame. That produced a false
+purple strip. A longer diagnostic request exposed the next `0x88` marker at
+exactly byte 10,068,992, proving the boundary and the look-ahead layout above.
+Three consecutive look-ahead-assembled frames were then captured with unique
+hashes and no strip. The reader preserves the untouched first device record
+separately and validates every consumed record marker.
 
 Earlier relay traces appeared as 524,288-byte pieces and were initially
 interpreted as application-level read boundaries. Optical autocorrelation and
@@ -91,6 +96,12 @@ of the two-frame limit, remains fatal; command transfers are never retried.
 The present FFmpeg/V4L2 path uses provisional `bayer_grbg8`. Microscope imagery
 is spatially coherent with that interpretation, but a known color target is
 still needed to distinguish the four Bayer phases conclusively.
+
+The dependency-free `tca-white-balance` helper can use a neutral slide region
+to estimate red, green, and blue multipliers. On the current tungsten-lit
+microscope it independently produced approximately red 0.87, green 1.0, and
+blue 1.98–2.0 in both modes. That is an in-situ white balance, not a Bayer-phase
+proof or a calibrated illuminant measurement.
 
 ## Controls
 
@@ -139,13 +150,10 @@ restricted material are deliberately excluded from this repository.
 
 - only fixed modes 0 (3664×2748) and 2 (1280×960) are enabled;
 - frame rate depends on mode and exposure; no formal performance guarantee;
-- no automatic exposure, white balance, or host color correction;
+- no automatic exposure or continuously adaptive host color correction;
 - no hotplug daemon or multi-camera selection;
 - Apple Silicon live capture is verified both through a one-device Pi relay
   and over a direct native cable; AVFoundation integration is not yet
   implemented;
-- mode 0 currently shows a 192-pixel-wide dark/purple strip at the left edge;
-  whether this is an optical-black sensor margin or a mode-register issue is
-  unresolved; and
-- final Bayer phase, color response, exposure scale, and gain response await a
+- final Bayer phase, absolute color response, exposure scale, and gain response await a
   known optical target and controlled calibration.

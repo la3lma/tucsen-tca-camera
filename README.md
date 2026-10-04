@@ -6,7 +6,7 @@ sold as TCA-10.0N/IS1000-family hardware).
 
 The reader cold-initializes the camera with `libusb`, captures 1280×960 preview
 or 3664×2748 full-resolution Bayer8 frames, validates and removes each device
-record prefix, and exposes bounded exposure and gain controls. A Raspberry Pi 5 has
+record framing, and exposes bounded exposure and gain controls. A Raspberry Pi 5 has
 completed a 14,400-frame preview endurance run, captured consecutive full-size
 frames, and fed the preview stream through FFmpeg and a temporary V4L2 camera
 device. No vendor driver and no camera-specific kernel module are required.
@@ -49,7 +49,8 @@ still.
 | Native-cable capture on Apple Silicon macOS | Verified live in modes 0 and 2 |
 | Full 3664×2748 Bayer8 capture | Verified live |
 | Spatially coherent optical capture | Verified live in both modes |
-| Final Bayer phase, color, and image calibration | In progress |
+| Neutral-background white-balance estimation | Verified optically |
+| Final Bayer phase and color-target calibration | In progress |
 
 ## Build
 
@@ -75,13 +76,14 @@ optional rule in [`udev/99-tucsen-tca-camera.rules`](udev/99-tucsen-tca-camera.r
 
 ## Install and remove
 
-Install the reader, V4L2 helper, and frame analyzer under the selected prefix:
+Install the reader, V4L2 helper, frame analyzer, and white-balance estimator
+under the selected prefix:
 
 ```sh
 sudo make install PREFIX=/usr/local
 ```
 
-Remove exactly those three installed programs:
+Remove exactly those four installed programs:
 
 ```sh
 sudo make uninstall PREFIX=/usr/local
@@ -185,6 +187,34 @@ scripts/tca-frame-stats capture/one-frame.bayer --mode 2
 For a multi-frame stream, extract one exact frame first. The utility reports
 SHA-256, dimensions, intensity percentiles, clipping, four sensor-parity
 planes, and a phase-independent Laplacian focus score.
+
+### White balance from the illuminated slide
+
+If a blank part of the slide should be neutral, estimate channel multipliers
+directly from that region. This incorporates the actual lamp temperature,
+condenser, microscope optics, color filters, and sensor response:
+
+```sh
+scripts/tca-white-balance capture/one-frame.bayer --mode 2 \
+  --phase grbg --roi 448,48,576,240
+```
+
+The JSON result includes raw channel medians, gains, and an FFmpeg
+`colorchannelmixer` filter. Apply the reported filter after Bayer conversion;
+for example, the tested tungsten-lit field produced approximately red `0.87`,
+green `1.0`, and blue `2.0`:
+
+```sh
+ffmpeg -f rawvideo -pixel_format bayer_grbg8 -video_size 1280x960 \
+  -i capture/one-frame.bayer \
+  -vf 'colorchannelmixer=rr=0.87:gg=1.0:bb=2.0' \
+  -frames:v 1 capture/white-balanced.png
+```
+
+This makes the reference region chromatically neutral; it does not brighten
+gray into display white. Exposure, gain, or a separate tone curve controls
+brightness. Re-estimate after changing the lamp, condenser, optical path, or
+camera gain substantially.
 
 ## Optional V4L2 camera
 

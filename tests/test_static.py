@@ -42,10 +42,11 @@ def main() -> None:
     assert "TCA_NEXT_PACKET_BYTES" in source
     assert "TCA_PREFIX_MARKER_BYTES 10u" in source
     assert '"mode 2 record prefix must be 512 bytes"' in source
-    assert '"mode 0 record prefix must be 320 bytes"' in source
-    assert "one request=%zu" in source
-    assert "prefix_bytes" in source
-    assert "device_frame + prefix_bytes(mode)" in source
+    assert '"mode 0 head plus next-record continuation must be one frame"' in source
+    assert "record request=%zu" in source
+    assert "head_bytes" in source
+    assert "device_frame + mode->head_offset" in source
+    assert "next_device_frame + mode->continuation_offset" in source
     assert "while (*received < mode->device_bytes)" not in source
     assert "TCA_INITIAL_RESYNC_LIMIT 2u" in source
     assert "TCA_MODE2_ROW_TIME_US 120u" in source
@@ -54,7 +55,7 @@ def main() -> None:
     assert '"--exposure-ms"' in source and '"--gain"' in source
     assert 'perror("flush raw-first")' in source
     assert "fflush(raw_first)" in source
-    assert "discarding bounded warm-up frame %u/%u" in source
+    assert "discarding bounded warm-up record %u/%u" in source
     assert "int raw_written = 0" in source
     assert "trace_command_result_accepted" in source
     assert "result == 1 && response[0] == request" in source
@@ -68,7 +69,7 @@ def main() -> None:
     version = subprocess.run(
         [str(binary), "--version"], check=True, capture_output=True, text=True
     )
-    assert version.stdout.strip() == "tca-camera 0.2.0-alpha.4"
+    assert version.stdout.strip() == "tca-camera 0.2.0-alpha.5"
     with tempfile.TemporaryDirectory(prefix="tca-linux-stream-") as directory:
         raw = pathlib.Path(directory, "no.raw")
         bayer = pathlib.Path(directory, "no.bayer")
