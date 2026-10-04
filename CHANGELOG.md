@@ -8,6 +8,10 @@
   CLI without changing the USB protocol or default Bayer output format.
 - Flush each timestamp row for useful bounded and interrupted-run timing
   evidence, and reject conflicting or stdout timestamp paths before transfer.
+- Add `tca-timing-stats` and record direct-Apple-Silicon delivered-frame
+  cadence of 17.3466 fps for 1280x960 at requested 1 ms, 9.5057 fps for
+  1280x960 at 250 ms, and 2.7911 fps for 3664x2748 at 250 ms. These are
+  application-facing output measurements, not sensor-integration claims.
 - Document the distinction between measured capture timing and an FFmpeg
   playback time base.
 - Add `tca-flat-field`, a dependency-free C17 calibrator and streaming
@@ -25,6 +29,12 @@
 - Add an inert-by-default guided physical-calibration session that keeps dark,
   repositioned-flat, withheld-blank, and specimen captures at locked settings,
   validates exact sizes, renders comparisons, and hashes the completed bundle.
+- Render every public evidence record as navigable HTML, link the README,
+  Docstack, evidence index, and report to one another, and publish a clickable
+  Agency-style task dependency graph plus compact Cockburn/UML use cases.
+- Make the public/private boundary permanent with a current-tree and full-Git-
+  history denylist for disassembly, decompiler exports, vendor binaries,
+  firmware, packet captures, VM disks, and private work artifacts.
 
 ## 0.2.0-alpha.6 — 2026-10-04
 
