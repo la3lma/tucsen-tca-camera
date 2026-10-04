@@ -54,7 +54,28 @@ user space.
   binaries, disassembly, firmware, packet captures, VM disks, or private work
   are included.
 
-## Physical application evidence carried into the release
+## Exact-release physical application verification
+
+After publication, the downloaded source archive's packaged helper ran against
+the directly attached microscope camera in mode 2 at requested 250 ms, gain 0,
+and a 10-fps media time base. It recorded exactly 30 complete 1280x960 frames.
+Producer timing reported 9.508016 delivered fps over 3.050058 seconds, with
+103.798-107.309-ms intervals, mean 105.174 ms, median 105.101 ms, and p95
+106.780 ms. The untouched first device record was exactly 1,229,312 bytes.
+
+Independent FFprobe/FFmpeg validation reported H.264, YUV420P, 1280x960,
+exactly 30 decoded frames over 3.000 seconds, 30 distinct decoded frame hashes,
+and no decoder diagnostics. The MP4 SHA-256 is
+`0b26cd5659facee00526a27ab6a3572fe124caf03a2f2dea274e479d2a3b2be9`.
+
+A fresh exact-release process immediately reopened the camera and captured
+another complete 1,228,800-byte Bayer frame. Its SHA-256 is
+`26aece6a8deb70212852fd01395768b0ef98dfad272462d7946044ba3b17b33e`;
+statistics reported min 20, max 241, mean 178.8566, p01 79, p99 221, zero
+zero-valued pixels, and zero saturated pixels. Raw, Bayer, timestamp, and video
+artifacts plus a verified manifest remain private in the report project.
+
+## Earlier application evidence carried into the release
 
 Candidate `f524560`, merged before the release as public main `f297834`, ran
 the packaged helper against the Mac-attached microscope camera at mode 2,
