@@ -406,31 +406,33 @@ Docstack</a></td>
 </tr>
 <tr>
 <td>Revision</td>
-<td>5.0, use cases expressed in Cockburn form and UML; delivered-frame
-cadence measured in both recovered modes; Linux V4L2 producer timing and
-bounded acceptance harness prepared; camera-free consumer
-detach/reattach, slow-consumer, bounded-memory, signal, and cleanup
-behavior verified on the Pi at both 1280x960 preview and complete
-3664x2748 full resolution; exact post-merge main and downloaded alpha-8
-release archive physically regressed in both optical modes on Apple
-Silicon; exact alpha-8 live output consumed and recorded by an
-independent FFmpeg process over a plain pipe on macOS for 17,200
-distinct frames across 30 minutes with bounded memory and immediate
-camera reopen; installed V4L2 helper discovery corrected and verified in
-a fresh staged AArch64 install; a packaged cross-platform FFplay/H.264
-helper physically recorded an exact-frame microscope clip with measured
-producer timing and immediate reopen, then passed the complete Pi
-AArch64 suite; current ToupTek SDK and USB-updater surfaces statically
-rechecked without executing vendor code; the UTM Linux shortcut was
-rechecked, remained unable to enumerate the host camera, and was
-followed by an exact-main macOS capture proving clean ownership
-hand-back; uncorrected physical Linux transport acceptance independently
-runnable before optical calibration and protected by a recorded
-wall-clock consumer deadline; historical evidence placeholders and the
-decision ledger reconciled with current verified state; public alpha-8
-packages the full-resolution application path and bounded Linux gate;
-public evidence rendered as HTML and guarded by a permanent full-history
-privacy policy</td>
+<td>5.1, annotated alpha-9 packages the verified one-command
+FFplay/H.264 helper and passes exact-main, exact-tag, Raspberry Pi
+AArch64, and downloaded-archive verification; use cases expressed in
+Cockburn form and UML; delivered-frame cadence measured in both
+recovered modes; Linux V4L2 producer timing and bounded acceptance
+harness prepared; camera-free consumer detach/reattach, slow-consumer,
+bounded-memory, signal, and cleanup behavior verified on the Pi at both
+1280x960 preview and complete 3664x2748 full resolution; exact
+post-merge main and downloaded alpha-8 release archive physically
+regressed in both optical modes on Apple Silicon; exact alpha-8 live
+output consumed and recorded by an independent FFmpeg process over a
+plain pipe on macOS for 17,200 distinct frames across 30 minutes with
+bounded memory and immediate camera reopen; installed V4L2 helper
+discovery corrected and verified in a fresh staged AArch64 install; a
+packaged cross-platform FFplay/H.264 helper physically recorded an
+exact-frame microscope clip with measured producer timing and immediate
+reopen, then passed the complete Pi AArch64 suite; current ToupTek SDK
+and USB-updater surfaces statically rechecked without executing vendor
+code; the UTM Linux shortcut was rechecked, remained unable to enumerate
+the host camera, and was followed by an exact-main macOS capture proving
+clean ownership hand-back; uncorrected physical Linux transport
+acceptance independently runnable before optical calibration and
+protected by a recorded wall-clock consumer deadline; historical
+evidence placeholders and the decision ledger reconciled with current
+verified state; public alpha-8 packages the full-resolution application
+path and bounded Linux gate; public evidence rendered as HTML and
+guarded by a permanent full-history privacy policy</td>
 </tr>
 <tr>
 <td>Execution state</td>
@@ -2018,14 +2020,15 @@ cable reconnect remain</td>
 <td>D110</td>
 <td>Package source and operations</td>
 <td>D100</td>
-<td>Active; alpha-8 released and independently verified</td>
-<td>Public GitHub repository, Apache-2.0 license, udev/V4L2 operations,
-CI, two modes, bounded initial recovery, optical and calibration
-procedures, independently runnable uncorrected Linux application gate,
-recorded consumer deadline, measured output cadence, clickable
-full-resolution evidence, scoped native-libusb discovery, permanent
-publication boundary, tested install/removal plus native AArch64
-installed-helper discovery, validation record, and report links</td>
+<td>Active; alpha-9 released and independently verified</td>
+<td>Public GitHub repository, Apache-2.0 license, one-command
+FFplay/H.264 helper, udev/V4L2 operations, CI, two modes, bounded
+initial recovery, optical and calibration procedures, independently
+runnable uncorrected Linux application gate, recorded consumer deadline,
+measured output cadence, clickable full-resolution evidence, scoped
+native-libusb discovery, permanent publication boundary, tested
+install/removal plus native AArch64 installed-helper discovery,
+validation record, and report links</td>
 </tr>
 <tr>
 <td>D120</td>
@@ -3225,12 +3228,13 @@ Fixtures, and Operations</h3>
 <tbody>
 <tr>
 <td>State</td>
-<td>Active; public alpha-8 packages the reader, both Linux application
-geometries, calibrated-field tooling, measured output cadence, bounded
-live acceptance, rendered evidence including a third-party FFmpeg
-recording and 30-minute endurance proof, permanent publication-boundary
-enforcement, and tested install/removal with corrected installed-helper
-discovery while residual physical validation continues</td>
+<td>Active; public alpha-9 packages the reader, one-command FFplay/H.264
+helper, both Linux application geometries, calibrated-field tooling,
+measured output cadence, bounded live acceptance, rendered evidence
+including a third-party FFmpeg recording and 30-minute endurance proof,
+permanent publication-boundary enforcement, and tested install/removal
+with corrected installed-helper discovery while residual physical
+validation continues</td>
 </tr>
 <tr>
 <td>Actors</td>
@@ -3400,6 +3404,19 @@ earlier three-frame preview session was optically valid but showed a
 retained 429.728/74.563-ms startup transient. Clickable exact-tag
 display derivatives and full statistics are included in the <a
 href="../evidence/public-release-alpha8.html">alpha-8 release
+evidence</a>.</p>
+<p>The annotated public prerelease <a
+href="https://github.com/la3lma/tucsen-tca-camera/releases/tag/v0.2.0-alpha.9"><code>v0.2.0-alpha.9</code></a>
+resolves to exact commit <code>a254f53</code>. Independent exact-main
+and exact-tag Ubuntu/macOS CI pass, the exact commit passes the complete
+Raspberry Pi AArch64 suite, and GitHub’s downloaded source archive
+passes the complete suite outside a Git checkout on both Apple Silicon
+and the Pi with SHA-256
+<code>97750800e90783aaf606c160fdd33925f60e56b7f7464113077c5524b259ea52</code>.
+Alpha 9 packages the physically proven <code>tca-ffmpeg</code>
+one-command viewer and recorder plus all post-alpha-8 Linux application
+and installed-helper work. See the <a
+href="../evidence/public-release-alpha9.html">alpha-9 release
 evidence</a>.</p>
 <p>The current <a
 href="../evidence/release-acceptance-audit.html">release acceptance
@@ -4463,6 +4480,19 @@ Raspberry Pi AArch64 suite with zero attached cameras and an explicit
 view/record helper</a></td>
 <td>VERIFIED PHYSICAL ORDINARY-APPLICATION RECORDING + CROSS-PLATFORM
 PACKAGE / DIRECT LINUX V4L2 CABLE RUN OPEN</td>
+</tr>
+<tr>
+<td>E-085</td>
+<td>Annotated prerelease <code>v0.2.0-alpha.9</code> resolves to exact
+commit <code>a254f53</code>; exact-main and exact-tag Ubuntu/macOS CI
+pass independently, the exact commit passes the complete Raspberry Pi
+AArch64 suite, and GitHub’s downloaded source archive with SHA-256
+<code>97750800e90783aaf606c160fdd33925f60e56b7f7464113077c5524b259ea52</code>
+passes the complete suite outside a Git checkout on both Apple Silicon
+and Raspberry Pi AArch64</td>
+<td><a href="../evidence/public-release-alpha9.html">Public alpha-9
+release</a></td>
+<td>VERIFIED PUBLIC RELEASE + PI + TAG CI + TWO-HOST ARCHIVE</td>
 </tr>
 </tbody>
 </table>
