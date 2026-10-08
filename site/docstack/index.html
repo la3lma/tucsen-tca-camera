@@ -225,19 +225,24 @@ class="toc-section-number">5.3</span> Dependency Graph</a></li>
 <li><a href="#task-summary" id="toc-task-summary"><span
 class="toc-section-number">5.4</span> Task Summary</a>
 <ul>
+<li><a
+href="#operator-stabilization-campaign-and-future-project-boundary"
+id="toc-operator-stabilization-campaign-and-future-project-boundary"><span
+class="toc-section-number">5.4.1</span> Operator stabilization campaign
+and future project boundary</a></li>
 <li><a href="#non-gating-research-lane-updated-firmware-discovery"
 id="toc-non-gating-research-lane-updated-firmware-discovery"><span
-class="toc-section-number">5.4.1</span> Non-gating Research Lane —
+class="toc-section-number">5.4.2</span> Non-gating Research Lane —
 Updated Firmware Discovery</a></li>
 <li><a
 href="#non-gating-research-lane-historical-application-integration"
 id="toc-non-gating-research-lane-historical-application-integration"><span
-class="toc-section-number">5.4.2</span> Non-gating Research Lane —
+class="toc-section-number">5.4.3</span> Non-gating Research Lane —
 Historical Application Integration</a></li>
 <li><a
 href="#non-gating-reverse-engineering-lane-ghidra-call-graph-recovery"
 id="toc-non-gating-reverse-engineering-lane-ghidra-call-graph-recovery"><span
-class="toc-section-number">5.4.3</span> Non-gating Reverse-Engineering
+class="toc-section-number">5.4.4</span> Non-gating Reverse-Engineering
 Lane — Ghidra Call-Graph Recovery</a></li>
 </ul></li>
 <li><a href="#task-contracts" id="toc-task-contracts"><span
@@ -406,61 +411,16 @@ Docstack</a></td>
 </tr>
 <tr>
 <td>Revision</td>
-<td>5.9, annotated alpha-12 packages USB-inert exact-device enumeration
-and the explicit system-managed V4L2 lifecycle, passes exact-tag CI and
-downloaded-source verification on Apple Silicon and Raspberry Pi
-AArch64, publishes a checksum-pinned ARM64 package, and is installed
-cleanly on the camera-free Pi; public main <code>8d254b7</code> adds
-that system-managed lifecycle, validates a pre-created exact-labelled
-loopback without opening it, never mutates or unloads its owner-managed
-module, and passes exact-main Raspberry Pi AArch64 lifecycle tests in
-both supported geometries plus Apple Silicon and hosted CI; public main
-<code>b726322</code> adds the USB-inert cable-move preflight, recognizes
-one high-speed <code>0547:c003</code> unit on the Mac and zero on the
-camera-free Pi, passes exact-main Apple Silicon/Pi AArch64 suites and
-hosted CI, and leaves all physical transport and optical gates open;
-annotated alpha-11 corrects and tests source, CLI, installed-marker, and
-Debian-package version provenance, publishes a checksum-pinned ARM64
-package, passes exact-tag CI and two-host downloaded-source
-verification, and was installed cleanly on the Pi before the alpha-12
-upgrade; annotated alpha-10 publishes the reproducible ARM64 Debian
-package as a checksum-pinned release asset after exact-tag CI, two-host
-downloaded-source verification, native package lifecycle, and local-file
-APT reinstall, but a later audit records its stale embedded alpha-7 CLI
-version and supersession by alpha-11; exact merged main builds a
-reproducible architecture-native Debian package, passes native Raspberry
-Pi AArch64 package inspection, installation, removal, clean-path
-verification, reinstallation, integrity, and USB-inert installed-helper
-diagnostics, and leaves the Pi prepared for its direct-camera Linux run;
-the downloaded exact alpha-9 archive physically records and
-independently decodes a 30-frame microscope clip through the packaged
-helper, then immediately reopens the camera; annotated alpha-9 packages
-the verified one-command FFplay/H.264 helper and passes exact-main,
-exact-tag, Raspberry Pi AArch64, and downloaded-archive verification;
-use cases expressed in Cockburn form and UML; delivered-frame cadence
-measured in both recovered modes; Linux V4L2 producer timing and bounded
-acceptance harness prepared; camera-free consumer detach/reattach,
-slow-consumer, bounded-memory, signal, and cleanup behavior verified on
-the Pi at both 1280x960 preview and complete 3664x2748 full resolution;
-exact post-merge main and downloaded alpha-8 release archive physically
-regressed in both optical modes on Apple Silicon; exact alpha-8 live
-output consumed and recorded by an independent FFmpeg process over a
-plain pipe on macOS for 17,200 distinct frames across 30 minutes with
-bounded memory and immediate camera reopen; installed V4L2 helper
-discovery corrected and verified in a fresh staged AArch64 install; a
-packaged cross-platform FFplay/H.264 helper physically recorded an
-exact-frame microscope clip with measured producer timing and immediate
-reopen, then passed the complete Pi AArch64 suite; current ToupTek SDK
-and USB-updater surfaces statically rechecked without executing vendor
-code; the UTM Linux shortcut was rechecked, remained unable to enumerate
-the host camera, and was followed by an exact-main macOS capture proving
-clean ownership hand-back; uncorrected physical Linux transport
-acceptance independently runnable before optical calibration and
-protected by a recorded wall-clock consumer deadline; historical
-evidence placeholders and the decision ledger reconciled with current
-verified state; public alpha-8 packages the full-resolution application
-path and bounded Linux gate; public evidence rendered as HTML and
-guarded by a permanent full-history privacy policy</td>
+<td>6.1 records the operator stabilization campaign: prove usable
+direct-Mac live view and focusing, build a small calibrated optical
+corpus, then perform the direct-camera Linux/V4L2 acceptance; it also
+records autofocus/stage automation and containerized robotic microscopy
+as separate, non-gating future workstreams; revision 6.0 added
+restart-safe private evidence sessions around the explicit system-owned
+V4L2 contract, real Pi <code>v4l2loopback</code> application lifecycles
+in both geometries, a disabled systemd user-service example, and the
+unreleased alpha-13 development package; annotated alpha-12 remains the
+current prerelease</td>
 </tr>
 <tr>
 <td>Execution state</td>
@@ -2059,19 +2019,22 @@ deferred</td>
 <td>Reopen, 30-minute corrected-era endurance, process-kill, host
 reboot, direct Apple Silicon capture, bounded ownership hand-back,
 USB-inert exact-device enumeration, USB-inert managed and pre-created
-V4L2 lifecycles in both geometries, exact-post-merge and exact-release
-optical regressions, plain-pipe FFmpeg application consumption, and
-wall-clock-bounded application acceptance passed; uncorrected physical
-Linux transport and later corrected repeat plus Pi cable reconnect
-remain</td>
+V4L2 lifecycles plus restart-safe private service sessions in both
+geometries, exact-post-merge and exact-release optical regressions,
+plain-pipe FFmpeg application consumption, and wall-clock-bounded
+application acceptance passed; uncorrected physical Linux transport and
+later corrected repeat plus Pi cable reconnect remain</td>
 </tr>
 <tr>
 <td>D110</td>
 <td>Package source and operations</td>
 <td>D100</td>
-<td>Active; alpha-12 publishes a provenance-consistent,
-two-host-verified ARM64 asset with inert enumeration and an explicit
-system-managed V4L2 service mode; residual physical gates remain</td>
+<td>Active; exact main <code>4c3b2ad</code> adds an alpha-13
+restart-safe session wrapper and disabled systemd user-service example
+while alpha-12 remains the current prerelease and publishes a
+provenance-consistent, two-host-verified ARM64 asset with inert
+enumeration and an explicit system-managed V4L2 service mode; residual
+physical gates remain</td>
 <td>Public GitHub repository, Apache-2.0 license, checksum-pinned ARM64
 package asset, exact-device enumeration, bridge-owned and pre-created
 V4L2 lifecycle contracts, one-command FFplay/H.264 helper, udev/V4L2
@@ -2095,8 +2058,78 @@ and report links</td>
 </tbody>
 </table>
 <h3 data-number="5.4.1"
+id="operator-stabilization-campaign-and-future-project-boundary"><span
+class="header-section-number">5.4.1</span> Operator stabilization
+campaign and future project boundary</h3>
+<p>The immediate campaign is deliberately narrower than a general
+microscope automation system. It uses the current reader to establish a
+comfortable human workflow and a small, well-described optical corpus
+before final Linux acceptance.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Order</th>
+<th>Activity</th>
+<th>Completion evidence</th>
+<th>Relationship to this project</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Direct-Mac live view and focus</td>
+<td>The operator can start and stop a responsive preview, alter
+exposure/gain deliberately, focus the optical system from the preview,
+and immediately reopen the camera</td>
+<td>Current D60/D100 stabilization work; first hardware gate</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Optical familiarization and corpus</td>
+<td>Locked-setting blank-field and specimen captures,
+condenser/illumination notes, at least one overlapping tile series, and
+at least one Z/focus series, with raw files and acquisition metadata
+retained</td>
+<td>Current D60 optical calibration and application acceptance work</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Direct-camera Linux acceptance</td>
+<td>The same camera is moved to the Pi only after the Mac workflow is
+usable; the native reader and standard V4L2 consumers pass the bounded
+physical-camera checks</td>
+<td>Current D80/D100 exit evidence</td>
+</tr>
+</tbody>
+</table>
+<p>Two attractive follow-on efforts are recorded here for continuity but
+are <strong>not tasks, dependencies, or release criteria in
+D00–D120</strong>:</p>
+<ol type="1">
+<li><strong>Motorized focus and stage automation.</strong> Treat safe
+motion limits, homing, backlash, repeatability, focus metrics, Z-series,
+and tiled acquisition as a separate hardware-control project. It should
+consume the stable camera capture/control interface and the calibration
+corpus rather than changing the recovered USB protocol reader.</li>
+<li><strong>Containerized robotic microscopy.</strong> Build a separate
+control and data service, deployable in containers on Raspberry Pi or
+macOS, for scheduled and remote capture, time series, dataset assembly,
+provenance, and later robotic orchestration. It should use the reader’s
+supported stream/still interfaces and define explicit boundaries for
+hardware ownership, storage, authentication, and recovery.</li>
+</ol>
+<p>These future workstreams may share fixtures and datasets with this
+project. They do not broaden the present objective: first make this
+camera dependable for an operator and ordinary applications.</p>
+<h3 data-number="5.4.2"
 id="non-gating-research-lane-updated-firmware-discovery"><span
-class="header-section-number">5.4.1</span> Non-gating Research Lane —
+class="header-section-number">5.4.2</span> Non-gating Research Lane —
 Updated Firmware Discovery</h3>
 <p>This is a <strong>low-priority, opportunistic investigation</strong>,
 not a dependency or prerequisite for D20–D120. It may run whenever
@@ -2179,9 +2212,9 @@ graph.</p>
 <code>Xintu Photonics</code>, <code>Tucsen</code>,
 <code>AmScope 10MP</code>, and strings or version identifiers extracted
 from the archived driver and camera DLL packages.</p>
-<h3 data-number="5.4.2"
+<h3 data-number="5.4.3"
 id="non-gating-research-lane-historical-application-integration"><span
-class="header-section-number">5.4.2</span> Non-gating Research Lane —
+class="header-section-number">5.4.3</span> Non-gating Research Lane —
 Historical Application Integration</h3>
 <p>A 2014 University College London thesis explicitly identifies a
 Tucsen TCA-10.0-N running on Micro-Manager 1.4 for live view and an
@@ -2199,9 +2232,9 @@ UVC/DirectShow/TWAIN registration, or authorize a live request. See the
 <a
 href="../evidence/micromanager-application-precedent.html">Micro-Manager
 application precedent</a>.</p>
-<h3 data-number="5.4.3"
+<h3 data-number="5.4.4"
 id="non-gating-reverse-engineering-lane-ghidra-call-graph-recovery"><span
-class="header-section-number">5.4.3</span> Non-gating
+class="header-section-number">5.4.4</span> Non-gating
 Reverse-Engineering Lane — Ghidra Call-Graph Recovery</h3>
 <p>Ghidra is used to refine, name, and cross-check the static model
 recovered from the working purchase-era Windows stack. This lane remains
@@ -3251,6 +3284,17 @@ root-owned harness. The retained failed candidates show that a former
 full-resolution race; replacing it with non-opening sysfs checks
 corrected the cause. This proves the system-integration lifecycle
 without a camera, while the direct-camera Linux run remains open.</p>
+<p>Public main <code>4c3b2ad</code> makes that lifecycle restart-safe
+for a service manager. <code>tca-v4l2-session</code> atomically
+allocates a private directory on every start, records the controls and
+exact evidence paths, and then replaces itself with
+<code>tca-v4l2 --serve-existing</code>. It contains no module,
+ownership, USB, or retry operation. Exact-main Pi runs passed the real
+FFmpeg/<code>v4l2loopback</code> lifecycle through this wrapper at both
+supported geometries: service-session consumers received four preview or
+two full-resolution frames, the system node/module survived TERM, and
+final cleanup remained harness-owned. Preview warm-baseline RSS growth
+was zero; full-resolution growth was 9,824 KiB.</p>
 <p>Exact public post-merge main <code>72964bb</code> was also rebuilt
 and physically regressed against the directly attached optical system on
 Apple Silicon. At 250 ms/gain 0 it delivered three distinct 1280x960
@@ -3593,6 +3637,17 @@ The hash-pinned downloaded package upgraded the camera-free Pi to
 inert enumeration, and both installed-helper diagnostics pass. See the
 <a href="../evidence/public-release-alpha12.html">alpha-12 release
 evidence</a>.</p>
+<p>Public main <code>4c3b2ad</code> advances the development identity to
+alpha 13 and adds the restart-safe session wrapper plus a deliberately
+disabled systemd user service/settings example. Hosted CI, complete
+Apple Silicon and Pi AArch64 suites, and exact-main Pi application
+lifecycles pass in both geometries. The reproducible ARM64 development
+package has SHA-256
+<code>1befeec59685d5bc3cc27362bb22b2ff819cba9999ff0bc86f07d859eefc56d1</code>;
+it is installed on the camera-free Pi with clean integrity and verified
+unit syntax, while no service is installed, enabled, or active. See the
+<a href="../evidence/v4l2-service-sessions.html">restart-safe
+service-session evidence</a>.</p>
 <p>The current <a
 href="../evidence/release-acceptance-audit.html">release acceptance
 audit</a> marks the Linux reader/API, preview endurance, application
@@ -4791,6 +4846,25 @@ both installed-helper diagnostics</td>
 release</a></td>
 <td>VERIFIED CURRENT PUBLIC ARM64 PACKAGE + TAG CI + TWO-HOST ARCHIVE +
 INSTALLED PI / PHYSICAL CAMERA V4L2 RUN OPEN</td>
+</tr>
+<tr>
+<td>E-093</td>
+<td>Public main <code>4c3b2ad</code> adds <code>tca-v4l2-session</code>,
+which atomically allocates one private evidence directory per start and
+delegates only to the pre-created-loopback contract. A disabled
+<code>Restart=no</code> systemd user-service example is documentation
+only. Exact-main Pi runs through the wrapper delivered real-consumer
+frames at 1280x960 and 3664x2748, retained the system node/module after
+bridge TERM, and left final cleanup to the harness. Apple Silicon, Pi
+AArch64, and hosted suites pass. The reproducible alpha-13 development
+package has SHA-256
+<code>1befeec59685d5bc3cc27362bb22b2ff819cba9999ff0bc86f07d859eefc56d1</code>,
+is installed with clean integrity on the camera-free Pi, and leaves no
+service installed, enabled, or active</td>
+<td><a href="../evidence/v4l2-service-sessions.html">Restart-safe V4L2
+service sessions</a></td>
+<td>VERIFIED RESTART-SAFE SYSTEM-OWNED APPLICATION LIFECYCLE + PACKAGE /
+PHYSICAL LINUX CAPTURE OPEN</td>
 </tr>
 </tbody>
 </table>
